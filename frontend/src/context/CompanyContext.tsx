@@ -317,58 +317,34 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return ALL_COMPANIES.find((c) => c.id === selectedCompanyId) || ALL_COMPANIES[0];
   }, [selectedCompanyId]);
 
+  const isProjectOfOtherCompany = (p: Project, targetCompanyId: string): boolean => {
+    const name = (p.name || '').toLowerCase();
+    const key = (p.key || '').toUpperCase();
+
+    if (targetCompanyId !== 'techflow') {
+      if (key === 'FLOW' || name.includes('techflow')) return true;
+    }
+    if (targetCompanyId !== 'acmeglobal') {
+      if (key === 'ACME' || key === 'SHOP' || name.includes('acme')) return true;
+    }
+    if (targetCompanyId !== 'nexusfintech') {
+      if (key === 'FIN' || key === 'NEXUS' || name.includes('nexus') || name.includes('fintech')) return true;
+    }
+    if (targetCompanyId !== 'pulsehealth') {
+      if (key === 'HLTH' || key === 'PULSE' || name.includes('pulse') || name.includes('health')) return true;
+    }
+    if (targetCompanyId !== 'vortexlogistics') {
+      if (key === 'LOG' || key === 'VORTEX' || name.includes('vortex') || name.includes('logistics')) return true;
+    }
+
+    return false;
+  };
+
   const filterProjectsByCompany = React.useCallback((projects: Project[]): Project[] => {
     if (!projects || projects.length === 0) return [];
     if (selectedCompanyId === 'all') return projects;
 
-    if (selectedCompanyId === 'techflow') {
-      return projects.filter(
-        (p) =>
-          p.key === 'FLOW' ||
-          p.name.toLowerCase().includes('techflow')
-      );
-    }
-
-    if (selectedCompanyId === 'acmeglobal') {
-      return projects.filter(
-        (p) =>
-          p.key === 'SHOP' ||
-          p.key === 'ACME' ||
-          p.name.toLowerCase().includes('acme')
-      );
-    }
-
-    if (selectedCompanyId === 'nexusfintech') {
-      return projects.filter(
-        (p) =>
-          p.key === 'FIN' ||
-          p.key === 'NEXUS' ||
-          p.name.toLowerCase().includes('nexus') ||
-          p.name.toLowerCase().includes('fintech')
-      );
-    }
-
-    if (selectedCompanyId === 'pulsehealth') {
-      return projects.filter(
-        (p) =>
-          p.key === 'HLTH' ||
-          p.key === 'PULSE' ||
-          p.name.toLowerCase().includes('pulse') ||
-          p.name.toLowerCase().includes('health')
-      );
-    }
-
-    if (selectedCompanyId === 'vortexlogistics') {
-      return projects.filter(
-        (p) =>
-          p.key === 'LOG' ||
-          p.key === 'VORTEX' ||
-          p.name.toLowerCase().includes('vortex') ||
-          p.name.toLowerCase().includes('logistics')
-      );
-    }
-
-    return projects;
+    return projects.filter((p) => !isProjectOfOtherCompany(p, selectedCompanyId));
   }, [selectedCompanyId]);
 
   const contextValue = useMemo(
