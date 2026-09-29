@@ -178,14 +178,13 @@ export const BacklogPage: React.FC = () => {
       )}
 
       {/* Create Sprint Modal */}
-      {selectedProjectId && (
-        <CreateSprintModal
-          isOpen={isCreateSprintOpen}
-          onClose={() => setIsCreateSprintOpen(false)}
-          projectId={selectedProjectId}
-          onSprintCreated={fetchBacklogData}
-        />
-      )}
+      <CreateSprintModal
+        isOpen={isCreateSprintOpen}
+        onClose={() => setIsCreateSprintOpen(false)}
+        projectId={selectedProjectId || projects[0]?.id}
+        projects={projects}
+        onSprintCreated={fetchBacklogData}
+      />
 
       {/* Create Issue Modal */}
       <CreateIssueModal
