@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Flowtask.API/Flowtask.API.csproj" />
+    <Project Path="src/Flowtask.Business/Flowtask.Business.csproj" />
+    <Project Path="src/Flowtask.Core/Flowtask.Core.csproj" />
+    <Project Path="src/Flowtask.DataAccess/Flowtask.DataAccess.csproj" />
+    <Project Path="src/Flowtask.EntityLayer/Flowtask.EntityLayer.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Flowtask.IntegrationTests/Flowtask.IntegrationTests.csproj" />
+    <Project Path="tests/Flowtask.UnitTests/Flowtask.UnitTests.csproj" />
+  </Folder>
+</Solution>
