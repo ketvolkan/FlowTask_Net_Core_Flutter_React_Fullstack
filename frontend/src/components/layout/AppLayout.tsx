@@ -1,15 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { CreateProjectModal } from '../projects/CreateProjectModal';
+import { CreateIssueModal } from '../issues/CreateIssueModal';
+import { GlobalAddMemberModal } from '../projects/GlobalAddMemberModal';
 
 export const AppLayout: React.FC = () => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     return localStorage.getItem('flowtask_sidebar_collapsed') === 'true';
   });
+
+  // Global Action Modals
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
+  const [isCreateIssueOpen, setIsCreateIssueOpen] = useState(false);
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
 
   const toggleSidebarCollapse = () => {
     setIsSidebarCollapsed((prev) => {
@@ -35,12 +41,16 @@ export const AppLayout: React.FC = () => {
         isCollapsed={isSidebarCollapsed}
         onClose={() => setIsMobileSidebarOpen(false)}
         onToggleCollapse={toggleSidebarCollapse}
-        onOpenCreateProject={() => setIsCreateProjectOpen(true)}
       />
 
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col overflow-hidden min-w-0">
-        <Header onToggleSidebar={handleToggleSidebar} />
+        <Header
+          onToggleSidebar={handleToggleSidebar}
+          onOpenCreateProject={() => setIsCreateProjectOpen(true)}
+          onOpenCreateIssue={() => setIsCreateIssueOpen(true)}
+          onOpenAddMember={() => setIsAddMemberOpen(true)}
+        />
 
         <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-5 bg-slate-50">
           <div className="w-full max-w-[1920px] mx-auto px-1 sm:px-2">
@@ -49,13 +59,28 @@ export const AppLayout: React.FC = () => {
         </main>
       </div>
 
-      {/* Global Project Modal */}
+      {/* Global Create Project Modal */}
       <CreateProjectModal
         isOpen={isCreateProjectOpen}
         onClose={() => setIsCreateProjectOpen(false)}
         onProjectCreated={() => {
           window.location.reload();
         }}
+      />
+
+      {/* Global Create Issue Modal */}
+      <CreateIssueModal
+        isOpen={isCreateIssueOpen}
+        onClose={() => setIsCreateIssueOpen(false)}
+        onIssueCreated={() => {
+          window.location.reload();
+        }}
+      />
+
+      {/* Global Add Member Modal */}
+      <GlobalAddMemberModal
+        isOpen={isAddMemberOpen}
+        onClose={() => setIsAddMemberOpen(false)}
       />
     </div>
   );

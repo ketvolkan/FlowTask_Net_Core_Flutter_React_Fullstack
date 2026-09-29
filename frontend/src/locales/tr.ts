@@ -24,6 +24,13 @@ export const tr = {
   'header.notifications': 'Bildirimler',
   'header.noNotifications': 'Henüz bildiriminiz yok',
   'header.markAllRead': 'Tümünü Okundu İşaretle',
+  'header.searchPlaceholder': 'Görevlerde, projelerde ara...',
+  'header.newIssue': 'Görev Oluştur',
+  'header.newProject': 'Yeni Proje',
+  'header.addMember': 'Üye Ekle',
+  'header.quickActions': 'Hızlı İşlem',
+  'header.adminAddUser': 'Kullanıcı Yönetimi',
+  'header.adminLogs': 'Sistem Logları',
 
   // Common Actions & Buttons
   'common.create': 'Oluştur',
@@ -238,6 +245,11 @@ export const tr = {
   // Project Members Modal
   'membersModal.title': 'Proje Üyeleri',
   'membersModal.description': 'Bu proje için ekip erişimini ve rollerini yönetin.',
+  'membersModal.quickAddTitle': 'Projeye Üye / Kullanıcı Ekle',
+  'membersModal.quickAddDesc': 'Bir projeye e-posta adresiyle yeni bir ekip üyesi davet edin.',
+  'membersModal.selectProject': 'Lütfen bir proje seçiniz.',
+  'membersModal.addSuccess': 'Kullanıcı başarıyla projeye eklendi!',
+  'membersModal.addFailed': 'Üye eklenirken bir hata oluştu. E-postayı kontrol ediniz.',
   'membersModal.userEmail': 'Kullanıcı E-Posta Adresi',
   'membersModal.emailPlaceholder': 'Örn: uye@flowtask.com',
   'membersModal.role': 'Rol',

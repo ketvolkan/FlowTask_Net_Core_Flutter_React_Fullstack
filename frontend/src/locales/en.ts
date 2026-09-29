@@ -24,6 +24,13 @@ export const en: Record<string, string> = {
   'header.notifications': 'Notifications',
   'header.noNotifications': 'No notifications yet',
   'header.markAllRead': 'Mark all as read',
+  'header.searchPlaceholder': 'Search issues, projects...',
+  'header.newIssue': 'Create Issue',
+  'header.newProject': 'New Project',
+  'header.addMember': 'Add Member',
+  'header.quickActions': 'Quick Actions',
+  'header.adminAddUser': 'User Management',
+  'header.adminLogs': 'System Audit Logs',
 
   // Common Actions & Buttons
   'common.create': 'Create',
@@ -238,6 +245,11 @@ export const en: Record<string, string> = {
   // Project Members Modal
   'membersModal.title': 'Project Members',
   'membersModal.description': 'Manage access and roles for this project.',
+  'membersModal.quickAddTitle': 'Add Member / User to Project',
+  'membersModal.quickAddDesc': 'Invite a new team member to a project via email address.',
+  'membersModal.selectProject': 'Please select a project.',
+  'membersModal.addSuccess': 'User successfully added to the project!',
+  'membersModal.addFailed': 'Failed to add member. Please check the email address.',
   'membersModal.userEmail': 'User Email',
   'membersModal.emailPlaceholder': 'e.g. member@flowtask.com',
   'membersModal.role': 'Role',

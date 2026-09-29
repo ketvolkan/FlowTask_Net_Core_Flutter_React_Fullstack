@@ -23,7 +23,6 @@ interface SidebarProps {
   isCollapsed: boolean;
   onClose: () => void;
   onToggleCollapse: () => void;
-  onOpenCreateProject?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -31,7 +30,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed,
   onClose,
   onToggleCollapse,
-  onOpenCreateProject,
 }) => {
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -104,29 +102,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
           </div>
         </div>
-
-        {/* Quick Action - Only for standard users/companies, not for super admin */}
-        {!isSysAdmin && (
-          <div className={`p-3 ${isCollapsed ? 'flex justify-center' : ''}`}>
-            {isCollapsed ? (
-              <button
-                onClick={onOpenCreateProject}
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm hover:bg-slate-800 transition-colors"
-                title={t('nav.newProject', 'Yeni Proje')}
-              >
-                <PlusCircle className="h-5 w-5 text-indigo-400" />
-              </button>
-            ) : (
-              <button
-                onClick={onOpenCreateProject}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-slate-800 transition-colors"
-              >
-                <PlusCircle className="h-4 w-4 text-indigo-400" />
-                <span>{t('nav.newProject', 'Yeni Proje')}</span>
-              </button>
-            )}
-          </div>
-        )}
 
         {/* Navigation Items */}
         <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
