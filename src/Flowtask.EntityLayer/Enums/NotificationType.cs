@@ -9,5 +9,6 @@ public enum NotificationType
     ProjectInvited = 5,
     SprintStarted = 6,
     SprintCompleted = 7,
-    SystemAlert = 8
+    SystemAlert = 8,
+    UrgentAlert = 9
 }

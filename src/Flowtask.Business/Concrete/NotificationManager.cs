@@ -6,6 +6,7 @@ using Flowtask.Core.Results;
 using Flowtask.DataAccess.Abstract;
 using Flowtask.EntityLayer.DTOs.Notifications;
 using Flowtask.EntityLayer.Entities;
+using Flowtask.EntityLayer.Enums;
 
 namespace Flowtask.Business.Concrete;
 
@@ -14,12 +15,18 @@ public class NotificationManager : INotificationService
     private readonly INotificationDal _notificationDal;
     private readonly IUserDal _userDal;
     private readonly IMapper _mapper;
+    private readonly INotificationDispatcher _dispatcher;
 
-    public NotificationManager(INotificationDal notificationDal, IUserDal userDal, IMapper mapper)
+    public NotificationManager(
+        INotificationDal notificationDal,
+        IUserDal userDal,
+        IMapper mapper,
+        INotificationDispatcher dispatcher)
     {
         _notificationDal = notificationDal;
         _userDal = userDal;
         _mapper = mapper;
+        _dispatcher = dispatcher;
     }
 
     public async Task<IDataResult<List<NotificationDto>>> GetUserNotificationsAsync(Guid userId)
@@ -43,6 +50,7 @@ public class NotificationManager : INotificationService
         }
 
         notification.IsRead = true;
+        notification.ReadAt = DateTime.UtcNow;
         await _notificationDal.UpdateAsync(notification);
 
         return new SuccessResult(Messages.NotificationMarkedAsRead);
@@ -56,11 +64,40 @@ public class NotificationManager : INotificationService
         foreach (var notification in unreadNotifications)
         {
             notification.IsRead = true;
+            notification.ReadAt = DateTime.UtcNow;
         }
 
         _notificationDal.UpdateRange(unreadNotifications);
 
         return new SuccessResult(Messages.AllNotificationsMarkedAsRead);
+    }
+
+    public async Task<IDataResult<NotificationDto>> CreateAndSendNotificationAsync(
+        Guid userId,
+        NotificationType type,
+        string title,
+        string message,
+        string? linkUrl = null)
+    {
+        var notification = new Notification
+        {
+            UserId = userId,
+            Type = type,
+            Title = title.Trim(),
+            Message = message.Trim(),
+            TargetUrl = linkUrl?.Trim(),
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _notificationDal.AddAsync(notification);
+
+        var dto = _mapper.Map<NotificationDto>(notification);
+
+        // Dispatch real-time via SignalR
+        await _dispatcher.SendNotificationToUserAsync(userId, dto);
+
+        return new SuccessDataResult<NotificationDto>(dto);
     }
 
     public async Task<IResult> SendNotificationAsync(Guid senderUserId, SendNotificationDto request)
@@ -105,7 +142,7 @@ public class NotificationManager : INotificationService
         }
         else
         {
-            // All active platform/company users
+            // All active users
             var allUsers = await _userDal.GetListAsync(u => !u.IsDeleted && u.IsActive);
             targetUserIds = allUsers.Select(u => u.Id).ToList();
         }
@@ -128,6 +165,13 @@ public class NotificationManager : INotificationService
 
         await _notificationDal.AddRangeAsync(notifications);
 
-        return new SuccessResult($"{notifications.Count} kullanıcıya bildirim başarıyla gönderildi.");
+        // Real-time SignalR dispatching to each target user
+        foreach (var notif in notifications)
+        {
+            var dto = _mapper.Map<NotificationDto>(notif);
+            await _dispatcher.SendNotificationToUserAsync(notif.UserId, dto);
+        }
+
+        return new SuccessResult($"{notifications.Count} kullanıcıya bildirim anlık olarak başarıyla iletildi.");
     }
 }

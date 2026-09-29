@@ -18,6 +18,7 @@ public class IssueManager : IIssueService
     private readonly IUserDal _userDal;
     private readonly IMapper _mapper;
     private readonly IActivityLogService _activityLogService;
+    private readonly INotificationService _notificationService;
 
     public IssueManager(
         IIssueDal issueDal,
@@ -25,7 +26,8 @@ public class IssueManager : IIssueService
         IProjectMemberDal projectMemberDal,
         IUserDal userDal,
         IMapper mapper,
-        IActivityLogService activityLogService)
+        IActivityLogService activityLogService,
+        INotificationService notificationService)
     {
         _issueDal = issueDal;
         _projectDal = projectDal;
@@ -33,6 +35,7 @@ public class IssueManager : IIssueService
         _userDal = userDal;
         _mapper = mapper;
         _activityLogService = activityLogService;
+        _notificationService = notificationService;
     }
 
     public async Task<IDataResult<PagedDataResult<IssueDto>>> GetIssuesAsync(Guid userId, IssueFilterParams filter)
@@ -149,6 +152,19 @@ public class IssueManager : IIssueService
 
         await _activityLogService.LogActivityAsync(userId, "CREATE", "Issue", issue.Id, $"Created issue {issue.Key}: {issue.Title}", projectId);
 
+        // Send real-time notification to assignee if assigned
+        if (cleanAssigneeId.HasValue && cleanAssigneeId.Value != userId)
+        {
+            var creator = await _userDal.GetByIdAsync(userId);
+            var creatorName = creator?.FullName ?? "Bir ekip üyesi";
+            await _notificationService.CreateAndSendNotificationAsync(
+                cleanAssigneeId.Value,
+                NotificationType.IssueAssigned,
+                $"Yeni Görev Atandı: {issue.Key}",
+                $"{creatorName} size '{issue.Title}' görevini atadı.",
+                $"/board?issue={issue.Key}");
+        }
+
         return new SuccessDataResult<IssueDto>(dto, Messages.IssueCreated);
     }
 
@@ -162,6 +178,9 @@ public class IssueManager : IIssueService
         {
             throw new NotFoundException(Messages.IssueNotFound);
         }
+
+        var oldAssigneeId = issue.AssigneeId;
+        var oldStatus = issue.Status;
 
         issue.Title = request.Title.Trim();
         issue.Description = request.Description?.Trim();
@@ -179,6 +198,19 @@ public class IssueManager : IIssueService
 
         var dto = _mapper.Map<IssueDto>(issue);
         await _activityLogService.LogActivityAsync(userId, "UPDATE", "Issue", issue.Id, $"Updated issue {issue.Key}", issue.ProjectId);
+
+        // Notify new assignee if changed
+        if (issue.AssigneeId.HasValue && issue.AssigneeId != oldAssigneeId && issue.AssigneeId.Value != userId)
+        {
+            var updater = await _userDal.GetByIdAsync(userId);
+            var updaterName = updater?.FullName ?? "Bir ekip üyesi";
+            await _notificationService.CreateAndSendNotificationAsync(
+                issue.AssigneeId.Value,
+                NotificationType.IssueAssigned,
+                $"Yeni Görev Atandı: {issue.Key}",
+                $"{updaterName} size '{issue.Title}' görevini atadı.",
+                $"/board?issue={issue.Key}");
+        }
 
         return new SuccessDataResult<IssueDto>(dto, Messages.IssueUpdated);
     }
@@ -211,6 +243,33 @@ public class IssueManager : IIssueService
         var dto = _mapper.Map<IssueDto>(issue);
         await _activityLogService.LogActivityAsync(userId, "STATUS_CHANGE", "Issue", issue.Id, $"Changed status of {issue.Key} from {oldStatus} to {request.Status}", issue.ProjectId);
 
+        // Real-time automatic notification on status change
+        if (oldStatus != request.Status)
+        {
+            var updater = await _userDal.GetByIdAsync(userId);
+            var updaterName = updater?.FullName ?? "Bir ekip üyesi";
+
+            if (issue.AssigneeId.HasValue && issue.AssigneeId.Value != userId)
+            {
+                await _notificationService.CreateAndSendNotificationAsync(
+                    issue.AssigneeId.Value,
+                    NotificationType.IssueStatusChanged,
+                    $"Görev Durumu Güncellendi: {issue.Key}",
+                    $"{updaterName} '{issue.Title}' görevini '{request.Status}' durumuna güncelledi.",
+                    $"/board?issue={issue.Key}");
+            }
+
+            if (issue.ReporterId != userId && issue.ReporterId != issue.AssigneeId)
+            {
+                await _notificationService.CreateAndSendNotificationAsync(
+                    issue.ReporterId,
+                    NotificationType.IssueStatusChanged,
+                    $"Görev Durumu Güncellendi: {issue.Key}",
+                    $"{updaterName} '{issue.Title}' görevini '{request.Status}' durumuna güncelledi.",
+                    $"/board?issue={issue.Key}");
+            }
+        }
+
         return new SuccessDataResult<IssueDto>(dto, Messages.IssueStatusUpdated);
     }
 
@@ -225,7 +284,8 @@ public class IssueManager : IIssueService
             throw new NotFoundException(Messages.IssueNotFound);
         }
 
-        issue.AssigneeId = (request.AssigneeId.HasValue && request.AssigneeId.Value != Guid.Empty) ? request.AssigneeId : null;
+        var cleanAssigneeId = (request.AssigneeId.HasValue && request.AssigneeId.Value != Guid.Empty) ? request.AssigneeId : null;
+        issue.AssigneeId = cleanAssigneeId;
         issue.UpdatedAt = DateTime.UtcNow;
 
         await _issueDal.UpdateAsync(issue);
@@ -236,6 +296,19 @@ public class IssueManager : IIssueService
 
         var dto = _mapper.Map<IssueDto>(updated);
         await _activityLogService.LogActivityAsync(userId, "ASSIGN", "Issue", issue.Id, $"Assigned {issue.Key} to {dto.AssigneeName ?? "Unassigned"}", issue.ProjectId);
+
+        // Real-time automatic notification on task assignment
+        if (cleanAssigneeId.HasValue && cleanAssigneeId.Value != userId)
+        {
+            var assigner = await _userDal.GetByIdAsync(userId);
+            var assignerName = assigner?.FullName ?? "Bir ekip üyesi";
+            await _notificationService.CreateAndSendNotificationAsync(
+                cleanAssigneeId.Value,
+                NotificationType.IssueAssigned,
+                $"Yeni Görev Atandı: {issue.Key}",
+                $"{assignerName} size '{issue.Title}' görevini atadı.",
+                $"/board?issue={issue.Key}");
+        }
 
         return new SuccessDataResult<IssueDto>(dto, Messages.IssueAssigned);
     }

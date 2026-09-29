@@ -145,12 +145,24 @@ export interface Attachment {
   createdAt: string;
 }
 
+export type NotificationType =
+  | 'IssueAssigned'
+  | 'IssueStatusChanged'
+  | 'CommentAdded'
+  | 'Mentioned'
+  | 'ProjectInvited'
+  | 'SprintStarted'
+  | 'SprintCompleted'
+  | 'SystemAlert'
+  | 'UrgentAlert'
+  | string;
+
 export interface Notification {
   id: string;
-  userId: string;
+  userId?: string;
   title: string;
   message: string;
-  type: 'IssueAssigned' | 'IssueCommented' | 'SprintStarted' | 'ProjectInvitation' | 'System';
+  type: NotificationType;
   isRead: boolean;
   linkUrl?: string;
   createdAt: string;

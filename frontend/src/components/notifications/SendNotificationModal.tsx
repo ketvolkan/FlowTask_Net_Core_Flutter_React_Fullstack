@@ -446,17 +446,24 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
 
             <button
               type="button"
-              onClick={() => setNotificationType(2)}
+              onClick={() => setNotificationType(9)}
               className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-                notificationType === 2
-                  ? 'border-amber-600 bg-amber-50 text-amber-700 ring-1 ring-amber-500/20'
+                notificationType === 9 || notificationType === 2
+                  ? 'border-rose-600 bg-rose-50 text-rose-700 ring-1 ring-rose-500/30 font-bold'
                   : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
               }`}
             >
-              <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
-              <span>{t('notifications.typeAlert', 'Önemli / Uyarı')}</span>
+              <AlertTriangle className="h-3.5 w-3.5 text-rose-600" />
+              <span>🚨 Acil / Dialog Uyarısı</span>
             </button>
           </div>
+
+          {(notificationType === 9 || notificationType === 8) && (
+            <p className="text-[11px] text-rose-600 mt-1.5 font-medium flex items-center gap-1 bg-rose-50/70 p-2 rounded-lg border border-rose-100">
+              <span>🚨</span>
+              <span><strong>Anlık Modal Dialog:</strong> Bu bildirim, hedef kullanıcıların ekranına anında tam ekran popup dialog olarak yansıyacaktır.</span>
+            </p>
+          )}
         </div>
 
         {/* Title */}

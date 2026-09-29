@@ -8,6 +8,7 @@ public class NotificationProfile : Profile
 {
     public NotificationProfile()
     {
-        CreateMap<Notification, NotificationDto>();
+        CreateMap<Notification, NotificationDto>()
+            .ForMember(d => d.LinkUrl, opt => opt.MapFrom(s => s.TargetUrl));
     }
 }

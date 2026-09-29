@@ -6,6 +6,7 @@ using Flowtask.Core.Results;
 using Flowtask.DataAccess.Abstract;
 using Flowtask.EntityLayer.DTOs.Comments;
 using Flowtask.EntityLayer.Entities;
+using Flowtask.EntityLayer.Enums;
 
 namespace Flowtask.Business.Concrete;
 
@@ -15,13 +16,20 @@ public class CommentManager : ICommentService
     private readonly IIssueDal _issueDal;
     private readonly IUserDal _userDal;
     private readonly IMapper _mapper;
+    private readonly INotificationService _notificationService;
 
-    public CommentManager(ICommentDal commentDal, IIssueDal issueDal, IUserDal userDal, IMapper mapper)
+    public CommentManager(
+        ICommentDal commentDal,
+        IIssueDal issueDal,
+        IUserDal userDal,
+        IMapper mapper,
+        INotificationService notificationService)
     {
         _commentDal = commentDal;
         _issueDal = issueDal;
         _userDal = userDal;
         _mapper = mapper;
+        _notificationService = notificationService;
     }
 
     public async Task<IDataResult<List<CommentDto>>> GetIssueCommentsAsync(Guid issueId, Guid userId)
@@ -70,6 +78,31 @@ public class CommentManager : ICommentService
         comment.User = user!;
 
         var dto = _mapper.Map<CommentDto>(comment);
+
+        // Automated notification on new comment
+        var authorName = user?.FullName ?? "Bir ekip üyesi";
+        var snippet = comment.Content.Length > 50 ? comment.Content.Substring(0, 47) + "..." : comment.Content;
+
+        if (issue.AssigneeId.HasValue && issue.AssigneeId.Value != userId)
+        {
+            await _notificationService.CreateAndSendNotificationAsync(
+                issue.AssigneeId.Value,
+                NotificationType.CommentAdded,
+                $"Yeni Yorum: {issue.Key}",
+                $"{authorName} '{issue.Title}' görevine yorum yaptı: \"{snippet}\"",
+                $"/board?issue={issue.Key}");
+        }
+
+        if (issue.ReporterId != userId && issue.ReporterId != issue.AssigneeId)
+        {
+            await _notificationService.CreateAndSendNotificationAsync(
+                issue.ReporterId,
+                NotificationType.CommentAdded,
+                $"Yeni Yorum: {issue.Key}",
+                $"{authorName} '{issue.Title}' görevine yorum yaptı: \"{snippet}\"",
+                $"/board?issue={issue.Key}");
+        }
+
         return new SuccessDataResult<CommentDto>(dto, Messages.CommentAdded);
     }
 
@@ -102,7 +135,6 @@ public class CommentManager : ICommentService
         }
 
         await _commentDal.DeleteAsync(comment);
-
         return new SuccessResult(Messages.CommentDeleted);
     }
 }

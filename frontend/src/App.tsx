@@ -7,6 +7,10 @@ import { DepartmentProvider } from './context/DepartmentContext';
 import { AppRoutes } from './routes/AppRoutes';
 import { LanguageProvider } from './context/LanguageContext';
 
+import { NotificationProvider } from './context/NotificationContext';
+import { UrgentAlertModal } from './components/notifications/UrgentAlertModal';
+import { NotificationToast } from './components/notifications/NotificationToast';
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -24,7 +28,11 @@ export const App: React.FC = () => {
           <AuthProvider>
             <CompanyProvider>
               <DepartmentProvider>
-                <AppRoutes />
+                <NotificationProvider>
+                  <AppRoutes />
+                  <UrgentAlertModal />
+                  <NotificationToast />
+                </NotificationProvider>
               </DepartmentProvider>
             </CompanyProvider>
           </AuthProvider>

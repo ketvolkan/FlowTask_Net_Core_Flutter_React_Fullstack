@@ -67,6 +67,7 @@ public static class DependencyInjection
         services.AddScoped<ISprintService, SprintManager>();
         services.AddScoped<ICommentService, CommentManager>();
         services.AddScoped<IAttachmentService, AttachmentManager>();
+        services.AddScoped<INotificationDispatcher, NullNotificationDispatcher>();
         services.AddScoped<INotificationService, NotificationManager>();
         services.AddScoped<IActivityLogService, ActivityLogManager>();
         services.AddScoped<IAdminService, AdminManager>();

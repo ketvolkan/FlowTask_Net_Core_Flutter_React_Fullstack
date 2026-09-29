@@ -38,6 +38,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Register Business & DataAccess Layers
 builder.Services.AddFlowtaskBusiness(builder.Configuration);
 
+// Register SignalR & Real-time Notification Dispatcher
+builder.Services.AddSignalR();
+builder.Services.AddScoped<Flowtask.Business.Abstract.INotificationDispatcher, Flowtask.API.Services.SignalRNotificationDispatcher>();
+
 // Register JWT Authentication & Authorization
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
@@ -128,6 +132,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<Flowtask.API.Hubs.NotificationHub>("/hubs/notifications");
 
 app.Run();
 
