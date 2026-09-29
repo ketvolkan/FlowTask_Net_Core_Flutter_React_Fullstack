@@ -342,10 +342,13 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const filterProjectsByCompany = React.useCallback((projects: Project[]): Project[] => {
     if (!projects || projects.length === 0) return [];
+    // If the user does not have multi-company switching privileges (i.e. regular member or company manager),
+    // they should see ALL projects that the backend returned for them (the projects they are assigned to / created).
+    if (!userEvaluation.hasMultiple) return projects;
     if (selectedCompanyId === 'all') return projects;
 
     return projects.filter((p) => !isProjectOfOtherCompany(p, selectedCompanyId));
-  }, [selectedCompanyId]);
+  }, [selectedCompanyId, userEvaluation.hasMultiple]);
 
   const contextValue = useMemo(
     () => ({

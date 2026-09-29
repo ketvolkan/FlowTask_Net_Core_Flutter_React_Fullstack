@@ -35,8 +35,11 @@ public class ProjectManager : IProjectService
 
     public async Task<IDataResult<PagedDataResult<ProjectDto>>> GetUserProjectsAsync(Guid userId, PaginationParams pagination)
     {
+        var user = await _userDal.GetByIdAsync(userId);
+        var isSysAdmin = user?.IsSystemAdmin ?? false;
+
         var (projects, totalCount) = await _projectDal.GetPagedAsync(
-            filter: p => p.Members.Any(m => m.UserId == userId),
+            filter: p => isSysAdmin || p.Members.Any(m => m.UserId == userId) || p.OwnerId == userId,
             page: pagination.Page,
             pageSize: pagination.PageSize,
             includeProperties: "Owner,Members,Issues",
@@ -56,8 +59,11 @@ public class ProjectManager : IProjectService
 
     public async Task<IDataResult<ProjectDetailDto>> GetProjectByIdAsync(Guid projectId, Guid userId)
     {
+        var user = await _userDal.GetByIdAsync(userId);
+        var isSysAdmin = user?.IsSystemAdmin ?? false;
+
         var project = await _projectDal.GetAsync(
-            p => p.Id == projectId && p.Members.Any(m => m.UserId == userId),
+            p => p.Id == projectId && (isSysAdmin || p.Members.Any(m => m.UserId == userId) || p.OwnerId == userId),
             includeProperties: "Owner,Members.User,Issues");
 
         if (project == null)
