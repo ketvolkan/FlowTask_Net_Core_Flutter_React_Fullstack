@@ -2,7 +2,7 @@ export const en: Record<string, string> = {
   // Navigation
   'nav.dashboard': 'Dashboard',
   'nav.projects': 'Projects',
-  'nav.board': 'Kanban Board',
+  'nav.board': 'Workflow',
   'nav.backlog': 'Sprints & Backlog',
   'nav.team': 'Team & Workload',
   'nav.settings': 'Profile Settings',
@@ -108,7 +108,7 @@ export const en: Record<string, string> = {
   'dashboard.noTeamData': 'No team members or issue data available yet.',
   'dashboard.myAssignedIssues': 'My Assigned Issues',
   'dashboard.issuesSubtitle': 'Tasks and bugs waiting for your action',
-  'dashboard.openBoard': 'Open Board',
+  'dashboard.openBoard': 'Open Workflow',
   'dashboard.noAssignedIssues': 'You have no issues currently assigned.',
   'dashboard.recentProjects': 'My Projects',
   'dashboard.recentProjectsSubtitle': 'Quick access to workspaces',
@@ -148,13 +148,13 @@ export const en: Record<string, string> = {
 
   // Projects Page
   'projects.title': 'Projects',
-  'projects.subtitle': 'Select a project to explore its board, sprints, backlog, and team.',
+  'projects.subtitle': 'Select a project to explore its workflow, sprints, backlog, and team.',
   'projects.createProject': 'Create Project',
   'projects.searchPlaceholder': 'Search by project name or key...',
   'projects.noProjectsFound': 'No projects found',
   'projects.noProjectsDesc': 'Get started by creating your first project to organize tasks, sprints, and team workflows.',
   'projects.noDescription': 'No description provided.',
-  'projects.openBoard': 'Board',
+  'projects.openBoard': 'Workflow',
   'projects.openBacklog': 'Backlog',
 
   // Project Detail Page
@@ -175,8 +175,9 @@ export const en: Record<string, string> = {
   'projectDetail.teamMembers': 'Project Team Members',
   'projectDetail.teamSubtitle': 'People with access to this workspace',
 
-  // Board Page
-  'board.loading': 'Loading board...',
+  // Workflow Page
+  'board.title': 'Workflow',
+  'board.loading': 'Loading workflow...',
   'board.selectProject': 'Please select or create a project.',
   'board.allSprintsBacklog': 'All Sprints & Backlog',
   'board.allAssignees': 'All Assignees',
