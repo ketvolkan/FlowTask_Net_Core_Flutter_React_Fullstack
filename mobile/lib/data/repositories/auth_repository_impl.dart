@@ -52,6 +52,12 @@ class AuthRepositoryImpl implements IAuthRepository {
   }
 
   @override
+  Future<void> deleteAccount() async {
+    await remoteDataSource.deleteAccount();
+    await storageService.clearAll();
+  }
+
+  @override
   Future<bool> isLoggedIn() async {
     final token = await storageService.getToken();
     return token != null && token.isNotEmpty;

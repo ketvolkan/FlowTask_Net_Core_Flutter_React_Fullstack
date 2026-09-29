@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../../core/constants/api_endpoints.dart';
 import '../../core/errors/server_exception.dart';
 import '../../core/network/api_client.dart';
+import '../../core/network/response_parser.dart';
 import '../models/sprint_model.dart';
 
 class SprintRemoteDataSource {
@@ -15,8 +16,11 @@ class SprintRemoteDataSource {
         ApiEndpoints.sprints,
         queryParameters: {'projectId': projectId},
       );
-      final list = (response.data['data'] ?? response.data) as List;
-      return list.map((json) => SprintModel.fromJson(json as Map<String, dynamic>)).toList();
+      final list = ResponseParser.extractList(response.data);
+      return list
+          .whereType<Map<String, dynamic>>()
+          .map((json) => SprintModel.fromJson(json))
+          .toList();
     } on DioException catch (e) {
       throw ServerException(
         message: e.response?.data?['message'] ?? 'Failed to load sprints',
@@ -43,8 +47,8 @@ class SprintRemoteDataSource {
           'endDate': endDate?.toIso8601String(),
         },
       );
-      final data = response.data['data'] ?? response.data;
-      return SprintModel.fromJson(data as Map<String, dynamic>);
+      final data = ResponseParser.extractMap(response.data);
+      return SprintModel.fromJson(data);
     } on DioException catch (e) {
       throw ServerException(
         message: e.response?.data?['message'] ?? 'Failed to create sprint',

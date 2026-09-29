@@ -190,4 +190,22 @@ public class UserManager : IUserService
         dto.Roles = targetUser.UserRoles.Select(ur => ur.Role.Name).ToList();
         return new SuccessDataResult<UserDto>(dto, "Kullanıcının departmanı başarıyla güncellendi.");
     }
+
+    public async Task<IResult> DeleteAccountAsync(Guid currentUserId)
+    {
+        var user = await _userDal.GetByIdAsync(currentUserId);
+        if (user == null)
+        {
+            throw new NotFoundException(Messages.UserNotFound);
+        }
+
+        user.IsDeleted = true;
+        user.IsActive = false;
+        user.DeletedAt = DateTime.UtcNow;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await _userDal.UpdateAsync(user);
+
+        return new SuccessResult("Hesabınız başarıyla silindi.");
+    }
 }

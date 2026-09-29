@@ -6,6 +6,7 @@ import 'presentation/blocs/auth/auth_bloc.dart';
 import 'presentation/blocs/project/project_bloc.dart';
 import 'presentation/blocs/issue/issue_bloc.dart';
 import 'presentation/blocs/sprint/sprint_bloc.dart';
+import 'presentation/blocs/language/language_cubit.dart';
 import 'presentation/pages/splash_page.dart';
 
 void main() async {
@@ -21,17 +22,22 @@ class FlowTaskApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider<LanguageCubit>(create: (_) => di.sl<LanguageCubit>()),
         BlocProvider<AuthBloc>(create: (_) => di.sl<AuthBloc>()),
         BlocProvider<ProjectBloc>(create: (_) => di.sl<ProjectBloc>()),
         BlocProvider<IssueBloc>(create: (_) => di.sl<IssueBloc>()),
         BlocProvider<SprintBloc>(create: (_) => di.sl<SprintBloc>()),
       ],
-      child: MaterialApp(
-        title: 'Flowtask',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        themeMode: ThemeMode.light, // Strict Light Mode Only
-        home: const SplashPage(),
+      child: BlocBuilder<LanguageCubit, LanguageState>(
+        builder: (context, langState) {
+          return MaterialApp(
+            title: 'Flowtask',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            themeMode: ThemeMode.light,
+            home: const SplashPage(),
+          );
+        },
       ),
     );
   }

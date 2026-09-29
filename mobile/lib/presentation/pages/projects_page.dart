@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/localization/app_translations.dart';
+import '../blocs/language/language_cubit.dart';
 import '../blocs/project/project_bloc.dart';
 import '../blocs/project/project_event.dart';
 import '../blocs/project/project_state.dart';
+import '../blocs/issue/issue_bloc.dart';
+import '../blocs/issue/issue_event.dart';
 import '../widgets/empty_state_widget.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
@@ -11,7 +15,7 @@ import '../widgets/custom_text_field.dart';
 class ProjectsPage extends StatelessWidget {
   const ProjectsPage({super.key});
 
-  void _showCreateProjectDialog(BuildContext context) {
+  void _showCreateProjectDialog(BuildContext context, String locale) {
     final nameController = TextEditingController();
     final keyController = TextEditingController();
     final descController = TextEditingController();
@@ -41,9 +45,9 @@ class ProjectsPage extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Create New Project',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    Text(
+                      AppTranslations.get('create_project_title', locale: locale),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close, size: 20),
@@ -54,7 +58,7 @@ class ProjectsPage extends StatelessWidget {
                 const SizedBox(height: 16),
                 CustomTextField(
                   controller: nameController,
-                  label: 'Project Name',
+                  label: AppTranslations.get('project_name', locale: locale),
                   hintText: 'e.g. Mobile App Redesign',
                   validator: (val) => (val == null || val.isEmpty) ? 'Name is required' : null,
                   onChanged: (val) {
@@ -70,20 +74,20 @@ class ProjectsPage extends StatelessWidget {
                 const SizedBox(height: 14),
                 CustomTextField(
                   controller: keyController,
-                  label: 'Key',
+                  label: AppTranslations.get('project_key', locale: locale),
                   hintText: 'e.g. MOB',
                   validator: (val) => (val == null || val.isEmpty) ? 'Key is required' : null,
                 ),
                 const SizedBox(height: 14),
                 CustomTextField(
                   controller: descController,
-                  label: 'Description',
+                  label: AppTranslations.get('project_desc', locale: locale),
                   hintText: 'Project overview...',
                   maxLines: 2,
                 ),
                 const SizedBox(height: 20),
                 CustomButton(
-                  text: 'Create Project',
+                  text: AppTranslations.get('create', locale: locale),
                   onPressed: () {
                     if (formKey.currentState?.validate() ?? false) {
                       context.read<ProjectBloc>().add(
@@ -107,14 +111,23 @@ class ProjectsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final langState = context.watch<LanguageCubit>().state;
+    final locale = langState.locale;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Projects'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: Text(
+          AppTranslations.get('projects_title', locale: locale),
+          style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => _showCreateProjectDialog(context),
+            icon: const Icon(Icons.add, color: AppColors.primary),
+            tooltip: AppTranslations.get('new_project', locale: locale),
+            onPressed: () => _showCreateProjectDialog(context, locale),
           ),
         ],
       ),
@@ -128,11 +141,11 @@ class ProjectsPage extends StatelessWidget {
             if (state.projects.isEmpty) {
               return EmptyStateWidget(
                 icon: Icons.folder_open_outlined,
-                title: 'No projects found',
-                description: 'Get started by creating your first project workspace.',
+                title: AppTranslations.get('no_projects_title', locale: locale),
+                description: AppTranslations.get('no_projects_desc', locale: locale),
                 action: CustomButton(
-                  text: 'Create Project',
-                  onPressed: () => _showCreateProjectDialog(context),
+                  text: AppTranslations.get('create_project_title', locale: locale),
+                  onPressed: () => _showCreateProjectDialog(context, locale),
                 ),
               );
             }
@@ -150,11 +163,12 @@ class ProjectsPage extends StatelessWidget {
 
                   return Card(
                     margin: const EdgeInsets.only(bottom: 12),
+                    elevation: isSelected ? 2 : 0.5,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                       side: BorderSide(
                         color: isSelected ? AppColors.primary : AppColors.divider,
-                        width: isSelected ? 1.5 : 1,
+                        width: isSelected ? 1.8 : 1,
                       ),
                     ),
                     child: InkWell(
@@ -162,8 +176,17 @@ class ProjectsPage extends StatelessWidget {
                         context.read<ProjectBloc>().add(
                               SelectProjectEvent(projectId: project.id),
                             );
+                        context.read<IssueBloc>().add(
+                              LoadIssuesByProjectEvent(projectId: project.id),
+                            );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('${project.name} (${project.key}) aktif proje olarak seçildi.'),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
                       },
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                       child: Padding(
                         padding: const EdgeInsets.all(16),
                         child: Column(
@@ -173,7 +196,7 @@ class ProjectsPage extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
                                     color: AppColors.primaryLight,
                                     borderRadius: BorderRadius.circular(6),
@@ -181,14 +204,31 @@ class ProjectsPage extends StatelessWidget {
                                   child: Text(
                                     project.key,
                                     style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
                                       color: AppColors.primary,
                                     ),
                                   ),
                                 ),
                                 if (isSelected)
-                                  const Icon(Icons.check_circle, size: 18, color: AppColors.primary),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.shade50,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: Colors.green.shade200),
+                                    ),
+                                    child: const Row(
+                                      children: [
+                                        Icon(Icons.check_circle, size: 14, color: AppColors.success),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Aktif',
+                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.success),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                               ],
                             ),
                             const SizedBox(height: 10),
@@ -215,17 +255,17 @@ class ProjectsPage extends StatelessWidget {
                             const SizedBox(height: 12),
                             Row(
                               children: [
-                                const Icon(Icons.people_outline, size: 14, color: AppColors.textMuted),
+                                const Icon(Icons.people_outline, size: 15, color: AppColors.textMuted),
                                 const SizedBox(width: 4),
                                 Text(
-                                  '${project.memberCount} members',
+                                  '${project.memberCount} ${AppTranslations.get('project_members', locale: locale)}',
                                   style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                                 ),
                                 const SizedBox(width: 16),
-                                const Icon(Icons.assignment_outlined, size: 14, color: AppColors.textMuted),
+                                const Icon(Icons.assignment_outlined, size: 15, color: AppColors.textMuted),
                                 const SizedBox(width: 4),
                                 Text(
-                                  '${project.issueCount} issues',
+                                  '${project.issueCount} ${AppTranslations.get('project_tasks', locale: locale)}',
                                   style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                                 ),
                               ],
@@ -236,6 +276,27 @@ class ProjectsPage extends StatelessWidget {
                     ),
                   );
                 },
+              ),
+            );
+          }
+
+          if (state is ProjectError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.error_outline, color: AppColors.danger, size: 36),
+                    const SizedBox(height: 8),
+                    Text(state.message, style: const TextStyle(color: AppColors.textSecondary)),
+                    const SizedBox(height: 12),
+                    ElevatedButton(
+                      onPressed: () => context.read<ProjectBloc>().add(LoadProjectsEvent()),
+                      child: Text(AppTranslations.get('refresh', locale: locale)),
+                    ),
+                  ],
+                ),
               ),
             );
           }

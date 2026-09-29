@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/companies.dart';
+import '../../core/localization/app_translations.dart';
 import '../blocs/auth/auth_bloc.dart';
 import '../blocs/auth/auth_event.dart';
 import '../blocs/auth/auth_state.dart';
+import '../blocs/language/language_cubit.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
 import 'main_navigation_page.dart';
@@ -24,7 +26,6 @@ class _RegisterPageState extends State<RegisterPage> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
-  // 'company' (Yetkili) | 'employee' (Çalışan)
   String _registerType = 'employee';
   String _selectedCompanyId = AppCompanies.list.first.id;
 
@@ -51,6 +52,9 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final langState = context.watch<LanguageCubit>().state;
+    final locale = langState.locale;
+
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is Authenticated) {
@@ -80,9 +84,9 @@ class _RegisterPageState extends State<RegisterPage> {
               icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
               onPressed: () => Navigator.of(context).pop(),
             ),
-            title: const Text(
-              'Hesap Oluştur',
-              style: TextStyle(
+            title: Text(
+              AppTranslations.get('register_button', locale: locale),
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
@@ -140,7 +144,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                       ),
                                       const SizedBox(width: 6),
                                       Text(
-                                        'Kullanıcı Girişi',
+                                        AppTranslations.get('role_member', locale: locale),
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: _registerType == 'employee'
@@ -188,7 +192,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                       ),
                                       const SizedBox(width: 6),
                                       Text(
-                                        'Şirket Yetkilisi',
+                                        AppTranslations.get('role_manager', locale: locale),
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: _registerType == 'company'
@@ -211,11 +215,11 @@ class _RegisterPageState extends State<RegisterPage> {
 
                       CustomTextField(
                         controller: _nameController,
-                        label: 'Ad Soyad',
-                        hintText: 'Örn: Ahmet Yılmaz',
+                        label: AppTranslations.get('fullname', locale: locale),
+                        hintText: locale == 'tr' ? 'Örn: Ahmet Yılmaz' : 'e.g. John Doe',
                         prefixIcon: const Icon(Icons.person_outline, size: 20, color: AppColors.textMuted),
                         validator: (val) {
-                          if (val == null || val.isEmpty) return 'Ad Soyad zorunludur';
+                          if (val == null || val.isEmpty) return locale == 'tr' ? 'Ad Soyad zorunludur' : 'Name is required';
                           return null;
                         },
                       ),
@@ -224,12 +228,12 @@ class _RegisterPageState extends State<RegisterPage> {
                       if (_registerType == 'company')
                         CustomTextField(
                           controller: _companyNameController,
-                          label: 'Şirket Adı',
+                          label: AppTranslations.get('company_name', locale: locale),
                           hintText: 'Örn: Acme Tech A.Ş.',
                           prefixIcon: const Icon(Icons.business_outlined, size: 20, color: AppColors.textMuted),
                           validator: (val) {
                             if (_registerType == 'company' && (val == null || val.isEmpty)) {
-                              return 'Şirket adı zorunludur';
+                              return locale == 'tr' ? 'Şirket adı zorunludur' : 'Company name is required';
                             }
                             return null;
                           },
@@ -238,9 +242,9 @@ class _RegisterPageState extends State<RegisterPage> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Katılınacak Şirket',
-                              style: TextStyle(
+                            Text(
+                              AppTranslations.get('company_name', locale: locale),
+                              style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.textPrimary,
@@ -282,20 +286,20 @@ class _RegisterPageState extends State<RegisterPage> {
                       const SizedBox(height: 16),
                       CustomTextField(
                         controller: _emailController,
-                        label: 'E-posta Adresi',
+                        label: AppTranslations.get('email', locale: locale),
                         hintText: 'name@company.com',
                         keyboardType: TextInputType.emailAddress,
                         prefixIcon: const Icon(Icons.email_outlined, size: 20, color: AppColors.textMuted),
                         validator: (val) {
-                          if (val == null || val.isEmpty) return 'E-posta zorunludur';
-                          if (!val.contains('@')) return 'Geçerli bir e-posta adresi girin';
+                          if (val == null || val.isEmpty) return locale == 'tr' ? 'E-posta zorunludur' : 'Email is required';
+                          if (!val.contains('@')) return locale == 'tr' ? 'Geçerli bir e-posta adresi girin' : 'Enter a valid email';
                           return null;
                         },
                       ),
                       const SizedBox(height: 16),
                       CustomTextField(
                         controller: _passwordController,
-                        label: 'Şifre',
+                        label: AppTranslations.get('password', locale: locale),
                         hintText: '••••••••',
                         obscureText: _obscurePassword,
                         prefixIcon: const Icon(Icons.lock_outline, size: 20, color: AppColors.textMuted),
@@ -312,13 +316,13 @@ class _RegisterPageState extends State<RegisterPage> {
                           },
                         ),
                         validator: (val) {
-                          if (val == null || val.length < 6) return 'En az 6 karakter girilmelidir';
+                          if (val == null || val.length < 6) return locale == 'tr' ? 'En az 6 karakter girilmelidir' : 'Minimum 6 characters';
                           return null;
                         },
                       ),
                       const SizedBox(height: 24),
                       CustomButton(
-                        text: _registerType == 'company' ? 'Şirket Olarak Kayıt Ol' : 'Kullanıcı Olarak Katıl',
+                        text: AppTranslations.get('register_button', locale: locale),
                         isLoading: isLoading,
                         onPressed: _onRegisterPressed,
                       ),
@@ -326,15 +330,15 @@ class _RegisterPageState extends State<RegisterPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text(
-                            'Zaten hesabınız var mı? ',
-                            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                          Text(
+                            '${AppTranslations.get('have_account', locale: locale).split('?')[0]}? ',
+                            style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
                           ),
                           GestureDetector(
                             onTap: () => Navigator.of(context).pop(),
-                            child: const Text(
-                              'Giriş Yap',
-                              style: TextStyle(
+                            child: Text(
+                              AppTranslations.get('login_button', locale: locale),
+                              style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.primary,

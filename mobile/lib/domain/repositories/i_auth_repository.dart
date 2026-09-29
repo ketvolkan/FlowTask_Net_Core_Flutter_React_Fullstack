@@ -6,5 +6,6 @@ abstract class IAuthRepository {
   Future<AuthTokensEntity> register({required String fullName, required String email, required String password});
   Future<UserEntity> getCurrentUser();
   Future<void> logout();
+  Future<void> deleteAccount();
   Future<bool> isLoggedIn();
 }

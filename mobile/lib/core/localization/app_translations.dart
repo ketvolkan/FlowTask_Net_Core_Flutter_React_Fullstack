@@ -1,0 +1,269 @@
+class AppTranslations {
+  static const Map<String, Map<String, String>> _localizedValues = {
+    'tr': {
+      // General & Common
+      'app_name': 'Flowtask',
+      'loading': 'Yükleniyor...',
+      'error': 'Hata',
+      'success': 'Başarılı',
+      'cancel': 'İptal',
+      'save': 'Kaydet',
+      'create': 'Oluştur',
+      'delete': 'Sil',
+      'confirm': 'Onayla',
+      'yes': 'Evet',
+      'no': 'Hayır',
+      'search': 'Ara...',
+      'refresh': 'Yenile',
+
+      // Navigation
+      'nav_dashboard': 'Gösterge Paneli',
+      'nav_projects': 'Projeler',
+      'nav_board': 'Görevler & Pano',
+      'nav_profile': 'Profil',
+
+      // Dashboard
+      'dashboard_greeting': 'Merhaba, {name} 👋',
+      'dashboard_subtitle': 'Çalışma alanınızın genel durumu',
+      'total_tasks': 'Toplam Görev',
+      'in_progress_tasks': 'Devam Eden',
+      'completed_tasks': 'Tamamlanan',
+      'recent_tasks': 'Son Görevler',
+      'new_task': 'Yeni Görev',
+      'new_project': 'Yeni Proje',
+      'all_projects': 'Tüm Projeler',
+      'select_project': 'Proje Seçin',
+      'no_tasks_title': 'Henüz görev bulunmuyor',
+      'no_tasks_desc': 'Ekibinizle görevleri takip etmek için ilk görevinizi oluşturun.',
+      'active_project': 'Aktif Proje',
+
+      // Projects
+      'projects_title': 'Projeler',
+      'projects_search_placeholder': 'Proje adı veya anahtarı ile ara...',
+      'create_project_title': 'Yeni Proje Oluştur',
+      'project_name': 'Proje Adı',
+      'project_key': 'Proje Anahtarı (örn: FLOW)',
+      'project_desc': 'Açıklama (Opsiyonel)',
+      'project_created_success': 'Proje başarıyla oluşturuldu!',
+      'project_members': 'Üyeler',
+      'project_tasks': 'Görevler',
+      'no_projects_title': 'Henüz proje bulunmuyor',
+      'no_projects_desc': 'Görev ve iş akışlarınızı başlatmak için yeni bir proje oluşturun.',
+
+      // Tasks & Board
+      'board_title': 'Görevler & Pano',
+      'board_search_placeholder': 'Görev ara...',
+      'status_all': 'Tümü',
+      'status_todo': 'Yapılacak',
+      'status_inprogress': 'Devam Ediyor',
+      'status_inreview': 'İncelemede',
+      'status_done': 'Tamamlandı',
+      'status_updated_success': 'Görev durumu güncellendi!',
+      'change_status': 'Durumu Değiştir',
+
+      // Create Task
+      'create_task_title': 'Yeni Görev Ekle',
+      'task_title': 'Görev Başlığı',
+      'task_description': 'Açıklama',
+      'task_type': 'Görev Türü',
+      'task_priority': 'Öncelik',
+      'task_story_points': 'Hikaye Puanı (Story Points)',
+      'task_due_date': 'Bitiş Tarihi',
+      'task_created_success': 'Görev başarıyla oluşturuldu!',
+
+      // Types & Priorities
+      'type_task': 'Görev (Task)',
+      'type_bug': 'Hata (Bug)',
+      'type_story': 'Hikaye (Story)',
+      'type_epic': 'Büyük İş (Epic)',
+      'priority_low': 'Düşük',
+      'priority_medium': 'Orta',
+      'priority_high': 'Yüksek',
+      'priority_urgent': 'Acil',
+
+      // Issue Detail
+      'task_detail_title': 'Görev Detayı',
+      'assignee': 'Atanan Kişi',
+      'reporter': 'Oluşturan Kişi',
+      'unassigned': 'Atama Yapılmadı',
+      'comments': 'Yorumlar',
+      'add_comment': 'Yorum ekle...',
+      'send_comment': 'Gönder',
+      'no_comments': 'Henüz yorum bulunmuyor.',
+      'comment_added': 'Yorum eklendi.',
+      'delete_task': 'Görevi Sil',
+      'delete_task_confirm': 'Bu görevi silmek istediğinize emin misiniz?',
+
+      // Profile
+      'profile_title': 'Profil Ayarları',
+      'role_manager': 'Şirket Yetkilisi',
+      'role_member': 'Ekip Üyesi',
+      'company_info_title': 'Şirket & Departman Bilgisi',
+      'company_name': 'Bağlı Olduğu Şirket',
+      'department_name': 'Departman',
+      'not_specified': 'Belirtilmemiş',
+      'readonly_badge': 'Salt Okunur',
+      'dept_readonly_note': 'ℹ️ Departman bilginiz yalnızca şirket yetkilisi tarafından güncellenebilir.',
+      'language_title': 'Dil Seçimi / Language',
+      'language_tr': '🇹🇷 Türkçe',
+      'language_en': '🇬🇧 English',
+      'logout': 'Çıkış Yap',
+      'logout_confirm_title': 'Çıkış Yap',
+      'logout_confirm_desc': 'Hesabınızdan çıkış yapmak istediğinize emin misiniz?',
+      'delete_account': 'Hesabımı Sil',
+      'delete_account_confirm_title': 'Hesabı Kalıcı Olarak Sil',
+      'delete_account_confirm_desc': 'Hesabınızı ve tüm oturumunuzu kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
+      'account_deleted_success': 'Hesabınız başarıyla silindi.',
+
+      // Auth
+      'login_title': 'Flowtask Giriş',
+      'login_subtitle': 'Hesabınıza giriş yaparak projelerinizi yönetin',
+      'email': 'E-posta Adresi',
+      'password': 'Şifre',
+      'fullname': 'Ad Soyad',
+      'login_button': 'Giriş Yap',
+      'register_button': 'Kayıt Ol',
+      'no_account': 'Hesabınız yok mu? Kayıt olun',
+      'have_account': 'Zaten hesabınız var mı? Giriş yapın',
+      'quick_login_title': 'Hızlı Demo Girişi (Geliştirici / Test)',
+    },
+    'en': {
+      // General & Common
+      'app_name': 'Flowtask',
+      'loading': 'Loading...',
+      'error': 'Error',
+      'success': 'Success',
+      'cancel': 'Cancel',
+      'save': 'Save',
+      'create': 'Create',
+      'delete': 'Delete',
+      'confirm': 'Confirm',
+      'yes': 'Yes',
+      'no': 'No',
+      'search': 'Search...',
+      'refresh': 'Refresh',
+
+      // Navigation
+      'nav_dashboard': 'Dashboard',
+      'nav_projects': 'Projects',
+      'nav_board': 'Tasks & Board',
+      'nav_profile': 'Profile',
+
+      // Dashboard
+      'dashboard_greeting': 'Hello, {name} 👋',
+      'dashboard_subtitle': 'Here is your workspace overview',
+      'total_tasks': 'Total Tasks',
+      'in_progress_tasks': 'In Progress',
+      'completed_tasks': 'Completed',
+      'recent_tasks': 'Recent Tasks',
+      'new_task': 'New Task',
+      'new_project': 'New Project',
+      'all_projects': 'All Projects',
+      'select_project': 'Select Project',
+      'no_tasks_title': 'No issues yet',
+      'no_tasks_desc': 'Create your first issue to track tasks with your team.',
+      'active_project': 'Active Project',
+
+      // Projects
+      'projects_title': 'Projects',
+      'projects_search_placeholder': 'Search by name or key...',
+      'create_project_title': 'Create New Project',
+      'project_name': 'Project Name',
+      'project_key': 'Project Key (e.g. FLOW)',
+      'project_desc': 'Description (Optional)',
+      'project_created_success': 'Project created successfully!',
+      'project_members': 'Members',
+      'project_tasks': 'Tasks',
+      'no_projects_title': 'No projects yet',
+      'no_projects_desc': 'Create a new project to start tracking your workflow.',
+
+      // Tasks & Board
+      'board_title': 'Tasks & Board',
+      'board_search_placeholder': 'Search tasks...',
+      'status_all': 'All',
+      'status_todo': 'To Do',
+      'status_inprogress': 'In Progress',
+      'status_inreview': 'In Review',
+      'status_done': 'Done',
+      'status_updated_success': 'Task status updated!',
+      'change_status': 'Change Status',
+
+      // Create Task
+      'create_task_title': 'Create New Task',
+      'task_title': 'Task Title',
+      'task_description': 'Description',
+      'task_type': 'Task Type',
+      'task_priority': 'Priority',
+      'task_story_points': 'Story Points',
+      'task_due_date': 'Due Date',
+      'task_created_success': 'Task created successfully!',
+
+      // Types & Priorities
+      'type_task': 'Task',
+      'type_bug': 'Bug',
+      'type_story': 'Story',
+      'type_epic': 'Epic',
+      'priority_low': 'Low',
+      'priority_medium': 'Medium',
+      'priority_high': 'High',
+      'priority_urgent': 'Urgent',
+
+      // Issue Detail
+      'task_detail_title': 'Task Details',
+      'assignee': 'Assignee',
+      'reporter': 'Reporter',
+      'unassigned': 'Unassigned',
+      'comments': 'Comments',
+      'add_comment': 'Add a comment...',
+      'send_comment': 'Send',
+      'no_comments': 'No comments yet.',
+      'comment_added': 'Comment added.',
+      'delete_task': 'Delete Task',
+      'delete_task_confirm': 'Are you sure you want to delete this task?',
+
+      // Profile
+      'profile_title': 'Profile Settings',
+      'role_manager': 'Company Manager',
+      'role_member': 'Team Member',
+      'company_info_title': 'Company & Department Information',
+      'company_name': 'Company',
+      'department_name': 'Department',
+      'not_specified': 'Not Specified',
+      'readonly_badge': 'Read-only',
+      'dept_readonly_note': 'ℹ️ Your department can only be changed by authorized company managers.',
+      'language_title': 'Language / Dil',
+      'language_tr': '🇹🇷 Türkçe',
+      'language_en': '🇬🇧 English',
+      'logout': 'Log Out',
+      'logout_confirm_title': 'Log Out',
+      'logout_confirm_desc': 'Are you sure you want to log out of your account?',
+      'delete_account': 'Delete My Account',
+      'delete_account_confirm_title': 'Permanently Delete Account',
+      'delete_account_confirm_desc': 'Are you sure you want to permanently delete your account? This action cannot be undone.',
+      'account_deleted_success': 'Your account was deleted successfully.',
+
+      // Auth
+      'login_title': 'Flowtask Login',
+      'login_subtitle': 'Sign in to manage your projects and team tasks',
+      'email': 'Email Address',
+      'password': 'Password',
+      'fullname': 'Full Name',
+      'login_button': 'Sign In',
+      'register_button': 'Register',
+      'no_account': "Don't have an account? Sign up",
+      'have_account': 'Already have an account? Sign in',
+      'quick_login_title': 'Quick Demo Logins (Developer / Testing)',
+    },
+  };
+
+  static String get(String key, {String locale = 'tr', Map<String, String>? params}) {
+    final values = _localizedValues[locale] ?? _localizedValues['tr']!;
+    var text = values[key] ?? _localizedValues['en']?[key] ?? key;
+    if (params != null) {
+      params.forEach((k, v) {
+        text = text.replaceAll('{$k}', v);
+      });
+    }
+    return text;
+  }
+}

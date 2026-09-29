@@ -12,4 +12,5 @@ public interface IUserService
     Task<IDataResult<PagedDataResult<UserDto>>> GetAllUsersAsync(PaginationParams pagination);
     Task<IDataResult<UserDto>> GetUserByIdAsync(Guid id);
     Task<IDataResult<UserDto>> UpdateUserDepartmentAsync(Guid currentUserId, Guid targetUserId, string? department);
+    Task<IResult> DeleteAccountAsync(Guid currentUserId);
 }

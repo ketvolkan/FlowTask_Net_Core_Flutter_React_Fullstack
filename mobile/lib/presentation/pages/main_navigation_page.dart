@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/localization/app_translations.dart';
+import '../blocs/language/language_cubit.dart';
 import '../blocs/project/project_bloc.dart';
 import '../blocs/project/project_event.dart';
 import 'dashboard_page.dart';
@@ -33,6 +35,9 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final langState = context.watch<LanguageCubit>().state;
+    final locale = langState.locale;
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
@@ -52,26 +57,26 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
           unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 11),
           type: BottomNavigationBarType.fixed,
           elevation: 0,
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_outlined),
-              activeIcon: Icon(Icons.dashboard),
-              label: 'Dashboard',
+              icon: const Icon(Icons.dashboard_outlined),
+              activeIcon: const Icon(Icons.dashboard),
+              label: AppTranslations.get('nav_dashboard', locale: locale),
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.folder_outlined),
-              activeIcon: Icon(Icons.folder),
-              label: 'Projects',
+              icon: const Icon(Icons.folder_outlined),
+              activeIcon: const Icon(Icons.folder),
+              label: AppTranslations.get('nav_projects', locale: locale),
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.view_kanban_outlined),
-              activeIcon: Icon(Icons.view_kanban),
-              label: 'Board',
+              icon: const Icon(Icons.view_kanban_outlined),
+              activeIcon: const Icon(Icons.view_kanban),
+              label: AppTranslations.get('nav_board', locale: locale),
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person),
-              label: 'Profile',
+              icon: const Icon(Icons.person_outline),
+              activeIcon: const Icon(Icons.person),
+              label: AppTranslations.get('nav_profile', locale: locale),
             ),
           ],
         ),

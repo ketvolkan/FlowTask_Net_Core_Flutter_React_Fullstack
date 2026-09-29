@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../../core/constants/api_endpoints.dart';
 import '../../core/errors/server_exception.dart';
 import '../../core/network/api_client.dart';
+import '../../core/network/response_parser.dart';
 import '../models/project_model.dart';
 import '../models/project_member_model.dart';
 
@@ -12,9 +13,15 @@ class ProjectRemoteDataSource {
 
   Future<List<ProjectModel>> getProjects() async {
     try {
-      final response = await client.dio.get(ApiEndpoints.projects);
-      final list = (response.data['data'] ?? response.data) as List;
-      return list.map((json) => ProjectModel.fromJson(json as Map<String, dynamic>)).toList();
+      final response = await client.dio.get(
+        ApiEndpoints.projects,
+        queryParameters: {'page': 1, 'pageSize': 100},
+      );
+      final list = ResponseParser.extractList(response.data);
+      return list
+          .whereType<Map<String, dynamic>>()
+          .map((json) => ProjectModel.fromJson(json))
+          .toList();
     } on DioException catch (e) {
       throw ServerException(
         message: e.response?.data?['message'] ?? 'Failed to load projects',
@@ -26,8 +33,8 @@ class ProjectRemoteDataSource {
   Future<ProjectModel> getProjectById(String id) async {
     try {
       final response = await client.dio.get(ApiEndpoints.projectById(id));
-      final data = response.data['data'] ?? response.data;
-      return ProjectModel.fromJson(data as Map<String, dynamic>);
+      final data = ResponseParser.extractMap(response.data);
+      return ProjectModel.fromJson(data);
     } on DioException catch (e) {
       throw ServerException(
         message: e.response?.data?['message'] ?? 'Failed to load project',
@@ -50,8 +57,8 @@ class ProjectRemoteDataSource {
           'description': description,
         },
       );
-      final data = response.data['data'] ?? response.data;
-      return ProjectModel.fromJson(data as Map<String, dynamic>);
+      final data = ResponseParser.extractMap(response.data);
+      return ProjectModel.fromJson(data);
     } on DioException catch (e) {
       throw ServerException(
         message: e.response?.data?['message'] ?? 'Failed to create project',
@@ -63,8 +70,11 @@ class ProjectRemoteDataSource {
   Future<List<ProjectMemberModel>> getProjectMembers(String projectId) async {
     try {
       final response = await client.dio.get(ApiEndpoints.projectMembers(projectId));
-      final list = (response.data['data'] ?? response.data) as List;
-      return list.map((json) => ProjectMemberModel.fromJson(json as Map<String, dynamic>)).toList();
+      final list = ResponseParser.extractList(response.data);
+      return list
+          .whereType<Map<String, dynamic>>()
+          .map((json) => ProjectMemberModel.fromJson(json))
+          .toList();
     } on DioException catch (e) {
       throw ServerException(
         message: e.response?.data?['message'] ?? 'Failed to load members',

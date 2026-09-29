@@ -23,6 +23,7 @@ import 'domain/usecases/login_usecase.dart';
 import 'domain/usecases/register_usecase.dart';
 import 'domain/usecases/get_current_user_usecase.dart';
 import 'domain/usecases/logout_usecase.dart';
+import 'domain/usecases/delete_account_usecase.dart';
 import 'domain/usecases/get_projects_usecase.dart';
 import 'domain/usecases/create_project_usecase.dart';
 import 'domain/usecases/get_issues_by_project_usecase.dart';
@@ -37,6 +38,7 @@ import 'presentation/blocs/auth/auth_bloc.dart';
 import 'presentation/blocs/project/project_bloc.dart';
 import 'presentation/blocs/issue/issue_bloc.dart';
 import 'presentation/blocs/sprint/sprint_bloc.dart';
+import 'presentation/blocs/language/language_cubit.dart';
 
 final sl = GetIt.instance;
 
@@ -93,6 +95,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => RegisterUseCase(repository: sl()));
   sl.registerLazySingleton(() => GetCurrentUserUseCase(repository: sl()));
   sl.registerLazySingleton(() => LogoutUseCase(repository: sl()));
+  sl.registerLazySingleton(() => DeleteAccountUseCase(repository: sl()));
   sl.registerLazySingleton(() => GetProjectsUseCase(repository: sl()));
   sl.registerLazySingleton(() => CreateProjectUseCase(repository: sl()));
   sl.registerLazySingleton(() => GetIssuesByProjectUseCase(repository: sl()));
@@ -104,13 +107,14 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AddCommentUseCase(repository: sl()));
   sl.registerLazySingleton(() => GetNotificationsUseCase(repository: sl()));
 
-  // BLoCs
+  // BLoCs & Cubits
   sl.registerFactory(
     () => AuthBloc(
       loginUseCase: sl(),
       registerUseCase: sl(),
       getCurrentUserUseCase: sl(),
       logoutUseCase: sl(),
+      deleteAccountUseCase: sl(),
       authRepository: sl(),
     ),
   );
@@ -132,5 +136,8 @@ Future<void> init() async {
       getSprintsUseCase: sl(),
       createSprintUseCase: sl(),
     ),
+  );
+  sl.registerLazySingleton(
+    () => LanguageCubit(storageService: sl()),
   );
 }

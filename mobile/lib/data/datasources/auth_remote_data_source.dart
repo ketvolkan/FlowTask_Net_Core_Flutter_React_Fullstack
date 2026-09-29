@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../../core/constants/api_endpoints.dart';
 import '../../core/errors/server_exception.dart';
 import '../../core/network/api_client.dart';
+import '../../core/network/response_parser.dart';
 import '../models/auth_tokens_model.dart';
 import '../models/user_model.dart';
 
@@ -16,8 +17,8 @@ class AuthRemoteDataSource {
         ApiEndpoints.login,
         data: {'email': email, 'password': password},
       );
-      final data = response.data['data'] ?? response.data;
-      return AuthTokensModel.fromJson(data as Map<String, dynamic>);
+      final data = ResponseParser.extractMap(response.data);
+      return AuthTokensModel.fromJson(data);
     } on DioException catch (e) {
       throw ServerException(
         message: e.response?.data?['message'] ?? 'Login failed',
@@ -40,8 +41,8 @@ class AuthRemoteDataSource {
           'password': password,
         },
       );
-      final data = response.data['data'] ?? response.data;
-      return AuthTokensModel.fromJson(data as Map<String, dynamic>);
+      final data = ResponseParser.extractMap(response.data);
+      return AuthTokensModel.fromJson(data);
     } on DioException catch (e) {
       throw ServerException(
         message: e.response?.data?['message'] ?? 'Registration failed',
@@ -53,11 +54,22 @@ class AuthRemoteDataSource {
   Future<UserModel> getCurrentUser() async {
     try {
       final response = await client.dio.get(ApiEndpoints.me);
-      final data = response.data['data'] ?? response.data;
-      return UserModel.fromJson(data as Map<String, dynamic>);
+      final data = ResponseParser.extractMap(response.data);
+      return UserModel.fromJson(data);
     } on DioException catch (e) {
       throw ServerException(
         message: e.response?.data?['message'] ?? 'Failed to fetch user',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  Future<void> deleteAccount() async {
+    try {
+      await client.dio.delete('/users/account');
+    } on DioException catch (e) {
+      throw ServerException(
+        message: e.response?.data?['message'] ?? 'Failed to delete account',
         statusCode: e.response?.statusCode,
       );
     }

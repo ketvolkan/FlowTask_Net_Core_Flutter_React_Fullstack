@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/localization/app_translations.dart';
 import '../blocs/auth/auth_bloc.dart';
 import '../blocs/auth/auth_event.dart';
 import '../blocs/auth/auth_state.dart';
+import '../blocs/language/language_cubit.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
 import 'main_navigation_page.dart';
@@ -56,6 +58,9 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final langState = context.watch<LanguageCubit>().state;
+    final locale = langState.locale;
+
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
         if (state is Authenticated) {
@@ -87,6 +92,35 @@ class _LoginPageState extends State<LoginPage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      // Language Switcher Top Pill
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: InkWell(
+                          onTap: () => context.read<LanguageCubit>().toggleLanguage(),
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: AppColors.divider),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.language, size: 14, color: AppColors.primary),
+                                const SizedBox(width: 4),
+                                Text(
+                                  locale == 'tr' ? '🇹🇷 TR' : '🇬🇧 EN',
+                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+
                       // Brand Logo
                       Center(
                         child: Container(
@@ -109,11 +143,11 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 18),
-                      const Text(
-                        'Flowtask Mobil',
-                        style: TextStyle(
-                          fontSize: 24,
+                      const SizedBox(height: 16),
+                      Text(
+                        AppTranslations.get('login_title', locale: locale),
+                        style: const TextStyle(
+                          fontSize: 23,
                           fontWeight: FontWeight.w800,
                           color: AppColors.textPrimary,
                           letterSpacing: -0.5,
@@ -121,9 +155,9 @@ class _LoginPageState extends State<LoginPage> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 6),
-                      const Text(
-                        'Şirket çalışma alanınıza giriş yapın',
-                        style: TextStyle(
+                      Text(
+                        AppTranslations.get('login_subtitle', locale: locale),
+                        style: const TextStyle(
                           fontSize: 13,
                           color: AppColors.textSecondary,
                         ),
@@ -173,7 +207,7 @@ class _LoginPageState extends State<LoginPage> {
                                       ),
                                       const SizedBox(width: 6),
                                       Text(
-                                        'Şirket Yetkilisi',
+                                        AppTranslations.get('role_manager', locale: locale),
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: _selectedRoleType == 'manager'
@@ -221,7 +255,7 @@ class _LoginPageState extends State<LoginPage> {
                                       ),
                                       const SizedBox(width: 6),
                                       Text(
-                                        'Kullanıcı',
+                                        AppTranslations.get('role_member', locale: locale),
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: _selectedRoleType == 'employee'
@@ -244,20 +278,20 @@ class _LoginPageState extends State<LoginPage> {
 
                       CustomTextField(
                         controller: _emailController,
-                        label: 'E-posta Adresi',
+                        label: AppTranslations.get('email', locale: locale),
                         hintText: 'name@company.com',
                         keyboardType: TextInputType.emailAddress,
                         prefixIcon: const Icon(Icons.email_outlined, size: 20, color: AppColors.textMuted),
                         validator: (val) {
-                          if (val == null || val.isEmpty) return 'E-posta zorunludur';
-                          if (!val.contains('@')) return 'Geçerli bir e-posta adresi girin';
+                          if (val == null || val.isEmpty) return locale == 'tr' ? 'E-posta zorunludur' : 'Email is required';
+                          if (!val.contains('@')) return locale == 'tr' ? 'Geçerli bir e-posta adresi girin' : 'Enter a valid email';
                           return null;
                         },
                       ),
                       const SizedBox(height: 16),
                       CustomTextField(
                         controller: _passwordController,
-                        label: 'Şifre',
+                        label: AppTranslations.get('password', locale: locale),
                         hintText: '••••••••',
                         obscureText: _obscurePassword,
                         prefixIcon: const Icon(Icons.lock_outline, size: 20, color: AppColors.textMuted),
@@ -274,13 +308,13 @@ class _LoginPageState extends State<LoginPage> {
                           },
                         ),
                         validator: (val) {
-                          if (val == null || val.isEmpty) return 'Şifre zorunludur';
+                          if (val == null || val.isEmpty) return locale == 'tr' ? 'Şifre zorunludur' : 'Password is required';
                           return null;
                         },
                       ),
                       const SizedBox(height: 24),
                       CustomButton(
-                        text: 'Giriş Yap',
+                        text: AppTranslations.get('login_button', locale: locale),
                         isLoading: isLoading,
                         onPressed: _onLoginPressed,
                       ),
@@ -288,9 +322,9 @@ class _LoginPageState extends State<LoginPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text(
-                            'Hesabınız yok mu? ',
-                            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                          Text(
+                            '${AppTranslations.get('no_account', locale: locale).split('?')[0]}? ',
+                            style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
                           ),
                           GestureDetector(
                             onTap: () {
@@ -298,9 +332,9 @@ class _LoginPageState extends State<LoginPage> {
                                 MaterialPageRoute(builder: (_) => const RegisterPage()),
                               );
                             },
-                            child: const Text(
-                              'Kayıt Ol',
-                              style: TextStyle(
+                            child: Text(
+                              AppTranslations.get('register_button', locale: locale),
+                              style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.primary,

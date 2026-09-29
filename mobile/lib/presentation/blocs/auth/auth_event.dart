@@ -35,3 +35,5 @@ class RegisterSubmittedEvent extends AuthEvent {
 }
 
 class LogoutEvent extends AuthEvent {}
+
+class DeleteAccountSubmittedEvent extends AuthEvent {}

@@ -50,4 +50,11 @@ public class UsersController : BaseApiController
         var result = await _userService.UpdateUserDepartmentAsync(CurrentUserId, id, request.Department);
         return HandleDataResult(result);
     }
+
+    [HttpDelete("account")]
+    public async Task<IActionResult> DeleteAccount()
+    {
+        var result = await _userService.DeleteAccountAsync(CurrentUserId);
+        return HandleResult(result);
+    }
 }

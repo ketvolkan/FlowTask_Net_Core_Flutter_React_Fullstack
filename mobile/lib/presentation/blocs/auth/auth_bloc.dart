@@ -3,6 +3,7 @@ import '../../../domain/usecases/login_usecase.dart';
 import '../../../domain/usecases/register_usecase.dart';
 import '../../../domain/usecases/get_current_user_usecase.dart';
 import '../../../domain/usecases/logout_usecase.dart';
+import '../../../domain/usecases/delete_account_usecase.dart';
 import '../../../domain/repositories/i_auth_repository.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
@@ -12,6 +13,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final RegisterUseCase registerUseCase;
   final GetCurrentUserUseCase getCurrentUserUseCase;
   final LogoutUseCase logoutUseCase;
+  final DeleteAccountUseCase deleteAccountUseCase;
   final IAuthRepository authRepository;
 
   AuthBloc({
@@ -19,12 +21,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.registerUseCase,
     required this.getCurrentUserUseCase,
     required this.logoutUseCase,
+    required this.deleteAccountUseCase,
     required this.authRepository,
   }) : super(AuthInitial()) {
     on<CheckAuthStatusEvent>(_onCheckAuthStatus);
     on<LoginSubmittedEvent>(_onLoginSubmitted);
     on<RegisterSubmittedEvent>(_onRegisterSubmitted);
     on<LogoutEvent>(_onLogout);
+    on<DeleteAccountSubmittedEvent>(_onDeleteAccount);
   }
 
   Future<void> _onCheckAuthStatus(
@@ -84,5 +88,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     await logoutUseCase();
     emit(Unauthenticated());
+  }
+
+  Future<void> _onDeleteAccount(
+    DeleteAccountSubmittedEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      await deleteAccountUseCase();
+      emit(Unauthenticated());
+    } catch (e) {
+      emit(AuthError(message: e.toString().replaceAll('ServerException: ', '')));
+    }
   }
 }

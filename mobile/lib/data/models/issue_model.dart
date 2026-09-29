@@ -26,27 +26,29 @@ class IssueModel extends IssueEntity {
 
   factory IssueModel.fromJson(Map<String, dynamic> json) {
     return IssueModel(
-      id: json['id'] as String? ?? '',
-      title: json['title'] as String? ?? '',
-      description: json['description'] as String?,
-      issueKey: json['issueKey'] as String? ?? '',
-      status: json['status'] as String? ?? 'Todo',
-      priority: json['priority'] as String? ?? 'Medium',
-      type: json['type'] as String? ?? 'Task',
-      projectId: json['projectId'] as String? ?? '',
-      projectName: json['projectName'] as String?,
-      sprintId: json['sprintId'] as String?,
-      sprintName: json['sprintName'] as String?,
-      assigneeId: json['assigneeId'] as String?,
-      assigneeName: json['assigneeName'] as String?,
-      assigneeAvatar: json['assigneeAvatar'] as String?,
-      reporterId: json['reporterId'] as String? ?? '',
-      reporterName: json['reporterName'] as String?,
-      storyPoints: json['storyPoints'] as int?,
-      dueDate: json['dueDate'] != null ? DateTime.tryParse(json['dueDate'] as String) : null,
-      orderIndex: json['orderIndex'] as int? ?? 0,
+      id: json['id']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString(),
+      issueKey: (json['key'] ?? json['issueKey'] ?? '')?.toString() ?? '',
+      status: json['status']?.toString() ?? 'Todo',
+      priority: json['priority']?.toString() ?? 'Medium',
+      type: json['type']?.toString() ?? 'Task',
+      projectId: json['projectId']?.toString() ?? '',
+      projectName: json['projectName']?.toString(),
+      sprintId: json['sprintId']?.toString(),
+      sprintName: json['sprintName']?.toString(),
+      assigneeId: json['assigneeId']?.toString(),
+      assigneeName: json['assigneeName']?.toString(),
+      assigneeAvatar: (json['assigneeAvatarUrl'] ?? json['assigneeAvatar'])?.toString(),
+      reporterId: json['reporterId']?.toString() ?? '',
+      reporterName: json['reporterName']?.toString(),
+      storyPoints: json['storyPoints'] is num ? (json['storyPoints'] as num).toInt() : null,
+      dueDate: json['dueDate'] != null ? DateTime.tryParse(json['dueDate'].toString()) : null,
+      orderIndex: json['order'] is num
+          ? (json['order'] as num).toInt()
+          : (json['orderIndex'] is num ? (json['orderIndex'] as num).toInt() : 0),
       createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'] as String)
+          ? (DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now())
           : DateTime.now(),
     );
   }
@@ -56,15 +58,18 @@ class IssueModel extends IssueEntity {
       'id': id,
       'title': title,
       'description': description,
+      'key': issueKey,
       'issueKey': issueKey,
       'status': status,
       'priority': priority,
       'type': type,
       'projectId': projectId,
+      'projectName': projectName,
       'sprintId': sprintId,
       'assigneeId': assigneeId,
       'storyPoints': storyPoints,
       'dueDate': dueDate?.toIso8601String(),
+      'order': orderIndex,
       'orderIndex': orderIndex,
       'createdAt': createdAt.toIso8601String(),
     };

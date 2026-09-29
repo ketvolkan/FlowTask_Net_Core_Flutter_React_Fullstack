@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../../core/constants/api_endpoints.dart';
 import '../../core/errors/server_exception.dart';
 import '../../core/network/api_client.dart';
+import '../../core/network/response_parser.dart';
 import '../models/issue_model.dart';
 
 class IssueRemoteDataSource {
@@ -9,14 +10,26 @@ class IssueRemoteDataSource {
 
   IssueRemoteDataSource({required this.client});
 
-  Future<List<IssueModel>> getIssuesByProject(String projectId) async {
+  Future<List<IssueModel>> getIssuesByProject(String? projectId) async {
     try {
+      final Map<String, dynamic> queryParams = {
+        'page': 1,
+        'pageSize': 100,
+      };
+      if (projectId != null && projectId.isNotEmpty && projectId != 'all') {
+        queryParams['projectId'] = projectId;
+      }
+
       final response = await client.dio.get(
         ApiEndpoints.issues,
-        queryParameters: {'projectId': projectId},
+        queryParameters: queryParams,
       );
-      final list = (response.data['data'] ?? response.data) as List;
-      return list.map((json) => IssueModel.fromJson(json as Map<String, dynamic>)).toList();
+
+      final list = ResponseParser.extractList(response.data);
+      return list
+          .whereType<Map<String, dynamic>>()
+          .map((json) => IssueModel.fromJson(json))
+          .toList();
     } on DioException catch (e) {
       throw ServerException(
         message: e.response?.data?['message'] ?? 'Failed to load issues',
@@ -28,8 +41,8 @@ class IssueRemoteDataSource {
   Future<IssueModel> getIssueById(String id) async {
     try {
       final response = await client.dio.get(ApiEndpoints.issueById(id));
-      final data = response.data['data'] ?? response.data;
-      return IssueModel.fromJson(data as Map<String, dynamic>);
+      final data = ResponseParser.extractMap(response.data);
+      return IssueModel.fromJson(data);
     } on DioException catch (e) {
       throw ServerException(
         message: e.response?.data?['message'] ?? 'Failed to load issue',
@@ -51,21 +64,20 @@ class IssueRemoteDataSource {
   }) async {
     try {
       final response = await client.dio.post(
-        ApiEndpoints.issues,
+        '/issues/project/$projectId',
         data: {
           'title': title,
           'description': description,
           'type': type,
           'priority': priority,
-          'projectId': projectId,
           'sprintId': sprintId,
           'assigneeId': assigneeId,
           'storyPoints': storyPoints,
           'dueDate': dueDate?.toIso8601String(),
         },
       );
-      final data = response.data['data'] ?? response.data;
-      return IssueModel.fromJson(data as Map<String, dynamic>);
+      final data = ResponseParser.extractMap(response.data);
+      return IssueModel.fromJson(data);
     } on DioException catch (e) {
       throw ServerException(
         message: e.response?.data?['message'] ?? 'Failed to create issue',
@@ -80,16 +92,27 @@ class IssueRemoteDataSource {
     required int orderIndex,
   }) async {
     try {
-      await client.dio.put(
+      await client.dio.patch(
         ApiEndpoints.issueStatus(issueId),
         data: {
           'status': status,
-          'orderIndex': orderIndex,
+          'order': orderIndex,
         },
       );
     } on DioException catch (e) {
       throw ServerException(
         message: e.response?.data?['message'] ?? 'Failed to update issue status',
+        statusCode: e.response?.statusCode,
+      );
+    }
+  }
+
+  Future<void> deleteIssue(String issueId) async {
+    try {
+      await client.dio.delete(ApiEndpoints.issueById(issueId));
+    } on DioException catch (e) {
+      throw ServerException(
+        message: e.response?.data?['message'] ?? 'Failed to delete issue',
         statusCode: e.response?.statusCode,
       );
     }

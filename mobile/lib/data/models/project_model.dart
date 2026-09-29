@@ -15,16 +15,20 @@ class ProjectModel extends ProjectEntity {
 
   factory ProjectModel.fromJson(Map<String, dynamic> json) {
     return ProjectModel(
-      id: json['id'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      key: json['key'] as String? ?? '',
-      description: json['description'] as String?,
-      ownerId: json['ownerId'] as String? ?? '',
-      ownerName: json['ownerName'] as String?,
-      memberCount: json['memberCount'] as int? ?? (json['members'] as List?)?.length ?? 0,
-      issueCount: json['issueCount'] as int? ?? 0,
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      key: json['key']?.toString() ?? '',
+      description: json['description']?.toString(),
+      ownerId: json['ownerId']?.toString() ?? '',
+      ownerName: json['ownerName']?.toString(),
+      memberCount: json['memberCount'] is num
+          ? (json['memberCount'] as num).toInt()
+          : (json['members'] as List?)?.length ?? 0,
+      issueCount: json['issueCount'] is num
+          ? (json['issueCount'] as num).toInt()
+          : (json['issues'] as List?)?.length ?? 0,
       createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'] as String)
+          ? (DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now())
           : DateTime.now(),
     );
   }
