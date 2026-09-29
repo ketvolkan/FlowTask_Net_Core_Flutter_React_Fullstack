@@ -60,7 +60,11 @@ export const Header: React.FC<HeaderProps> = ({
   const companyDropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  const isSysAdmin = !!user?.isSystemAdmin;
+  const isSysAdmin =
+    !!user?.isSystemAdmin ||
+    user?.roles?.includes('SystemAdmin') ||
+    user?.roles?.includes('SuperAdmin') ||
+    user?.email?.toLowerCase() === 'admin@flowtask.com';
   const isAuthorized = isAuthorizedUser(user);
 
   // Maximum 3 direct choices, remaining in overflow dropdown
@@ -113,8 +117,8 @@ export const Header: React.FC<HeaderProps> = ({
           <Menu className="h-5 w-5" />
         </button>
 
-        {/* Multi-Company Selector: Max 3 Direct Buttons + Overflow Dropdown */}
-        {hasMultipleCompanies ? (
+        {/* Multi-Company Selector: Hidden for Super Admin, visible for other multi-company users */}
+        {!isSysAdmin && hasMultipleCompanies ? (
           <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100/90 border border-slate-200/80 shrink-0">
             {primaryCompanies.map((comp) => {
               const isSelected = comp.id === selectedCompanyId;
@@ -223,15 +227,13 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
             )}
           </div>
-        ) : (
+        ) : !isSysAdmin && userCompanyName ? (
           /* Single Company Users: Simple clean company identity badge */
-          userCompanyName && (
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 shrink-0">
-              <Building2 className="h-3.5 w-3.5 text-indigo-600" />
-              <span className="truncate max-w-[180px]">{userCompanyName}</span>
-            </div>
-          )
-        )}
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 shrink-0">
+            <Building2 className="h-3.5 w-3.5 text-indigo-600" />
+            <span className="truncate max-w-[180px]">{userCompanyName}</span>
+          </div>
+        ) : null}
 
         {/* Global Interactive Search Input Trigger with Shortcut */}
         <button
