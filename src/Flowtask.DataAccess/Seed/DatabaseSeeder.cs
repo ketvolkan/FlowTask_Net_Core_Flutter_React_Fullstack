@@ -63,17 +63,50 @@ public static class DatabaseSeeder
         }
         await context.SaveChangesAsync();
 
-        // 3. Seed Users
+        // 3. Seed Users (25+ users across 5 companies)
         var usersToSeed = new List<(string Email, string Name, string Title, string Dept, bool IsAdmin, string Password)>
         {
+            // Global Multi-Company Super Users
             ("admin@flowtask.com", "Sistem Yöneticisi", "Platform SuperAdmin", "Sistem Yönetimi", true, "Admin123*"),
+            ("demo@flowtask.com", "Demo Proje Yöneticisi", "Kıdemli Proje Yöneticisi", "Ürün Yönetimi", false, "Demo123*"),
+            ("ayse.yilmaz@flowtask.com", "Ayşe Yılmaz", "Senior Solutions Architect & Lead Frontend", "Çoklu Şirket Danışmanlığı", false, "User123*"),
+            
+            // 1. TechFlow Solutions
             ("manager@techflow.com", "Ahmet Tekin", "TechFlow Kurucu & CTO", "Yönetim & Teknoloji", false, "Manager123*"),
+            ("mehmet.kaya@flowtask.com", "Mehmet Kaya", "Principal Backend Engineer", "Backend Geliştirme", false, "User123*"),
+            ("caner.erdogan@flowtask.com", "Caner Erdoğan", "DevOps & Cloud Specialist", "Altyapı & Güvenlik", false, "User123*"),
+            ("elif.yildirim@techflow.com", "Elif Yıldırım", "Senior Frontend Developer", "Frontend Geliştirme", false, "User123*"),
+            ("burak.celik@techflow.com", "Burak Çelik", "Fullstack Software Engineer", "Çekirdek Mühendislik", false, "User123*"),
+            ("duygu.sen@techflow.com", "Duygu Şen", "QA & Test Automation Lead", "Kalite Güvence (QA)", false, "User123*"),
+
+            // 2. Acme Global Corp
             ("admin@acmeglobal.com", "Burak Demir", "Acme Global Ürün Direktörü", "Üst Yönetim", false, "Manager123*"),
-            ("demo@flowtask.com", "Demo Project Manager", "Kıdemli Proje Yöneticisi", "Ürün Yönetimi", false, "Demo123*"),
-            ("ayse.yilmaz@flowtask.com", "Ayşe Yılmaz", "Senior Frontend Architect (Çoklu Şirket)", "Frontend Ekibi", false, "User123*"),
-            ("mehmet.kaya@flowtask.com", "Mehmet Kaya", "Principal Backend Engineer", "Backend Ekibi", false, "User123*"),
-            ("zeynep.ozkan@flowtask.com", "Zeynep Özkan", "Senior UI/UX Designer", "Tasarım Ekibi", false, "User123*"),
-            ("caner.erdogan@flowtask.com", "Caner Erdoğan", "DevOps & Cloud Specialist", "Altyapı Ekibi", false, "User123*")
+            ("selin.arslan@acmeglobal.com", "Selin Arslan", "E-Ticaret Operasyon Müdürü", "E-Ticaret Operasyon", false, "User123*"),
+            ("kerem.yurt@acmeglobal.com", "Kerem Yurt", "Tedarik Zinciri & Lojistik Uzmanı", "Tedarik Zinciri & Depo", false, "User123*"),
+            ("busra.aydin@acmeglobal.com", "Büşra Aydın", "Büyüme & Dijital Pazarlama Lideri", "Dijital Pazarlama & Büyüme", false, "User123*"),
+            ("murat.dogan@acmeglobal.com", "Murat Doğan", "Ödeme Sistemleri Entegratörü", "Finans & Muhasebe", false, "User123*"),
+            ("gizem.tuncer@acmeglobal.com", "Gizem Tuncer", "Müşteri Deneyimi & CX Uzmanı", "Müşteri İlişkileri (CRM)", false, "User123*"),
+
+            // 3. Nexus FinTech Systems
+            ("sinan.vural@nexusfin.com", "Sinan Vural", "FinTech Çözüm Mimarı & CTO", "Çekirdek Bankacılık & POS", false, "Manager123*"),
+            ("deniz.aksoy@nexusfin.com", "Deniz Aksoy", "Fraud & Risk Analitiği Lideri", "Risk & Fraud Yönetimi", false, "User123*"),
+            ("melike.guler@nexusfin.com", "Melike Güler", "Biyometrik & 3D Secure Uzmanı", "Güvenlik & Uyum (Compliance)", false, "User123*"),
+            ("ozan.koc@nexusfin.com", "Ozan Koç", "Açık Bankacılık API Geliştiricisi", "Açık Bankacılık (Open Banking)", false, "User123*"),
+            ("ece.bulut@nexusfin.com", "Ece Bulut", "Kripto & Blokzincir Araştırmacısı", "Kripto & Dijital Varlıklar", false, "User123*"),
+
+            // 4. Pulse HealthTech AI
+            ("hakan.ozturk@pulsehealth.com", "Dr. Hakan Öztürk", "Medikal Yapay Zeka Direktörü", "Klinik Yapay Zeka & NLP", false, "Manager123*"),
+            ("zeynep.ozkan@flowtask.com", "Zeynep Özkan", "Senior UI/UX Designer & HealthTech Lead", "Tele-Tıp & Tasarım", false, "User123*"),
+            ("tolga.sahin@pulsehealth.com", "Tolga Şahin", "e-Reçete & HL7/FHIR Uzmanı", "e-Sağlık & Reçete Sistemleri", false, "User123*"),
+            ("asli.kara@pulsehealth.com", "Aslı Kara", "Radyoloji Görüntüleme AI Mühendisi", "Biyomedikal Görüntü İşleme", false, "User123*"),
+            ("cem.akbulut@pulsehealth.com", "Cem Akbulut", "Hasta Veri Güvenliği Sorumlusu", "Hasta Veri Güvenliği (KVKK)", false, "User123*"),
+
+            // 5. Vortex Logistics Global
+            ("erdem.soylu@vortexlog.com", "Erdem Soylu", "Filo & Rota Operasyon Müdürü", "Akıllı Rota & Navigasyon", false, "Manager123*"),
+            ("yasemin.cetin@vortexlog.com", "Yasemin Çetin", "IoT & Telemetri Mühendisi", "IoT & Filo Telemetri", false, "User123*"),
+            ("baris.yildiz@vortexlog.com", "Barış Yıldız", "Otonom Araç Simülasyon Uzmanı", "Otonom Sürüş & Simülasyon", false, "User123*"),
+            ("merve.polat@vortexlog.com", "Merve Polat", "Gümrük & Uluslararası Lojistik Koordinatörü", "Gümrük & Uluslararası Taşıma", false, "User123*"),
+            ("serdar.kurt@vortexlog.com", "Serdar Kurt", "Soğuk Zincir İzleme Lideri", "Depo & Soğuk Zincir Yönetimi", false, "User123*")
         };
 
         var userMap = new Dictionary<string, User>();
@@ -107,20 +140,57 @@ public static class DatabaseSeeder
             }
             else
             {
+                // Ensure JobTitle & Department are updated to latest realistic values
+                existing.JobTitle = u.Title;
+                existing.Department = u.Dept;
+                existing.FullName = u.Name;
                 userMap[u.Email] = existing;
             }
         }
+        await context.SaveChangesAsync();
 
         var adminUser = userMap["admin@flowtask.com"];
-        var techflowManager = userMap["manager@techflow.com"];
-        var acmeManager = userMap["admin@acmeglobal.com"];
         var demoUser = userMap["demo@flowtask.com"];
         var ayseUser = userMap["ayse.yilmaz@flowtask.com"];
-        var mehmetUser = userMap["mehmet.kaya@flowtask.com"];
-        var zeynepUser = userMap["zeynep.ozkan@flowtask.com"];
-        var canerUser = userMap["caner.erdogan@flowtask.com"];
 
-        // 4. Project 1: TechFlow - Flowtask Core Platform (FLOW)
+        // TechFlow users
+        var techflowManager = userMap["manager@techflow.com"];
+        var mehmetUser = userMap["mehmet.kaya@flowtask.com"];
+        var canerUser = userMap["caner.erdogan@flowtask.com"];
+        var elifUser = userMap["elif.yildirim@techflow.com"];
+        var burakCelikUser = userMap["burak.celik@techflow.com"];
+        var duyguUser = userMap["duygu.sen@techflow.com"];
+
+        // Acme users
+        var acmeManager = userMap["admin@acmeglobal.com"];
+        var selinUser = userMap["selin.arslan@acmeglobal.com"];
+        var keremUser = userMap["kerem.yurt@acmeglobal.com"];
+        var busraUser = userMap["busra.aydin@acmeglobal.com"];
+        var muratUser = userMap["murat.dogan@acmeglobal.com"];
+        var gizemUser = userMap["gizem.tuncer@acmeglobal.com"];
+
+        // Nexus users
+        var sinanUser = userMap["sinan.vural@nexusfin.com"];
+        var denizUser = userMap["deniz.aksoy@nexusfin.com"];
+        var melikeUser = userMap["melike.guler@nexusfin.com"];
+        var ozanUser = userMap["ozan.koc@nexusfin.com"];
+        var eceUser = userMap["ece.bulut@nexusfin.com"];
+
+        // Pulse users
+        var hakanUser = userMap["hakan.ozturk@pulsehealth.com"];
+        var zeynepUser = userMap["zeynep.ozkan@flowtask.com"];
+        var tolgaUser = userMap["tolga.sahin@pulsehealth.com"];
+        var asliUser = userMap["asli.kara@pulsehealth.com"];
+        var cemUser = userMap["cem.akbulut@pulsehealth.com"];
+
+        // Vortex users
+        var erdemUser = userMap["erdem.soylu@vortexlog.com"];
+        var yaseminUser = userMap["yasemin.cetin@vortexlog.com"];
+        var barisUser = userMap["baris.yildiz@vortexlog.com"];
+        var merveUser = userMap["merve.polat@vortexlog.com"];
+        var serdarUser = userMap["serdar.kurt@vortexlog.com"];
+
+        // 4. Project 1: TechFlow Solutions — Flowtask Core Platform (FLOW)
         var flowProject = await context.Projects.FirstOrDefaultAsync(p => p.Key == "FLOW");
         if (flowProject == null)
         {
@@ -134,15 +204,6 @@ public static class DatabaseSeeder
             };
             await context.Projects.AddAsync(flowProject);
             await context.SaveChangesAsync();
-
-            await AddMembersAsync(context, flowProject.Id, new[]
-            {
-                (techflowManager.Id, ProjectRoleType.Owner),
-                (demoUser.Id, ProjectRoleType.Admin),
-                (ayseUser.Id, ProjectRoleType.Member),
-                (mehmetUser.Id, ProjectRoleType.Member),
-                (canerUser.Id, ProjectRoleType.Member)
-            });
 
             var sprint1 = new Sprint
             {
@@ -176,7 +237,6 @@ public static class DatabaseSeeder
 
             var flowIssues = new List<Issue>
             {
-                // Completed Sprint 1 Issues
                 new()
                 {
                     ProjectId = flowProject.Id,
@@ -207,8 +267,6 @@ public static class DatabaseSeeder
                     StoryPoints = 3,
                     OrderIndex = 2
                 },
-
-                // Active Sprint 2 Issues
                 new()
                 {
                     ProjectId = flowProject.Id,
@@ -246,7 +304,7 @@ public static class DatabaseSeeder
                     ProjectId = flowProject.Id,
                     SprintId = sprint2.Id,
                     ReporterId = adminUser.Id,
-                    AssigneeId = demoUser.Id,
+                    AssigneeId = elifUser.Id,
                     IssueKey = "FLOW-5",
                     Title = "E-Posta ile Çalışma Alanına Ekip Üyesi Davet Etme",
                     Description = "Kullanıcı ID (GUID) yerine doğrudan kayıtlı e-posta adresiyle üye ekleme modalı.",
@@ -272,8 +330,6 @@ public static class DatabaseSeeder
                     StoryPoints = 5,
                     OrderIndex = 4
                 },
-
-                // Backlog Issues
                 new()
                 {
                     ProjectId = flowProject.Id,
@@ -292,6 +348,7 @@ public static class DatabaseSeeder
                 {
                     ProjectId = flowProject.Id,
                     ReporterId = demoUser.Id,
+                    AssigneeId = burakCelikUser.Id,
                     IssueKey = "FLOW-8",
                     Title = "Gelişmiş Filtreleme & Çoklu Etiket Sistemi",
                     Description = "Görevleri özel etiketler, atanan kişiler ve önceliklere göre anlık filtreleme.",
@@ -305,7 +362,6 @@ public static class DatabaseSeeder
             await context.Issues.AddRangeAsync(flowIssues);
             await context.SaveChangesAsync();
 
-            // Add sample comment
             var flowIssue3 = flowIssues.First(i => i.IssueKey == "FLOW-3");
             await context.Comments.AddAsync(new Comment
             {
@@ -322,29 +378,143 @@ public static class DatabaseSeeder
             await context.SaveChangesAsync();
         }
 
-        // 5. Project 2: FinPay — Dijital Cüzdan & Ödeme Geçidi (FIN)
+        // Always ensure memberships for FLOW project
+        await AddMembersAsync(context, flowProject.Id, new[]
+        {
+            (techflowManager.Id, ProjectRoleType.Owner),
+            (demoUser.Id, ProjectRoleType.Admin),
+            (ayseUser.Id, ProjectRoleType.Member),
+            (mehmetUser.Id, ProjectRoleType.Member),
+            (canerUser.Id, ProjectRoleType.Member),
+            (elifUser.Id, ProjectRoleType.Member),
+            (burakCelikUser.Id, ProjectRoleType.Member),
+            (duyguUser.Id, ProjectRoleType.Member),
+            (adminUser.Id, ProjectRoleType.Admin)
+        });
+
+        // 5. Project 2: Acme Global Corp — E-Ticaret & Tedarik Zinciri Portalı (SHOP)
+        var shopProject = await context.Projects.FirstOrDefaultAsync(p => p.Key == "SHOP");
+        if (shopProject == null)
+        {
+            shopProject = new Project
+            {
+                Name = "Acme Global — E-Ticaret & Tedarik Portalı",
+                Key = "SHOP",
+                Description = "Yüksek hacimli ürün kataloğu, anlık stok takibi ve akıllı kargo entegrasyonu.",
+                OwnerId = acmeManager.Id,
+                IsArchived = false
+            };
+            await context.Projects.AddAsync(shopProject);
+            await context.SaveChangesAsync();
+
+            var shopSprint1 = new Sprint
+            {
+                ProjectId = shopProject.Id,
+                Name = "Sprint 1 — Stok & Kargo Entegrasyonu",
+                Goal = "Elasticsearch ürün araması ve kargo webhook entegrasyonu.",
+                Status = SprintStatus.Active,
+                StartDate = DateTime.UtcNow.AddDays(-4),
+                EndDate = DateTime.UtcNow.AddDays(10)
+            };
+            await context.Sprints.AddAsync(shopSprint1);
+            await context.SaveChangesAsync();
+
+            var shopIssues = new List<Issue>
+            {
+                new()
+                {
+                    ProjectId = shopProject.Id,
+                    SprintId = shopSprint1.Id,
+                    ReporterId = acmeManager.Id,
+                    AssigneeId = ayseUser.Id,
+                    IssueKey = "SHOP-1",
+                    Title = "Dinamik Ürün Filtreleme & Kategori Ağacı Bileşeni",
+                    Description = "Fiyat aralığı, marka, beden ve renk filtrelerinin çoklu seçimle filtrelenmesi.",
+                    IssueType = IssueType.Task,
+                    Priority = IssuePriority.High,
+                    Status = IssueStatus.InProgress,
+                    StoryPoints = 5,
+                    DueDate = DateTime.UtcNow.AddDays(2),
+                    OrderIndex = 1
+                },
+                new()
+                {
+                    ProjectId = shopProject.Id,
+                    SprintId = shopSprint1.Id,
+                    ReporterId = demoUser.Id,
+                    AssigneeId = selinUser.Id,
+                    IssueKey = "SHOP-2",
+                    Title = "Redis Dağıtık Kilit ile Eşzamanlı Stok Düşümü",
+                    Description = "Flaş indirimlerde aynı ürünün fazladan satılmasını önleyen Redlock kilit mekanizması.",
+                    IssueType = IssueType.Story,
+                    Priority = IssuePriority.Urgent,
+                    Status = IssueStatus.Done,
+                    StoryPoints = 8,
+                    OrderIndex = 2
+                },
+                new()
+                {
+                    ProjectId = shopProject.Id,
+                    SprintId = shopSprint1.Id,
+                    ReporterId = keremUser.Id,
+                    AssigneeId = keremUser.Id,
+                    IssueKey = "SHOP-3",
+                    Title = "Yurtiçi & Aras Kargo Webhook Entegrasyonu",
+                    Description = "Kargo durum değişikliklerinde müşteriye otomatik SMS ve bildirim iletimi.",
+                    IssueType = IssueType.Story,
+                    Priority = IssuePriority.Medium,
+                    Status = IssueStatus.Todo,
+                    StoryPoints = 5,
+                    DueDate = DateTime.UtcNow.AddDays(6),
+                    OrderIndex = 3
+                },
+                new()
+                {
+                    ProjectId = shopProject.Id,
+                    ReporterId = busraUser.Id,
+                    AssigneeId = busraUser.Id,
+                    IssueKey = "SHOP-4",
+                    Title = "B2B Toptan Fiyatlandırma & Özel Bayi İskonto Modülü",
+                    Description = "Kurumsal müşteriler için kademeli iskonto ve sipariş onay mekanizması.",
+                    IssueType = IssueType.Epic,
+                    Priority = IssuePriority.Low,
+                    Status = IssueStatus.Todo,
+                    StoryPoints = 13,
+                    OrderIndex = 4
+                }
+            };
+            await context.Issues.AddRangeAsync(shopIssues);
+            await context.SaveChangesAsync();
+        }
+
+        // Always ensure memberships for SHOP project (including Ayşe & Demo)
+        await AddMembersAsync(context, shopProject.Id, new[]
+        {
+            (acmeManager.Id, ProjectRoleType.Owner),
+            (demoUser.Id, ProjectRoleType.Admin),
+            (ayseUser.Id, ProjectRoleType.Member),
+            (selinUser.Id, ProjectRoleType.Member),
+            (keremUser.Id, ProjectRoleType.Member),
+            (busraUser.Id, ProjectRoleType.Member),
+            (muratUser.Id, ProjectRoleType.Member),
+            (gizemUser.Id, ProjectRoleType.Member),
+            (adminUser.Id, ProjectRoleType.Admin)
+        });
+
+        // 6. Project 3: Nexus FinTech Systems — FinPay Dijital Cüzdan & Ödeme (FIN)
         var finProject = await context.Projects.FirstOrDefaultAsync(p => p.Key == "FIN");
         if (finProject == null)
         {
             finProject = new Project
             {
-                Name = "FinPay — Dijital Cüzdan & Ödeme",
+                Name = "Nexus FinTech — FinPay Dijital Cüzdan",
                 Key = "FIN",
                 Description = "3D Secure 2.0, sanal POS entegrasyonu, QR kod ile ödeme ve fraud izleme platformu.",
-                OwnerId = demoUser.Id,
+                OwnerId = sinanUser.Id,
                 IsArchived = false
             };
             await context.Projects.AddAsync(finProject);
             await context.SaveChangesAsync();
-
-            await AddMembersAsync(context, finProject.Id, new[]
-            {
-                (demoUser.Id, ProjectRoleType.Owner),
-                (adminUser.Id, ProjectRoleType.Admin),
-                (canerUser.Id, ProjectRoleType.Member),
-                (zeynepUser.Id, ProjectRoleType.Member),
-                (mehmetUser.Id, ProjectRoleType.Member)
-            });
 
             var finSprint1 = new Sprint
             {
@@ -373,8 +543,8 @@ public static class DatabaseSeeder
                 {
                     ProjectId = finProject.Id,
                     SprintId = finSprint1.Id,
-                    ReporterId = demoUser.Id,
-                    AssigneeId = mehmetUser.Id,
+                    ReporterId = sinanUser.Id,
+                    AssigneeId = ayseUser.Id,
                     IssueKey = "FIN-1",
                     Title = "PCI-DSS Uyumlu Kart Saklama (Tokenization) Servisi",
                     Description = "Müşteri kredi kartı bilgilerini HSM ve AES-256 ile şifreleyerek token üretme servisi.",
@@ -389,8 +559,8 @@ public static class DatabaseSeeder
                 {
                     ProjectId = finProject.Id,
                     SprintId = finSprint1.Id,
-                    ReporterId = demoUser.Id,
-                    AssigneeId = zeynepUser.Id,
+                    ReporterId = sinanUser.Id,
+                    AssigneeId = melikeUser.Id,
                     IssueKey = "FIN-2",
                     Title = "Kart Ekleme & Ödeme Onay Ekranı UI/UX Tasarımları",
                     Description = "Kullanıcı dostu kart tarama ve 3D SMS şifre giriş modalı tasarımı.",
@@ -405,7 +575,7 @@ public static class DatabaseSeeder
                     ProjectId = finProject.Id,
                     SprintId = finSprint1.Id,
                     ReporterId = adminUser.Id,
-                    AssigneeId = canerUser.Id,
+                    AssigneeId = denizUser.Id,
                     IssueKey = "FIN-3",
                     Title = "Şüpheli İşlem (Fraud) Tespit Algoritması & Uyarı Sistemi",
                     Description = "Kısa sürede farklı konumlardan yapılan yüksek tutarlı işlemleri otomatik bloke etme.",
@@ -421,7 +591,7 @@ public static class DatabaseSeeder
                     ProjectId = finProject.Id,
                     SprintId = finSprint1.Id,
                     ReporterId = demoUser.Id,
-                    AssigneeId = demoUser.Id,
+                    AssigneeId = ozanUser.Id,
                     IssueKey = "FIN-4",
                     Title = "Otomatik İade (Refund) ve İptal API Uçları",
                     Description = "Hatalı veya iptal edilen siparişlerde müşteri kartına anında para iadesi sağlama.",
@@ -435,7 +605,8 @@ public static class DatabaseSeeder
                 new()
                 {
                     ProjectId = finProject.Id,
-                    ReporterId = demoUser.Id,
+                    ReporterId = sinanUser.Id,
+                    AssigneeId = eceUser.Id,
                     IssueKey = "FIN-5",
                     Title = "Apple Pay & Google Wallet Entegrasyonu",
                     Description = "Mobil cüzdanlar üzerinden tek tıkla biyometrik ödeme imkanı sağlama.",
@@ -450,137 +621,39 @@ public static class DatabaseSeeder
             await context.SaveChangesAsync();
         }
 
-        // 6. Project 3: E-Ticaret & Tedarik Zinciri Portalı (SHOP)
-        var shopProject = await context.Projects.FirstOrDefaultAsync(p => p.Key == "SHOP");
-        if (shopProject == null)
+        // Always ensure memberships for FIN project (including Ayşe & Demo)
+        await AddMembersAsync(context, finProject.Id, new[]
         {
-            shopProject = new Project
-            {
-                Name = "E-Ticaret & Tedarik Zinciri",
-                Key = "SHOP",
-                Description = "Yüksek hacimli ürün kataloğu, anlık stok takibi ve akıllı kargo entegrasyonu.",
-                OwnerId = adminUser.Id,
-                IsArchived = false
-            };
-            await context.Projects.AddAsync(shopProject);
-            await context.SaveChangesAsync();
+            (sinanUser.Id, ProjectRoleType.Owner),
+            (demoUser.Id, ProjectRoleType.Admin),
+            (ayseUser.Id, ProjectRoleType.Member),
+            (denizUser.Id, ProjectRoleType.Member),
+            (melikeUser.Id, ProjectRoleType.Member),
+            (ozanUser.Id, ProjectRoleType.Member),
+            (eceUser.Id, ProjectRoleType.Member),
+            (adminUser.Id, ProjectRoleType.Admin)
+        });
 
-            await AddMembersAsync(context, shopProject.Id, new[]
-            {
-                (adminUser.Id, ProjectRoleType.Owner),
-                (demoUser.Id, ProjectRoleType.Member),
-                (ayseUser.Id, ProjectRoleType.Member),
-                (mehmetUser.Id, ProjectRoleType.Member),
-                (canerUser.Id, ProjectRoleType.Member)
-            });
-
-            var shopSprint1 = new Sprint
-            {
-                ProjectId = shopProject.Id,
-                Name = "Sprint 1 — Stok & Kargo Entegrasyonu",
-                Goal = "Elasticsearch ürün araması ve kargo webhook entegrasyonu.",
-                Status = SprintStatus.Active,
-                StartDate = DateTime.UtcNow.AddDays(-4),
-                EndDate = DateTime.UtcNow.AddDays(10)
-            };
-            await context.Sprints.AddAsync(shopSprint1);
-            await context.SaveChangesAsync();
-
-            var shopIssues = new List<Issue>
-            {
-                new()
-                {
-                    ProjectId = shopProject.Id,
-                    SprintId = shopSprint1.Id,
-                    ReporterId = adminUser.Id,
-                    AssigneeId = ayseUser.Id,
-                    IssueKey = "SHOP-1",
-                    Title = "Dinamik Ürün Filtreleme & Kategori Ağacı Bileşeni",
-                    Description = "Fiyat aralığı, marka, beden ve renk filtrelerinin çoklu seçimle filtrelenmesi.",
-                    IssueType = IssueType.Task,
-                    Priority = IssuePriority.High,
-                    Status = IssueStatus.InProgress,
-                    StoryPoints = 5,
-                    DueDate = DateTime.UtcNow.AddDays(2),
-                    OrderIndex = 1
-                },
-                new()
-                {
-                    ProjectId = shopProject.Id,
-                    SprintId = shopSprint1.Id,
-                    ReporterId = demoUser.Id,
-                    AssigneeId = mehmetUser.Id,
-                    IssueKey = "SHOP-2",
-                    Title = "Redis Dağıtık Kilit ile Eşzamanlı Stok Düşümü",
-                    Description = "Flaş indirimlerde aynı ürünün fazladan satılmasını önleyen Redlock kilit mekanizması.",
-                    IssueType = IssueType.Story,
-                    Priority = IssuePriority.Urgent,
-                    Status = IssueStatus.Done,
-                    StoryPoints = 8,
-                    OrderIndex = 2
-                },
-                new()
-                {
-                    ProjectId = shopProject.Id,
-                    SprintId = shopSprint1.Id,
-                    ReporterId = adminUser.Id,
-                    AssigneeId = canerUser.Id,
-                    IssueKey = "SHOP-3",
-                    Title = "Yurtiçi & Aras Kargo Webhook Entegrasyonu",
-                    Description = "Kargo durum değişikliklerinde müşteriye otomatik SMS ve bildirim iletimi.",
-                    IssueType = IssueType.Story,
-                    Priority = IssuePriority.Medium,
-                    Status = IssueStatus.Todo,
-                    StoryPoints = 5,
-                    DueDate = DateTime.UtcNow.AddDays(6),
-                    OrderIndex = 3
-                },
-                new()
-                {
-                    ProjectId = shopProject.Id,
-                    ReporterId = adminUser.Id,
-                    IssueKey = "SHOP-4",
-                    Title = "B2B Toptan Fiyatlandırma & Özel Bayi İskonto Modülü",
-                    Description = "Kurumsal müşteriler için kademeli iskonto ve sipariş onay mekanizması.",
-                    IssueType = IssueType.Epic,
-                    Priority = IssuePriority.Low,
-                    Status = IssueStatus.Todo,
-                    StoryPoints = 13,
-                    OrderIndex = 4
-                }
-            };
-            await context.Issues.AddRangeAsync(shopIssues);
-            await context.SaveChangesAsync();
-        }
-
-        // 7. Project 4: Sağlık & Tele-Tıp Randevu Asistanı (HLTH)
+        // 7. Project 4: Pulse HealthTech AI — Sağlık & Tele-Tıp Randevu Asistanı (HLTH)
         var hlthProject = await context.Projects.FirstOrDefaultAsync(p => p.Key == "HLTH");
         if (hlthProject == null)
         {
             hlthProject = new Project
             {
-                Name = "Sağlık & Tele-Tıp Asistanı",
+                Name = "Pulse HealthTech — Tele-Tıp Asistanı",
                 Key = "HLTH",
                 Description = "Online doktor randevusu, WebRTC görüntülü muayene ve e-Reçete arşivi.",
-                OwnerId = demoUser.Id,
+                OwnerId = hakanUser.Id,
                 IsArchived = false
             };
             await context.Projects.AddAsync(hlthProject);
             await context.SaveChangesAsync();
 
-            await AddMembersAsync(context, hlthProject.Id, new[]
-            {
-                (demoUser.Id, ProjectRoleType.Owner),
-                (adminUser.Id, ProjectRoleType.Admin),
-                (zeynepUser.Id, ProjectRoleType.Member),
-                (ayseUser.Id, ProjectRoleType.Member)
-            });
-
             var hlthSprint1 = new Sprint
             {
                 ProjectId = hlthProject.Id,
-                Name = "Sprint 1 — Randevu Takvimi & Bildirimler",
-                Goal = "Doktor çalışma saatleri, online randevu oluşturma ve SMS hatırlatıcılar.",
+                Name = "Sprint 1 — Randevu Takvimi & Görüntülü Muayene",
+                Goal = "Doktor çalışma saatleri, online randevu oluşturma ve WebRTC muayene odası.",
                 Status = SprintStatus.Active,
                 StartDate = DateTime.UtcNow.AddDays(-2),
                 EndDate = DateTime.UtcNow.AddDays(12)
@@ -594,7 +667,7 @@ public static class DatabaseSeeder
                 {
                     ProjectId = hlthProject.Id,
                     SprintId = hlthSprint1.Id,
-                    ReporterId = demoUser.Id,
+                    ReporterId = hakanUser.Id,
                     AssigneeId = zeynepUser.Id,
                     IssueKey = "HLTH-1",
                     Title = "Doktor Çalışma Takvimi & Randevu Slotu UI Tasarımı",
@@ -625,8 +698,8 @@ public static class DatabaseSeeder
                 {
                     ProjectId = hlthProject.Id,
                     SprintId = hlthSprint1.Id,
-                    ReporterId = adminUser.Id,
-                    AssigneeId = demoUser.Id,
+                    ReporterId = hakanUser.Id,
+                    AssigneeId = tolgaUser.Id,
                     IssueKey = "HLTH-3",
                     Title = "e-Reçete PDF Oluşturma & Karekodlu Doğrulama",
                     Description = "Muayene bitiminde otomatik imzalı PDF reçete üretimi ve eczane doğrulama kodu.",
@@ -636,11 +709,147 @@ public static class DatabaseSeeder
                     StoryPoints = 5,
                     DueDate = DateTime.UtcNow.AddDays(7),
                     OrderIndex = 3
+                },
+                new()
+                {
+                    ProjectId = hlthProject.Id,
+                    ReporterId = hakanUser.Id,
+                    AssigneeId = asliUser.Id,
+                    IssueKey = "HLTH-4",
+                    Title = "Radyoloji MR/Röntgen Görüntü Ön İnceleme AI Modeli",
+                    Description = "DICOM formatındaki tıbbi görüntüleri tarayarak olası anomalileri işaretleyen yapay zeka servisi.",
+                    IssueType = IssueType.Epic,
+                    Priority = IssuePriority.High,
+                    Status = IssueStatus.Todo,
+                    StoryPoints = 13,
+                    OrderIndex = 4
                 }
             };
             await context.Issues.AddRangeAsync(hlthIssues);
             await context.SaveChangesAsync();
         }
+
+        // Always ensure memberships for HLTH project (including Ayşe & Demo)
+        await AddMembersAsync(context, hlthProject.Id, new[]
+        {
+            (hakanUser.Id, ProjectRoleType.Owner),
+            (demoUser.Id, ProjectRoleType.Admin),
+            (ayseUser.Id, ProjectRoleType.Member),
+            (zeynepUser.Id, ProjectRoleType.Member),
+            (tolgaUser.Id, ProjectRoleType.Member),
+            (asliUser.Id, ProjectRoleType.Member),
+            (cemUser.Id, ProjectRoleType.Member),
+            (adminUser.Id, ProjectRoleType.Admin)
+        });
+
+        // 8. Project 5: Vortex Logistics Global — Akıllı Filo & Rota Optimizasyonu (LOG)
+        var logProject = await context.Projects.FirstOrDefaultAsync(p => p.Key == "LOG");
+        if (logProject == null)
+        {
+            logProject = new Project
+            {
+                Name = "Vortex Logistics — Akıllı Filo & Rota",
+                Key = "LOG",
+                Description = "Yapay zeka destekli dinamik rota optimizasyonu, IoT telemetri ve otonom filo takibi.",
+                OwnerId = erdemUser.Id,
+                IsArchived = false
+            };
+            await context.Projects.AddAsync(logProject);
+            await context.SaveChangesAsync();
+
+            var logSprint1 = new Sprint
+            {
+                ProjectId = logProject.Id,
+                Name = "Sprint 1 — Dinamik Rota & IoT Telemetri",
+                Goal = "Canlı GPS telemetri akışı ve teslimat rotası yakıt optimizasyon algoritması.",
+                Status = SprintStatus.Active,
+                StartDate = DateTime.UtcNow.AddDays(-1),
+                EndDate = DateTime.UtcNow.AddDays(13)
+            };
+            await context.Sprints.AddAsync(logSprint1);
+            await context.SaveChangesAsync();
+
+            var logIssues = new List<Issue>
+            {
+                new()
+                {
+                    ProjectId = logProject.Id,
+                    SprintId = logSprint1.Id,
+                    ReporterId = erdemUser.Id,
+                    AssigneeId = ayseUser.Id,
+                    IssueKey = "LOG-1",
+                    Title = "Canlı Filo Haritası & Sürücü Konum Takibi Dashboard",
+                    Description = "Mapbox / Leaflet üzerinde 500+ aracın anlık hız, rota ve durum verilerinin görselleştirilmesi.",
+                    IssueType = IssueType.Story,
+                    Priority = IssuePriority.Urgent,
+                    Status = IssueStatus.InProgress,
+                    StoryPoints = 8,
+                    DueDate = DateTime.UtcNow.AddDays(3),
+                    OrderIndex = 1
+                },
+                new()
+                {
+                    ProjectId = logProject.Id,
+                    SprintId = logSprint1.Id,
+                    ReporterId = erdemUser.Id,
+                    AssigneeId = yaseminUser.Id,
+                    IssueKey = "LOG-2",
+                    Title = "IoT Telemetri Cihazları MQTT Veri Akışı Bağlayıcısı",
+                    Description = "Araç can-bus verilerini (yakıt, motor sıcaklığı, fren) saniyede bir merkeze aktaran protokol.",
+                    IssueType = IssueType.Task,
+                    Priority = IssuePriority.High,
+                    Status = IssueStatus.Done,
+                    StoryPoints = 5,
+                    OrderIndex = 2
+                },
+                new()
+                {
+                    ProjectId = logProject.Id,
+                    SprintId = logSprint1.Id,
+                    ReporterId = demoUser.Id,
+                    AssigneeId = barisUser.Id,
+                    IssueKey = "LOG-3",
+                    Title = "Trafik Yoğunluğuna Göre Alternatif Rota Hesaplama Modeli",
+                    Description = "Trafik kazaları ve hava durumu verilerini harmanlayarak teslimat süresini %18 kısaltma.",
+                    IssueType = IssueType.Story,
+                    Priority = IssuePriority.High,
+                    Status = IssueStatus.InReview,
+                    StoryPoints = 8,
+                    DueDate = DateTime.UtcNow.AddDays(5),
+                    OrderIndex = 3
+                },
+                new()
+                {
+                    ProjectId = logProject.Id,
+                    ReporterId = merveUser.Id,
+                    AssigneeId = serdarUser.Id,
+                    IssueKey = "LOG-4",
+                    Title = "Soğuk Zincir Sıcaklık Sapması Anlık SMS/Çağrı Alarmı",
+                    Description = "İlaç ve gıda taşımacılığında konteyner ısısı eşiği aştığında sürücüye ve merkeze otomatik uyarı.",
+                    IssueType = IssueType.Bug,
+                    Priority = IssuePriority.Urgent,
+                    Status = IssueStatus.Todo,
+                    StoryPoints = 5,
+                    OrderIndex = 4
+                }
+            };
+            await context.Issues.AddRangeAsync(logIssues);
+            await context.SaveChangesAsync();
+        }
+
+        // Always ensure memberships for LOG project (including Ayşe & Demo)
+        await AddMembersAsync(context, logProject.Id, new[]
+        {
+            (erdemUser.Id, ProjectRoleType.Owner),
+            (demoUser.Id, ProjectRoleType.Admin),
+            (ayseUser.Id, ProjectRoleType.Member),
+            (yaseminUser.Id, ProjectRoleType.Member),
+            (barisUser.Id, ProjectRoleType.Member),
+            (merveUser.Id, ProjectRoleType.Member),
+            (serdarUser.Id, ProjectRoleType.Member),
+            (canerUser.Id, ProjectRoleType.Member),
+            (adminUser.Id, ProjectRoleType.Admin)
+        });
 
         // 8. Seed Notifications for Admin and Demo Users
         if (!await context.Notifications.AnyAsync())
