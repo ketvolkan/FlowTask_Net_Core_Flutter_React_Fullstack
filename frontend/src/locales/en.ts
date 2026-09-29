@@ -42,6 +42,9 @@ export const en: Record<string, string> = {
   'common.you': 'You',
   'common.unassigned': 'Unassigned',
   'common.noData': 'No data found',
+  'common.toggleSidebar': 'Toggle Sidebar',
+  'common.expandSidebar': 'Expand Sidebar',
+  'common.collapseSidebar': 'Collapse Sidebar',
 
   // Statuses
   'status.all': 'All Statuses',

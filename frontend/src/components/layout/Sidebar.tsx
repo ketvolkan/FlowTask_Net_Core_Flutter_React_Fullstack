@@ -14,17 +14,23 @@ import {
   PlusCircle,
   Users,
   Activity,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
+  isCollapsed: boolean;
   onClose: () => void;
+  onToggleCollapse: () => void;
   onOpenCreateProject?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
   isOpen,
+  isCollapsed,
   onClose,
+  onToggleCollapse,
   onOpenCreateProject,
 }) => {
   const { user } = useAuth();
@@ -61,49 +67,74 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Sidebar container */}
       <aside
-        className={`fixed top-0 left-0 z-40 flex h-screen w-64 flex-col border-r border-slate-200/80 bg-white transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 ${
-          isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
-        }`}
+        className={`fixed top-0 left-0 z-40 flex h-screen flex-col border-r border-slate-200/80 bg-white transition-all duration-300 ease-in-out lg:static ${
+          isCollapsed ? 'lg:w-20' : 'lg:w-64'
+        } ${isOpen ? 'translate-x-0 w-64 shadow-2xl' : '-translate-x-full lg:translate-x-0'}`}
       >
         {/* Brand Header */}
-        <div className="flex h-16 items-center justify-between px-6 border-b border-slate-100">
-          <div className="flex items-center gap-2.5">
-            <div className={`flex h-9 w-9 items-center justify-center rounded-xl text-white shadow-md ${isSysAdmin ? 'bg-gradient-to-tr from-purple-700 to-indigo-600 shadow-purple-500/20' : 'bg-gradient-to-tr from-indigo-600 to-indigo-500 shadow-indigo-500/20'}`}>
+        <div className={`flex h-16 items-center border-b border-slate-100 ${isCollapsed ? 'justify-center px-2' : 'justify-between px-5'}`}>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className={`flex h-9 w-9 items-center justify-center rounded-xl text-white shadow-md shrink-0 ${isSysAdmin ? 'bg-gradient-to-tr from-purple-700 to-indigo-600 shadow-purple-500/20' : 'bg-gradient-to-tr from-indigo-600 to-indigo-500 shadow-indigo-500/20'}`}>
               {isSysAdmin ? <Shield className="h-5 w-5" /> : <Kanban className="h-5 w-5" />}
             </div>
-            <div>
-              <span className="text-base font-bold tracking-tight text-slate-900">FLOW<span className="text-indigo-600">TASK</span></span>
-              <span className="block text-[9px] font-semibold text-slate-400 uppercase tracking-widest leading-none">
-                {isSysAdmin ? 'Super Admin' : 'Management'}
-              </span>
-            </div>
+            {!isCollapsed && (
+              <div className="overflow-hidden transition-opacity duration-200">
+                <span className="text-base font-bold tracking-tight text-slate-900">FLOW<span className="text-indigo-600">TASK</span></span>
+                <span className="block text-[9px] font-semibold text-slate-400 uppercase tracking-widest leading-none">
+                  {isSysAdmin ? 'Super Admin' : 'Management'}
+                </span>
+              </div>
+            )}
           </div>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 lg:hidden"
-          >
-            <X className="h-5 w-5" />
-          </button>
+
+          {/* Desktop Collapse / Mobile Close Buttons */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={onClose}
+              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 lg:hidden"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <button
+              onClick={onToggleCollapse}
+              className="hidden lg:flex items-center justify-center rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+              title={isCollapsed ? t('common.expandSidebar', 'Genişlet') : t('common.collapseSidebar', 'Daralt')}
+            >
+              {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
 
         {/* Quick Action - Only for standard users/companies, not for super admin */}
         {!isSysAdmin && (
-          <div className="p-4">
-            <button
-              onClick={onOpenCreateProject}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-slate-800 transition-colors"
-            >
-              <PlusCircle className="h-4 w-4 text-indigo-400" />
-              {t('nav.newProject', 'Yeni Proje')}
-            </button>
+          <div className={`p-3 ${isCollapsed ? 'flex justify-center' : ''}`}>
+            {isCollapsed ? (
+              <button
+                onClick={onOpenCreateProject}
+                className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm hover:bg-slate-800 transition-colors"
+                title={t('nav.newProject', 'Yeni Proje')}
+              >
+                <PlusCircle className="h-5 w-5 text-indigo-400" />
+              </button>
+            ) : (
+              <button
+                onClick={onOpenCreateProject}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-slate-800 transition-colors"
+              >
+                <PlusCircle className="h-4 w-4 text-indigo-400" />
+                <span>{t('nav.newProject', 'Yeni Proje')}</span>
+              </button>
+            )}
           </div>
         )}
 
         {/* Navigation Items */}
         <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
-          <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-            {isSysAdmin ? t('nav.adminPanel', 'Yönetim Konsolu') : t('nav.navigation', 'Menü')}
-          </div>
+          {!isCollapsed && (
+            <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              {isSysAdmin ? t('nav.adminPanel', 'Yönetim Konsolu') : t('nav.navigation', 'Menü')}
+            </div>
+          )}
           {navLinks.map((item) => {
             const Icon = item.icon;
             return (
@@ -111,8 +142,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 key={item.path}
                 to={item.path}
                 onClick={() => onClose()}
+                title={isCollapsed ? item.name : undefined}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-medium transition-all ${
+                  `flex items-center gap-3 rounded-xl py-2.5 text-xs font-medium transition-all ${
+                    isCollapsed ? 'justify-center px-2' : 'px-3.5'
+                  } ${
                     isActive
                       ? 'bg-indigo-50 text-indigo-700 font-semibold shadow-xs'
                       : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
@@ -121,8 +155,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               >
                 {({ isActive }) => (
                   <>
-                    <Icon className={`h-4 w-4 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`} />
-                    <span>{item.name}</span>
+                    <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-indigo-600' : 'text-slate-400'}`} />
+                    {!isCollapsed && <span className="truncate">{item.name}</span>}
                   </>
                 )}
               </NavLink>
@@ -131,13 +165,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Footer Language Switcher & App Info */}
-        <div className="border-t border-slate-100 p-3 space-y-2.5">
+        <div className={`border-t border-slate-100 p-3 space-y-2.5 ${isCollapsed ? 'flex flex-col items-center' : ''}`}>
           <LanguageSwitcher />
 
-          <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100 text-center">
-            <p className="text-[11px] font-semibold text-slate-700">Flowtask v1.0.0</p>
-            <p className="text-[10px] text-slate-400">{t('nav.enterprise', 'Kurumsal Proje Yönetimi')}</p>
-          </div>
+          {!isCollapsed && (
+            <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100 text-center">
+              <p className="text-[11px] font-semibold text-slate-700">Flowtask v1.0.0</p>
+              <p className="text-[10px] text-slate-400">{t('nav.enterprise', 'Kurumsal Proje Yönetimi')}</p>
+            </div>
+          )}
         </div>
       </aside>
     </>

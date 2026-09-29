@@ -42,6 +42,9 @@ export const tr = {
   'common.you': 'Sen',
   'common.unassigned': 'Atanmamış',
   'common.noData': 'Veri bulunamadı',
+  'common.toggleSidebar': 'Menüyü Aç/Kapat',
+  'common.expandSidebar': 'Menüyü Genişlet',
+  'common.collapseSidebar': 'Menüyü Daralt',
 
   // Statuses
   'status.all': 'Tüm Durumlar',
