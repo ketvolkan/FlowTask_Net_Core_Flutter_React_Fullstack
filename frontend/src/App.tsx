@@ -3,6 +3,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './context/AuthContext';
 import { CompanyProvider } from './context/CompanyContext';
+import { DepartmentProvider } from './context/DepartmentContext';
 import { AppRoutes } from './routes/AppRoutes';
 import { LanguageProvider } from './context/LanguageContext';
 
@@ -22,7 +23,9 @@ export const App: React.FC = () => {
         <LanguageProvider>
           <AuthProvider>
             <CompanyProvider>
-              <AppRoutes />
+              <DepartmentProvider>
+                <AppRoutes />
+              </DepartmentProvider>
             </CompanyProvider>
           </AuthProvider>
         </LanguageProvider>

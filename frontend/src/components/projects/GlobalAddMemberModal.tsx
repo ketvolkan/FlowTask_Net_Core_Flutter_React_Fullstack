@@ -4,6 +4,7 @@ import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { Select } from '../common/Select';
 import { Input } from '../common/Input';
+import { DepartmentSelect } from '../common/DepartmentSelect';
 import { projectsApi } from '../../api/projectsApi';
 import { Project, ProjectRole } from '../../types';
 import { UserPlus, CheckCircle2 } from 'lucide-react';
@@ -23,6 +24,7 @@ export const GlobalAddMemberModal: React.FC<GlobalAddMemberModalProps> = ({
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>(defaultProjectId || '');
   const [email, setEmail] = useState('');
+  const [department, setDepartment] = useState('Yazılım & Mühendislik');
   const [role, setRole] = useState<ProjectRole>('Member');
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -78,7 +80,7 @@ export const GlobalAddMemberModal: React.FC<GlobalAddMemberModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={t('membersModal.quickAddTitle', 'Projeye Üye / Kullanıcı Ekle')}
-      description={t('membersModal.quickAddDesc', 'Bir projeye e-posta adresiyle yeni bir ekip üyesi davet edin.')}
+      description={t('membersModal.quickAddDesc', 'Bir projeye e-posta adresi ve departman seçimiyle yeni bir ekip üyesi davet edin.')}
       size="md"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -117,14 +119,22 @@ export const GlobalAddMemberModal: React.FC<GlobalAddMemberModalProps> = ({
           required
         />
 
+        {/* Department Dropdown with Manager Creation */}
+        <DepartmentSelect
+          label="Departman / Birim"
+          value={department}
+          onChange={setDepartment}
+          allowCreate={true}
+        />
+
         <Select
-          label={t('membersModal.role', 'Rol')}
+          label={t('membersModal.role', 'Proje Yetkisi / Rol')}
           value={role}
           onChange={(e) => setRole(e.target.value as ProjectRole)}
         >
-          <option value="Member">{t('role.member', 'Üye')}</option>
-          <option value="Admin">{t('role.admin', 'Yönetici')}</option>
-          <option value="Viewer">{t('role.viewer', 'Gözlemci')}</option>
+          <option value="Member">{t('role.member', 'Üye (Görev alabilir, pano kullanabilir)')}</option>
+          <option value="Admin">{t('role.admin', 'Yönetici (Sprint yönetimi & üye ekleme)')}</option>
+          <option value="Viewer">{t('role.viewer', 'Gözlemci (Sadece izleme yetkisi)')}</option>
         </Select>
 
         <div className="flex justify-end gap-2.5 pt-4 border-t border-slate-100">

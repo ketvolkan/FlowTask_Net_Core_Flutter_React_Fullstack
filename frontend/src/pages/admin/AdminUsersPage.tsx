@@ -3,6 +3,7 @@ import { adminApi } from '../../api/adminApi';
 import { User } from '../../types';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
+import { DepartmentSelect } from '../../components/common/DepartmentSelect';
 import { Modal } from '../../components/common/Modal';
 import { UserAvatar } from '../../components/common/UserAvatar';
 import { Badge } from '../../components/common/Badge';
@@ -332,11 +333,11 @@ export const AdminUsersPage: React.FC = () => {
               onChange={(e) => setCreateJobTitle(e.target.value)}
             />
 
-            <Input
+            <DepartmentSelect
               label={t('admin.department', 'Department')}
-              placeholder="e.g. Engineering"
               value={createDepartment}
-              onChange={(e) => setCreateDepartment(e.target.value)}
+              onChange={setCreateDepartment}
+              allowCreate={true}
             />
           </div>
 
@@ -392,10 +393,11 @@ export const AdminUsersPage: React.FC = () => {
                 onChange={(e) => setEditJobTitle(e.target.value)}
               />
 
-              <Input
+              <DepartmentSelect
                 label={t('admin.department', 'Department')}
                 value={editDepartment}
-                onChange={(e) => setEditDepartment(e.target.value)}
+                onChange={setEditDepartment}
+                allowCreate={true}
               />
             </div>
 

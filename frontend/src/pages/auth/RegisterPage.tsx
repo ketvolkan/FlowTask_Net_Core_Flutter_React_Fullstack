@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
+import { DepartmentSelect } from '../../components/common/DepartmentSelect';
 import { LanguageSwitcher } from '../../components/common/LanguageSwitcher';
 import { Kanban, Lock, Mail, User, Briefcase, Building2, ArrowRight, ShieldCheck } from 'lucide-react';
 
@@ -121,12 +122,11 @@ export const RegisterPage: React.FC = () => {
                 leftIcon={<Briefcase className="h-4 w-4" />}
               />
 
-              <Input
+              <DepartmentSelect
                 label={t('profile.department', 'Departman')}
-                placeholder="Örn: Yazılım / Ar-Ge"
                 value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                leftIcon={<Building2 className="h-4 w-4" />}
+                onChange={setDepartment}
+                allowCreate={true}
               />
             </div>
 

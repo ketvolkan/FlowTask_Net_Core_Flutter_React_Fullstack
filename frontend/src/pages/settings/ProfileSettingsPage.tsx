@@ -4,6 +4,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { axiosClient } from '../../api/axiosClient';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
+import { DepartmentSelect } from '../../components/common/DepartmentSelect';
 import { UserAvatar } from '../../components/common/UserAvatar';
 import { Badge } from '../../components/common/Badge';
 import { User, Lock, Save, Shield } from 'lucide-react';
@@ -160,11 +161,11 @@ export const ProfileSettingsPage: React.FC = () => {
               onChange={(e) => setJobTitle(e.target.value)}
             />
 
-            <Input
+            <DepartmentSelect
               label={t('profile.department', 'Departman')}
-              placeholder="e.g. Core Engineering"
               value={department}
-              onChange={(e) => setDepartment(e.target.value)}
+              onChange={setDepartment}
+              allowCreate={true}
             />
           </div>
 
