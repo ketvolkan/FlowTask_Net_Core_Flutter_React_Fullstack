@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/companies.dart';
 import '../blocs/auth/auth_bloc.dart';
 import '../blocs/auth/auth_event.dart';
 import '../blocs/auth/auth_state.dart';
@@ -18,13 +19,19 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _companyNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
+  // 'company' (Yetkili) | 'employee' (Çalışan)
+  String _registerType = 'employee';
+  String _selectedCompanyId = AppCompanies.list.first.id;
+
   @override
   void dispose() {
     _nameController.dispose();
+    _companyNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -73,6 +80,14 @@ class _RegisterPageState extends State<RegisterPage> {
               icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
               onPressed: () => Navigator.of(context).pop(),
             ),
+            title: const Text(
+              'Hesap Oluştur',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
           ),
           body: SafeArea(
             child: Center(
@@ -83,52 +98,204 @@ class _RegisterPageState extends State<RegisterPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Text(
-                        'Create Account',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
+                      // Role Selection Type
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: Colors.grey.shade200),
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        'Start collaborating with Flowtask',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () => setState(() => _registerType = 'employee'),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: _registerType == 'employee'
+                                        ? Colors.white
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(10),
+                                    boxShadow: _registerType == 'employee'
+                                        ? [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(alpha: 0.05),
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ]
+                                        : null,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.person_outline,
+                                        size: 16,
+                                        color: _registerType == 'employee'
+                                            ? AppColors.primary
+                                            : AppColors.textSecondary,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Kullanıcı Girişi',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: _registerType == 'employee'
+                                              ? FontWeight.w700
+                                              : FontWeight.w500,
+                                          color: _registerType == 'employee'
+                                              ? AppColors.primary
+                                              : AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () => setState(() => _registerType = 'company'),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: _registerType == 'company'
+                                        ? Colors.white
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(10),
+                                    boxShadow: _registerType == 'company'
+                                        ? [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(alpha: 0.05),
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ]
+                                        : null,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.business_outlined,
+                                        size: 16,
+                                        color: _registerType == 'company'
+                                            ? AppColors.primary
+                                            : AppColors.textSecondary,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Şirket Yetkilisi',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: _registerType == 'company'
+                                              ? FontWeight.w700
+                                              : FontWeight.w500,
+                                          color: _registerType == 'company'
+                                              ? AppColors.primary
+                                              : AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 24),
+
                       CustomTextField(
                         controller: _nameController,
-                        label: 'Full Name',
-                        hintText: 'John Doe',
+                        label: 'Ad Soyad',
+                        hintText: 'Örn: Ahmet Yılmaz',
                         prefixIcon: const Icon(Icons.person_outline, size: 20, color: AppColors.textMuted),
                         validator: (val) {
-                          if (val == null || val.isEmpty) return 'Full name is required';
+                          if (val == null || val.isEmpty) return 'Ad Soyad zorunludur';
                           return null;
                         },
                       ),
                       const SizedBox(height: 16),
+
+                      if (_registerType == 'company')
+                        CustomTextField(
+                          controller: _companyNameController,
+                          label: 'Şirket Adı',
+                          hintText: 'Örn: Acme Tech A.Ş.',
+                          prefixIcon: const Icon(Icons.business_outlined, size: 20, color: AppColors.textMuted),
+                          validator: (val) {
+                            if (_registerType == 'company' && (val == null || val.isEmpty)) {
+                              return 'Şirket adı zorunludur';
+                            }
+                            return null;
+                          },
+                        )
+                      else
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Katılınacak Şirket',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.shade300),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _selectedCompanyId,
+                                  isExpanded: true,
+                                  icon: const Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                                  items: AppCompanies.list.map((c) {
+                                    return DropdownMenuItem(
+                                      value: c.id,
+                                      child: Text(
+                                        c.name,
+                                        style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (val) {
+                                    if (val != null) {
+                                      setState(() => _selectedCompanyId = val);
+                                    }
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                      const SizedBox(height: 16),
                       CustomTextField(
                         controller: _emailController,
-                        label: 'Email',
+                        label: 'E-posta Adresi',
                         hintText: 'name@company.com',
                         keyboardType: TextInputType.emailAddress,
                         prefixIcon: const Icon(Icons.email_outlined, size: 20, color: AppColors.textMuted),
                         validator: (val) {
-                          if (val == null || val.isEmpty) return 'Email is required';
-                          if (!val.contains('@')) return 'Enter a valid email';
+                          if (val == null || val.isEmpty) return 'E-posta zorunludur';
+                          if (!val.contains('@')) return 'Geçerli bir e-posta adresi girin';
                           return null;
                         },
                       ),
                       const SizedBox(height: 16),
                       CustomTextField(
                         controller: _passwordController,
-                        label: 'Password',
+                        label: 'Şifre',
                         hintText: '••••••••',
                         obscureText: _obscurePassword,
                         prefixIcon: const Icon(Icons.lock_outline, size: 20, color: AppColors.textMuted),
@@ -145,13 +312,13 @@ class _RegisterPageState extends State<RegisterPage> {
                           },
                         ),
                         validator: (val) {
-                          if (val == null || val.length < 6) return 'Minimum 6 characters required';
+                          if (val == null || val.length < 6) return 'En az 6 karakter girilmelidir';
                           return null;
                         },
                       ),
                       const SizedBox(height: 24),
                       CustomButton(
-                        text: 'Sign Up',
+                        text: _registerType == 'company' ? 'Şirket Olarak Kayıt Ol' : 'Kullanıcı Olarak Katıl',
                         isLoading: isLoading,
                         onPressed: _onRegisterPressed,
                       ),
@@ -160,16 +327,16 @@ class _RegisterPageState extends State<RegisterPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Text(
-                            'Already have an account? ',
+                            'Zaten hesabınız var mı? ',
                             style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
                           ),
                           GestureDetector(
                             onTap: () => Navigator.of(context).pop(),
                             child: const Text(
-                              'Sign in',
+                              'Giriş Yap',
                               style: TextStyle(
                                 fontSize: 13,
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w700,
                                 color: AppColors.primary,
                               ),
                             ),

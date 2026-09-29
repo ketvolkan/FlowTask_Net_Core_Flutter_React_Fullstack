@@ -8,8 +8,10 @@ void main() {
     test('UserModel.fromJson parses correctly', () {
       final json = {
         'id': 'u1',
-        'email': 'admin@flowtask.local',
-        'fullName': 'Admin User',
+        'email': 'manager@techflow.com',
+        'fullName': 'Ali Yılmaz',
+        'jobTitle': 'Genel Müdür',
+        'department': 'Yazılım Geliştirme',
         'role': 'Admin',
         'isActive': true,
       };
@@ -17,9 +19,12 @@ void main() {
       final model = UserModel.fromJson(json);
 
       expect(model.id, equals('u1'));
-      expect(model.email, equals('admin@flowtask.local'));
-      expect(model.fullName, equals('Admin User'));
+      expect(model.email, equals('manager@techflow.com'));
+      expect(model.fullName, equals('Ali Yılmaz'));
+      expect(model.jobTitle, equals('Genel Müdür'));
+      expect(model.department, equals('Yazılım Geliştirme'));
       expect(model.role, equals('Admin'));
+      expect(model.isAuthorized, isTrue);
       expect(model.isActive, isTrue);
     });
 
