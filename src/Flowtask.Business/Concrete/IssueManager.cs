@@ -112,6 +112,10 @@ public class IssueManager : IIssueService
 
         var maxOrder = await _issueDal.CountAsync(i => i.ProjectId == projectId && i.Status == request.Status);
 
+        // Sanitize optional Guid fields
+        var cleanSprintId = (request.SprintId.HasValue && request.SprintId.Value != Guid.Empty) ? request.SprintId : null;
+        var cleanAssigneeId = (request.AssigneeId.HasValue && request.AssigneeId.Value != Guid.Empty) ? request.AssigneeId : null;
+
         var issue = new Issue
         {
             ProjectId = projectId,
@@ -123,9 +127,9 @@ public class IssueManager : IIssueService
             Status = request.Status,
             StoryPoints = request.StoryPoints,
             DueDate = request.DueDate,
-            SprintId = request.SprintId,
+            SprintId = cleanSprintId,
             ReporterId = userId,
-            AssigneeId = request.AssigneeId,
+            AssigneeId = cleanAssigneeId,
             Order = (maxOrder + 1) * 1000.0
         };
 
@@ -161,8 +165,8 @@ public class IssueManager : IIssueService
         issue.StoryPoints = request.StoryPoints;
         issue.Order = request.Order;
         issue.DueDate = request.DueDate;
-        issue.SprintId = request.SprintId;
-        issue.AssigneeId = request.AssigneeId;
+        issue.SprintId = (request.SprintId.HasValue && request.SprintId.Value != Guid.Empty) ? request.SprintId : null;
+        issue.AssigneeId = (request.AssigneeId.HasValue && request.AssigneeId.Value != Guid.Empty) ? request.AssigneeId : null;
         issue.UpdatedAt = DateTime.UtcNow;
 
         await _issueDal.UpdateAsync(issue);
@@ -192,7 +196,7 @@ public class IssueManager : IIssueService
         }
         if (request.SprintId.HasValue)
         {
-            issue.SprintId = request.SprintId.Value;
+            issue.SprintId = request.SprintId.Value != Guid.Empty ? request.SprintId.Value : null;
         }
         issue.UpdatedAt = DateTime.UtcNow;
 
@@ -215,7 +219,7 @@ public class IssueManager : IIssueService
             throw new NotFoundException(Messages.IssueNotFound);
         }
 
-        issue.AssigneeId = request.AssigneeId;
+        issue.AssigneeId = (request.AssigneeId.HasValue && request.AssigneeId.Value != Guid.Empty) ? request.AssigneeId : null;
         issue.UpdatedAt = DateTime.UtcNow;
 
         await _issueDal.UpdateAsync(issue);

@@ -35,6 +35,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
   onOpenCreateProject,
 }) => {
   const { t } = useLanguage();
+  const [availableProjects, setAvailableProjects] = useState<Project[]>(projects);
   const [selectedProjectId, setSelectedProjectId] = useState<string>(initialProjectId || '');
   const [localSprints, setLocalSprints] = useState<Sprint[]>(initialSprints);
   const [localMembers, setLocalMembers] = useState<ProjectMember[]>(initialMembers);
@@ -61,6 +62,18 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
       setStatus(defaultStatus);
       setSprintId(defaultSprintId || '');
       setError(null);
+
+      if (projects.length > 0) {
+        setAvailableProjects(projects);
+      } else {
+        projectsApi.getProjects(1, 100).then((data) => {
+          const list = data?.items || [];
+          setAvailableProjects(list);
+          if (list.length > 0 && !selectedProjectId && !initialProjectId) {
+            setSelectedProjectId(list[0].id);
+          }
+        }).catch(console.error);
+      }
     }
   }, [isOpen, initialProjectId, projects, defaultStatus, defaultSprintId]);
 
@@ -129,8 +142,17 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
       onIssueCreated();
       onClose();
     } catch (err: unknown) {
-      const e = err as { response?: { data?: { message?: string } } };
-      setError(e.response?.data?.message || 'Failed to create issue');
+      const e = err as { response?: { data?: { message?: string; errors?: string[] | Record<string, string[]> } } };
+      const data = e.response?.data;
+      let msg = data?.message;
+      if (!msg && data?.errors) {
+        if (Array.isArray(data.errors)) {
+          msg = data.errors.join(', ');
+        } else if (typeof data.errors === 'object') {
+          msg = Object.values(data.errors).flat().join(', ');
+        }
+      }
+      setError(msg || t('createIssue.failed', 'Görev oluşturulamadı. Lütfen alanları kontrol ediniz.'));
     } finally {
       setIsLoading(false);
     }
@@ -144,7 +166,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
       description={t('createIssue.description', 'Bu proje için görev, hata, hikaye veya epik oluşturun.')}
       size="lg"
     >
-      {!selectedProjectId && projects.length === 0 ? (
+      {!selectedProjectId && availableProjects.length === 0 ? (
         <div className="py-6 text-center space-y-4">
           <p className="text-sm text-slate-600">
             {t('createIssue.noProjects', 'Kullanılabilir proje bulunamadı. Görev oluşturmadan önce bir proje oluşturmalı veya bir projeye katılmalısınız.')}
@@ -169,14 +191,14 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
           )}
 
           {/* Project Selector if multiple projects */}
-          {projects.length > 1 && (
+          {availableProjects.length > 1 && (
             <Select
               label={t('createIssue.project', 'Proje')}
               value={selectedProjectId}
               onChange={(e) => setSelectedProjectId(e.target.value)}
               required
             >
-              {projects.map((p) => (
+              {availableProjects.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name} ({p.key})
                 </option>
