@@ -16,6 +16,13 @@ public class JwtTokenHelper : ITokenHelper
         _tokenOptions = tokenOptions.Value;
     }
 
+    public AccessToken CreateToken(Guid userId, string email, string fullName, IEnumerable<string> roles, IEnumerable<string> permissions)
+    {
+        var roleList = roles.ToList();
+        var isSystemAdmin = roleList.Contains("SystemAdmin") || roleList.Contains("Admin");
+        return CreateToken(userId, email, fullName, isSystemAdmin, roleList, permissions);
+    }
+
     public AccessToken CreateToken(Guid userId, string email, string fullName, bool isSystemAdmin, IEnumerable<string> roles, IEnumerable<string> permissions)
     {
         var tokenHandler = new JwtSecurityTokenHandler();

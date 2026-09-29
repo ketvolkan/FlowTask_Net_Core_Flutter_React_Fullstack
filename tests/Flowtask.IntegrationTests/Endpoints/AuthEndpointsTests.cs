@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
-using Flowtask.Business.DTOs.Auth;
 using Flowtask.Core.Results;
+using Flowtask.EntityLayer.DTOs.Auth;
 using Flowtask.IntegrationTests.Infrastructure;
 using FluentAssertions;
 using Xunit;
@@ -21,7 +21,7 @@ public class AuthEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task Login_WithSeededAdminCredentials_ShouldReturnOkAndTokens()
     {
         // Arrange
-        var request = new LoginRequest
+        var request = new UserForLoginDto
         {
             Email = "admin@flowtask.com",
             Password = "Admin123*"
@@ -32,7 +32,7 @@ public class AuthEndpointsTests : IClassFixture<CustomWebApplicationFactory>
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<DataResult<LoginResponse>>();
+        var result = await response.Content.ReadFromJsonAsync<DataResult<TokenDto>>();
         result.Should().NotBeNull();
         result!.Success.Should().BeTrue();
         result.Data.Should().NotBeNull();
@@ -44,7 +44,7 @@ public class AuthEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task Login_WithInvalidPassword_ShouldReturnBadRequest()
     {
         // Arrange
-        var request = new LoginRequest
+        var request = new UserForLoginDto
         {
             Email = "admin@flowtask.com",
             Password = "WrongPassword!"
@@ -54,7 +54,7 @@ public class AuthEndpointsTests : IClassFixture<CustomWebApplicationFactory>
         var response = await _client.PostAsJsonAsync("/api/auth/login", request);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
         var result = await response.Content.ReadFromJsonAsync<Result>();
         result.Should().NotBeNull();
         result!.Success.Should().BeFalse();
@@ -65,7 +65,7 @@ public class AuthEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     {
         // Arrange
         var email = $"tester_{Guid.NewGuid():N}@flowtask.com";
-        var request = new RegisterRequest
+        var request = new UserForRegisterDto
         {
             FullName = "Integration Tester",
             Email = email,
@@ -78,7 +78,7 @@ public class AuthEndpointsTests : IClassFixture<CustomWebApplicationFactory>
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<DataResult<LoginResponse>>();
+        var result = await response.Content.ReadFromJsonAsync<DataResult<TokenDto>>();
         result.Should().NotBeNull();
         result!.Success.Should().BeTrue();
         result.Data!.User.Email.Should().Be(email);

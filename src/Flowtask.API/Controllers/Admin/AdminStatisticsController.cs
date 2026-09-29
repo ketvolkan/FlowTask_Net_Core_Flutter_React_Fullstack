@@ -1,4 +1,4 @@
-using Flowtask.Business.Interfaces;
+using Flowtask.Business.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,9 +16,9 @@ public class AdminStatisticsController : BaseApiController
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetStatistics(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetStatistics()
     {
-        var result = await _adminService.GetSystemStatisticsAsync(cancellationToken);
+        var result = await _adminService.GetSystemStatisticsAsync();
         return HandleDataResult(result);
     }
 }

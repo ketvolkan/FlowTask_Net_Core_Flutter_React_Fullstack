@@ -1,4 +1,4 @@
-using Flowtask.Business.Interfaces;
+using Flowtask.Business.Abstract;
 using Flowtask.Core.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,16 +17,16 @@ public class AdminProjectsController : BaseApiController
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllProjects([FromQuery] PaginationParams paginationParams, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAllProjects([FromQuery] PaginationParams paginationParams)
     {
-        var result = await _adminService.GetAllProjectsAsync(paginationParams, cancellationToken);
-        return Ok(result);
+        var result = await _adminService.GetAllProjectsAsync(paginationParams);
+        return HandleDataResult(result);
     }
 
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> DeleteProject(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteProject(Guid id)
     {
-        var result = await _adminService.DeleteProjectAsync(id, CurrentUserId, cancellationToken);
+        var result = await _adminService.DeleteProjectAsync(id);
         return HandleResult(result);
     }
 }

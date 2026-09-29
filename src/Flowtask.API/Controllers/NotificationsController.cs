@@ -1,4 +1,4 @@
-using Flowtask.Business.Interfaces;
+using Flowtask.Business.Abstract;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,30 +15,23 @@ public class NotificationsController : BaseApiController
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetUserNotifications(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetUserNotifications()
     {
-        var result = await _notificationService.GetUserNotificationsAsync(CurrentUserId, cancellationToken);
-        return HandleDataResult(result);
-    }
-
-    [HttpGet("unread-count")]
-    public async Task<IActionResult> GetUnreadCount(CancellationToken cancellationToken)
-    {
-        var result = await _notificationService.GetUnreadCountAsync(CurrentUserId, cancellationToken);
+        var result = await _notificationService.GetUserNotificationsAsync(CurrentUserId);
         return HandleDataResult(result);
     }
 
     [HttpPatch("{id:guid}/read")]
-    public async Task<IActionResult> MarkAsRead(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> MarkAsRead(Guid id)
     {
-        var result = await _notificationService.MarkAsReadAsync(id, CurrentUserId, cancellationToken);
+        var result = await _notificationService.MarkAsReadAsync(id, CurrentUserId);
         return HandleResult(result);
     }
 
     [HttpPatch("read-all")]
-    public async Task<IActionResult> MarkAllAsRead(CancellationToken cancellationToken)
+    public async Task<IActionResult> MarkAllAsRead()
     {
-        var result = await _notificationService.MarkAllAsReadAsync(CurrentUserId, cancellationToken);
+        var result = await _notificationService.MarkAllAsReadAsync(CurrentUserId);
         return HandleResult(result);
     }
 }

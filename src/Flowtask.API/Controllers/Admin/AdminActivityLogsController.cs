@@ -1,4 +1,4 @@
-using Flowtask.Business.Interfaces;
+using Flowtask.Business.Abstract;
 using Flowtask.Core.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,9 +17,9 @@ public class AdminActivityLogsController : BaseApiController
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetActivityLogs([FromQuery] PaginationParams paginationParams, [FromQuery] Guid? projectId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetActivityLogs([FromQuery] PaginationParams paginationParams, [FromQuery] Guid? projectId)
     {
-        var result = await _activityLogService.GetActivityLogsAsync(projectId, paginationParams, cancellationToken);
-        return Ok(result);
+        var result = await _activityLogService.GetLogsAsync(projectId, paginationParams);
+        return HandleDataResult(result);
     }
 }

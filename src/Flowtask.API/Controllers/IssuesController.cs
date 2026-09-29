@@ -1,12 +1,11 @@
-using Flowtask.Business.DTOs.Issues;
-using Flowtask.Business.Interfaces;
+using Flowtask.Business.Abstract;
+using Flowtask.EntityLayer.DTOs.Issues;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Flowtask.API.Controllers;
 
 [Authorize]
-[Route("api/projects/{projectId:guid}/issues")]
 public class IssuesController : BaseApiController
 {
     private readonly IIssueService _issueService;
@@ -17,51 +16,51 @@ public class IssuesController : BaseApiController
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetIssues(Guid projectId, [FromQuery] IssueFilterParams filterParams, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetIssues([FromQuery] IssueFilterParams filterParams)
     {
-        var result = await _issueService.GetIssuesAsync(projectId, filterParams, CurrentUserId, IsSystemAdmin, cancellationToken);
-        return Ok(result);
-    }
-
-    [HttpGet("{issueId:guid}")]
-    public async Task<IActionResult> GetById(Guid projectId, Guid issueId, CancellationToken cancellationToken)
-    {
-        var result = await _issueService.GetByIdAsync(projectId, issueId, CurrentUserId, IsSystemAdmin, cancellationToken);
+        var result = await _issueService.GetIssuesAsync(CurrentUserId, filterParams);
         return HandleDataResult(result);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> Create(Guid projectId, [FromBody] CreateIssueRequest request, CancellationToken cancellationToken)
+    [HttpGet("{issueId:guid}")]
+    public async Task<IActionResult> GetById(Guid issueId)
     {
-        var result = await _issueService.CreateAsync(projectId, request, CurrentUserId, IsSystemAdmin, cancellationToken);
+        var result = await _issueService.GetIssueByIdAsync(issueId, CurrentUserId);
+        return HandleDataResult(result);
+    }
+
+    [HttpPost("project/{projectId:guid}")]
+    public async Task<IActionResult> Create(Guid projectId, [FromBody] IssueCreateDto request)
+    {
+        var result = await _issueService.CreateIssueAsync(projectId, CurrentUserId, request);
         return HandleDataResult(result);
     }
 
     [HttpPut("{issueId:guid}")]
-    public async Task<IActionResult> Update(Guid projectId, Guid issueId, [FromBody] UpdateIssueRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> Update(Guid issueId, [FromBody] IssueUpdateDto request)
     {
-        var result = await _issueService.UpdateAsync(projectId, issueId, request, CurrentUserId, IsSystemAdmin, cancellationToken);
+        var result = await _issueService.UpdateIssueAsync(issueId, CurrentUserId, request);
         return HandleDataResult(result);
     }
 
     [HttpPatch("{issueId:guid}/status")]
-    public async Task<IActionResult> UpdateStatus(Guid projectId, Guid issueId, [FromBody] UpdateIssueStatusRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdateStatus(Guid issueId, [FromBody] UpdateIssueStatusDto request)
     {
-        var result = await _issueService.UpdateStatusAsync(projectId, issueId, request, CurrentUserId, IsSystemAdmin, cancellationToken);
+        var result = await _issueService.UpdateStatusAsync(issueId, CurrentUserId, request);
         return HandleDataResult(result);
     }
 
     [HttpPatch("{issueId:guid}/assign")]
-    public async Task<IActionResult> AssignIssue(Guid projectId, Guid issueId, [FromBody] AssignIssueRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> AssignIssue(Guid issueId, [FromBody] AssignIssueDto request)
     {
-        var result = await _issueService.AssignIssueAsync(projectId, issueId, request, CurrentUserId, IsSystemAdmin, cancellationToken);
+        var result = await _issueService.AssignIssueAsync(issueId, CurrentUserId, request);
         return HandleDataResult(result);
     }
 
     [HttpDelete("{issueId:guid}")]
-    public async Task<IActionResult> Delete(Guid projectId, Guid issueId, CancellationToken cancellationToken)
+    public async Task<IActionResult> Delete(Guid issueId)
     {
-        var result = await _issueService.DeleteAsync(projectId, issueId, CurrentUserId, IsSystemAdmin, cancellationToken);
+        var result = await _issueService.DeleteIssueAsync(issueId, CurrentUserId);
         return HandleResult(result);
     }
 }

@@ -1,6 +1,6 @@
-using Flowtask.Business.DTOs.Auth;
-using Flowtask.Business.DTOs.Projects;
-using Flowtask.Business.ValidationRules;
+using Flowtask.Business.ValidationRules.FluentValidation;
+using Flowtask.EntityLayer.DTOs.Auth;
+using Flowtask.EntityLayer.DTOs.Projects;
 using FluentAssertions;
 using Xunit;
 
@@ -13,10 +13,10 @@ public class ValidationTests
     [InlineData("invalid-email", "Password123*", false)]
     [InlineData("valid@flowtask.com", "", false)]
     [InlineData("valid@flowtask.com", "Password123*", true)]
-    public void LoginRequestValidator_ShouldValidateCorrectly(string email, string password, bool isValid)
+    public void UserForLoginDtoValidator_ShouldValidateCorrectly(string email, string password, bool isValid)
     {
-        var validator = new LoginRequestValidator();
-        var request = new LoginRequest { Email = email, Password = password };
+        var validator = new UserForLoginDtoValidator();
+        var request = new UserForLoginDto { Email = email, Password = password };
 
         var result = validator.Validate(request);
         result.IsValid.Should().Be(isValid);
@@ -27,10 +27,10 @@ public class ValidationTests
     [InlineData("Flowtask", "F", false)] // Key too short (min 2)
     [InlineData("Flowtask", "flw", false)] // Key must be uppercase
     [InlineData("Flowtask", "FLW10", true)]
-    public void CreateProjectRequestValidator_ShouldValidateCorrectly(string name, string key, bool isValid)
+    public void ProjectCreateDtoValidator_ShouldValidateCorrectly(string name, string key, bool isValid)
     {
-        var validator = new CreateProjectRequestValidator();
-        var request = new CreateProjectRequest { Name = name, Key = key };
+        var validator = new ProjectCreateDtoValidator();
+        var request = new ProjectCreateDto { Name = name, Key = key };
 
         var result = validator.Validate(request);
         result.IsValid.Should().Be(isValid);

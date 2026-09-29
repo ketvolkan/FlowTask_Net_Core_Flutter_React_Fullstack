@@ -1,12 +1,11 @@
-using Flowtask.Business.DTOs.Sprints;
-using Flowtask.Business.Interfaces;
+using Flowtask.Business.Abstract;
+using Flowtask.EntityLayer.DTOs.Sprints;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Flowtask.API.Controllers;
 
 [Authorize]
-[Route("api/projects/{projectId:guid}/sprints")]
 public class SprintsController : BaseApiController
 {
     private readonly ISprintService _sprintService;
@@ -16,52 +15,52 @@ public class SprintsController : BaseApiController
         _sprintService = sprintService;
     }
 
-    [HttpGet]
-    public async Task<IActionResult> GetProjectSprints(Guid projectId, CancellationToken cancellationToken)
+    [HttpGet("project/{projectId:guid}")]
+    public async Task<IActionResult> GetProjectSprints(Guid projectId)
     {
-        var result = await _sprintService.GetProjectSprintsAsync(projectId, CurrentUserId, IsSystemAdmin, cancellationToken);
+        var result = await _sprintService.GetProjectSprintsAsync(projectId, CurrentUserId);
         return HandleDataResult(result);
     }
 
     [HttpGet("{sprintId:guid}")]
-    public async Task<IActionResult> GetById(Guid projectId, Guid sprintId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetById(Guid sprintId)
     {
-        var result = await _sprintService.GetByIdAsync(projectId, sprintId, CurrentUserId, IsSystemAdmin, cancellationToken);
+        var result = await _sprintService.GetSprintByIdAsync(sprintId, CurrentUserId);
         return HandleDataResult(result);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> Create(Guid projectId, [FromBody] CreateSprintRequest request, CancellationToken cancellationToken)
+    [HttpPost("project/{projectId:guid}")]
+    public async Task<IActionResult> Create(Guid projectId, [FromBody] SprintCreateDto request)
     {
-        var result = await _sprintService.CreateAsync(projectId, request, CurrentUserId, IsSystemAdmin, cancellationToken);
+        var result = await _sprintService.CreateSprintAsync(projectId, CurrentUserId, request);
         return HandleDataResult(result);
     }
 
     [HttpPut("{sprintId:guid}")]
-    public async Task<IActionResult> Update(Guid projectId, Guid sprintId, [FromBody] UpdateSprintRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> Update(Guid sprintId, [FromBody] SprintUpdateDto request)
     {
-        var result = await _sprintService.UpdateAsync(projectId, sprintId, request, CurrentUserId, IsSystemAdmin, cancellationToken);
+        var result = await _sprintService.UpdateSprintAsync(sprintId, CurrentUserId, request);
         return HandleDataResult(result);
     }
 
     [HttpPatch("{sprintId:guid}/start")]
-    public async Task<IActionResult> Start(Guid projectId, Guid sprintId, CancellationToken cancellationToken)
+    public async Task<IActionResult> Start(Guid sprintId)
     {
-        var result = await _sprintService.StartSprintAsync(projectId, sprintId, CurrentUserId, IsSystemAdmin, cancellationToken);
+        var result = await _sprintService.StartSprintAsync(sprintId, CurrentUserId);
         return HandleDataResult(result);
     }
 
     [HttpPatch("{sprintId:guid}/complete")]
-    public async Task<IActionResult> Complete(Guid projectId, Guid sprintId, CancellationToken cancellationToken)
+    public async Task<IActionResult> Complete(Guid sprintId)
     {
-        var result = await _sprintService.CompleteSprintAsync(projectId, sprintId, CurrentUserId, IsSystemAdmin, cancellationToken);
+        var result = await _sprintService.CompleteSprintAsync(sprintId, CurrentUserId);
         return HandleDataResult(result);
     }
 
     [HttpDelete("{sprintId:guid}")]
-    public async Task<IActionResult> Delete(Guid projectId, Guid sprintId, CancellationToken cancellationToken)
+    public async Task<IActionResult> Delete(Guid sprintId)
     {
-        var result = await _sprintService.DeleteAsync(projectId, sprintId, CurrentUserId, IsSystemAdmin, cancellationToken);
+        var result = await _sprintService.DeleteSprintAsync(sprintId, CurrentUserId);
         return HandleResult(result);
     }
 }

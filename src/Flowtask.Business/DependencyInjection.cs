@@ -1,11 +1,10 @@
 using FluentValidation;
-using Flowtask.Business.Interfaces;
+using Flowtask.Business.Abstract;
+using Flowtask.Business.Concrete;
 using Flowtask.Business.Mappings;
-using Flowtask.Business.Services;
-using Flowtask.Business.ValidationRules;
+using Flowtask.Business.ValidationRules.FluentValidation;
 using Flowtask.Core.Caching;
 using Flowtask.Core.Security;
-using Flowtask.DataAccess.Context;
 using Flowtask.DataAccess.Repositories;
 using Flowtask.DataAccess.UnitOfWork;
 using Microsoft.Extensions.Configuration;
@@ -47,17 +46,18 @@ public static class DependencyInjection
         services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-        // Business Services
-        services.AddScoped<IAuthService, AuthService>();
-        services.AddScoped<IUserService, UserService>();
-        services.AddScoped<IProjectService, ProjectService>();
-        services.AddScoped<IProjectMemberService, ProjectMemberService>();
-        services.AddScoped<IIssueService, IssueService>();
-        services.AddScoped<ISprintService, SprintService>();
-        services.AddScoped<ICommentService, CommentService>();
-        services.AddScoped<INotificationService, NotificationService>();
-        services.AddScoped<IActivityLogService, ActivityLogService>();
-        services.AddScoped<IAdminService, AdminService>();
+        // Business Managers / Services
+        services.AddScoped<IAuthService, AuthManager>();
+        services.AddScoped<IUserService, UserManager>();
+        services.AddScoped<IProjectService, ProjectManager>();
+        services.AddScoped<IProjectMemberService, ProjectMemberManager>();
+        services.AddScoped<IIssueService, IssueManager>();
+        services.AddScoped<ISprintService, SprintManager>();
+        services.AddScoped<ICommentService, CommentManager>();
+        services.AddScoped<IAttachmentService, AttachmentManager>();
+        services.AddScoped<INotificationService, NotificationManager>();
+        services.AddScoped<IActivityLogService, ActivityLogManager>();
+        services.AddScoped<IAdminService, AdminManager>();
 
         // AutoMapper
         services.AddAutoMapper(cfg =>
@@ -73,7 +73,7 @@ public static class DependencyInjection
         });
 
         // FluentValidation
-        services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
+        services.AddValidatorsFromAssemblyContaining<UserForLoginDtoValidator>();
 
         return services;
     }

@@ -16,41 +16,136 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
         _dbSet = _context.Set<T>();
     }
 
-    public IQueryable<T> Query(bool asNoTracking = true)
+    public IQueryable<T> Query(bool asNoTracking = false)
     {
         return asNoTracking ? _dbSet.AsNoTracking() : _dbSet.AsQueryable();
     }
 
-    public async Task<IReadOnlyList<T>> GetAllAsync(bool asNoTracking = true, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<T>> GetAllAsync(
+        Expression<Func<T, bool>>? filter = null,
+        string? includeProperties = null,
+        Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
+        bool asNoTracking = true,
+        CancellationToken cancellationToken = default)
     {
-        return await Query(asNoTracking).ToListAsync(cancellationToken);
+        var query = Query(asNoTracking);
+
+        if (filter != null)
+        {
+            query = query.Where(filter);
+        }
+
+        if (!string.IsNullOrWhiteSpace(includeProperties))
+        {
+            foreach (var includeProp in includeProperties.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProp.Trim());
+            }
+        }
+
+        if (orderBy != null)
+        {
+            query = orderBy(query);
+        }
+
+        return await query.ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<T>> GetAsync(Expression<Func<T, bool>> predicate, bool asNoTracking = true, CancellationToken cancellationToken = default)
+    public async Task<(IReadOnlyList<T> Items, int TotalCount)> GetPagedAsync(
+        Expression<Func<T, bool>>? filter = null,
+        int page = 1,
+        int pageSize = 10,
+        string? includeProperties = null,
+        Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
+        bool asNoTracking = true,
+        CancellationToken cancellationToken = default)
     {
-        return await Query(asNoTracking).Where(predicate).ToListAsync(cancellationToken);
+        var query = Query(asNoTracking);
+
+        if (filter != null)
+        {
+            query = query.Where(filter);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        if (!string.IsNullOrWhiteSpace(includeProperties))
+        {
+            foreach (var includeProp in includeProperties.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProp.Trim());
+            }
+        }
+
+        if (orderBy != null)
+        {
+            query = orderBy(query);
+        }
+
+        var pageIndex = page < 1 ? 1 : page;
+        var validPageSize = pageSize < 1 ? 10 : pageSize;
+
+        var items = await query
+            .Skip((pageIndex - 1) * validPageSize)
+            .Take(validPageSize)
+            .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
     }
 
-    public async Task<T?> GetByIdAsync(Guid id, bool asNoTracking = true, CancellationToken cancellationToken = default)
+    public async Task<T?> GetAsync(
+        Expression<Func<T, bool>> filter,
+        string? includeProperties = null,
+        bool asNoTracking = true,
+        CancellationToken cancellationToken = default)
     {
-        return await Query(asNoTracking).FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+        var query = Query(asNoTracking);
+
+        if (!string.IsNullOrWhiteSpace(includeProperties))
+        {
+            foreach (var includeProp in includeProperties.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProp.Trim());
+            }
+        }
+
+        return await query.FirstOrDefaultAsync(filter, cancellationToken);
     }
 
-    public async Task<T?> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate, bool asNoTracking = true, CancellationToken cancellationToken = default)
+    public async Task<T?> GetByIdAsync(
+        Guid id,
+        string? includeProperties = null,
+        bool asNoTracking = true,
+        CancellationToken cancellationToken = default)
     {
-        return await Query(asNoTracking).FirstOrDefaultAsync(predicate, cancellationToken);
+        var query = Query(asNoTracking);
+
+        if (!string.IsNullOrWhiteSpace(includeProperties))
+        {
+            foreach (var includeProp in includeProperties.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProp.Trim());
+            }
+        }
+
+        return await query.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
     }
 
-    public async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default)
+    public async Task<bool> ExistsAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
     {
-        return await _dbSet.AnyAsync(predicate, cancellationToken);
+        return await _dbSet.AnyAsync(filter, cancellationToken);
     }
 
-    public async Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null, CancellationToken cancellationToken = default)
+    public async Task<bool> AnyAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default)
     {
-        return predicate == null
+        return await _dbSet.AnyAsync(filter, cancellationToken);
+    }
+
+    public async Task<int> CountAsync(Expression<Func<T, bool>>? filter = null, CancellationToken cancellationToken = default)
+    {
+        return filter == null
             ? await _dbSet.CountAsync(cancellationToken)
-            : await _dbSet.CountAsync(predicate, cancellationToken);
+            : await _dbSet.CountAsync(filter, cancellationToken);
     }
 
     public async Task<T> AddAsync(T entity, CancellationToken cancellationToken = default)

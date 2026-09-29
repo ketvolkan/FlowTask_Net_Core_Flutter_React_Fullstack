@@ -1,6 +1,6 @@
-using Flowtask.Business.DTOs.Users;
-using Flowtask.Business.Interfaces;
+using Flowtask.Business.Abstract;
 using Flowtask.Core.Utilities;
+using Flowtask.EntityLayer.DTOs.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,51 +18,30 @@ public class AdminUsersController : BaseApiController
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllUsers([FromQuery] PaginationParams paginationParams, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAllUsers([FromQuery] PaginationParams paginationParams)
     {
-        var result = await _adminService.GetAllUsersAsync(paginationParams, cancellationToken);
-        return Ok(result);
-    }
-
-    [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetUserById(Guid id, CancellationToken cancellationToken)
-    {
-        var result = await _adminService.GetUserByIdAsync(id, cancellationToken);
+        var result = await _adminService.GetAllUsersAsync(paginationParams);
         return HandleDataResult(result);
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateUser([FromBody] CreateUserAdminRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> CreateUser([FromBody] CreateUserAdminDto request)
     {
-        var result = await _adminService.CreateUserAsync(request, CurrentUserId, cancellationToken);
+        var result = await _adminService.CreateUserAsync(request);
         return HandleDataResult(result);
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserAdminRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserAdminDto request)
     {
-        var result = await _adminService.UpdateUserAsync(id, request, CurrentUserId, cancellationToken);
+        var result = await _adminService.UpdateUserAsync(id, request);
         return HandleDataResult(result);
     }
 
-    [HttpPatch("{id:guid}/status")]
-    public async Task<IActionResult> ToggleUserStatus(Guid id, CancellationToken cancellationToken)
-    {
-        var result = await _adminService.ToggleUserStatusAsync(id, CurrentUserId, cancellationToken);
-        return HandleResult(result);
-    }
-
-    [HttpPatch("{id:guid}/system-admin-role")]
-    public async Task<IActionResult> SetSystemAdminRole(Guid id, [FromQuery] bool isSystemAdmin, CancellationToken cancellationToken)
-    {
-        var result = await _adminService.SetSystemAdminRoleAsync(id, isSystemAdmin, CurrentUserId, cancellationToken);
-        return HandleResult(result);
-    }
-
     [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> DeleteUser(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteUser(Guid id)
     {
-        var result = await _adminService.DeleteUserAsync(id, CurrentUserId, cancellationToken);
+        var result = await _adminService.DeleteUserAsync(id);
         return HandleResult(result);
     }
 }

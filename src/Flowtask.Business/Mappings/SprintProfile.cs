@@ -1,5 +1,5 @@
 using AutoMapper;
-using Flowtask.Business.DTOs.Sprints;
+using Flowtask.EntityLayer.DTOs.Sprints;
 using Flowtask.EntityLayer.Entities;
 using Flowtask.EntityLayer.Enums;
 
@@ -17,7 +17,8 @@ public class SprintProfile : Profile
             .ForMember(dest => dest.CompletedStoryPoints, opt => opt.MapFrom(src => src.Issues.Where(i => !i.IsDeleted && i.Status == IssueStatus.Done && i.StoryPoints.HasValue).Sum(i => i.StoryPoints!.Value)));
 
         CreateMap<Sprint, SprintDetailDto>()
-            .IncludeBase<Sprint, SprintDto>()
+            .ForMember(dest => dest.TotalStoryPoints, opt => opt.MapFrom(src => src.Issues.Where(i => !i.IsDeleted && i.StoryPoints.HasValue).Sum(i => i.StoryPoints!.Value)))
+            .ForMember(dest => dest.CompletedStoryPoints, opt => opt.MapFrom(src => src.Issues.Where(i => !i.IsDeleted && i.Status == IssueStatus.Done && i.StoryPoints.HasValue).Sum(i => i.StoryPoints!.Value)))
             .ForMember(dest => dest.Issues, opt => opt.MapFrom(src => src.Issues.Where(i => !i.IsDeleted)));
     }
 }

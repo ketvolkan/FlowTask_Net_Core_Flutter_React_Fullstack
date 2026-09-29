@@ -1,8 +1,8 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using Flowtask.Business.DTOs.Auth;
 using Flowtask.Core.Results;
+using Flowtask.EntityLayer.DTOs.Auth;
 using Flowtask.IntegrationTests.Infrastructure;
 using FluentAssertions;
 using Xunit;
@@ -20,13 +20,13 @@ public class AuthorizationSecurityTests : IClassFixture<CustomWebApplicationFact
 
     private async Task<string> GetTokenAsync(string email, string password)
     {
-        var response = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest
+        var response = await _client.PostAsJsonAsync("/api/auth/login", new UserForLoginDto
         {
             Email = email,
             Password = password
         });
 
-        var result = await response.Content.ReadFromJsonAsync<DataResult<LoginResponse>>();
+        var result = await response.Content.ReadFromJsonAsync<DataResult<TokenDto>>();
         return result!.Data!.AccessToken;
     }
 

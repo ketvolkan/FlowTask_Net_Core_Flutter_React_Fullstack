@@ -1,12 +1,11 @@
-using Flowtask.Business.DTOs.Comments;
-using Flowtask.Business.Interfaces;
+using Flowtask.Business.Abstract;
+using Flowtask.EntityLayer.DTOs.Comments;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Flowtask.API.Controllers;
 
 [Authorize]
-[Route("api/projects/{projectId:guid}/issues/{issueId:guid}/comments")]
 public class CommentsController : BaseApiController
 {
     private readonly ICommentService _commentService;
@@ -16,31 +15,31 @@ public class CommentsController : BaseApiController
         _commentService = commentService;
     }
 
-    [HttpGet]
-    public async Task<IActionResult> GetComments(Guid projectId, Guid issueId, CancellationToken cancellationToken)
+    [HttpGet("issue/{issueId:guid}")]
+    public async Task<IActionResult> GetComments(Guid issueId)
     {
-        var result = await _commentService.GetCommentsAsync(projectId, issueId, CurrentUserId, IsSystemAdmin, cancellationToken);
+        var result = await _commentService.GetIssueCommentsAsync(issueId, CurrentUserId);
         return HandleDataResult(result);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> AddComment(Guid projectId, Guid issueId, [FromBody] CreateCommentRequest request, CancellationToken cancellationToken)
+    [HttpPost("issue/{issueId:guid}")]
+    public async Task<IActionResult> AddComment(Guid issueId, [FromBody] CommentCreateDto request)
     {
-        var result = await _commentService.AddCommentAsync(projectId, issueId, request, CurrentUserId, IsSystemAdmin, cancellationToken);
+        var result = await _commentService.AddCommentAsync(issueId, CurrentUserId, request);
         return HandleDataResult(result);
     }
 
     [HttpPut("{commentId:guid}")]
-    public async Task<IActionResult> UpdateComment(Guid projectId, Guid issueId, Guid commentId, [FromBody] UpdateCommentRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdateComment(Guid commentId, [FromBody] CommentUpdateDto request)
     {
-        var result = await _commentService.UpdateCommentAsync(projectId, issueId, commentId, request, CurrentUserId, IsSystemAdmin, cancellationToken);
+        var result = await _commentService.UpdateCommentAsync(commentId, CurrentUserId, request);
         return HandleDataResult(result);
     }
 
     [HttpDelete("{commentId:guid}")]
-    public async Task<IActionResult> DeleteComment(Guid projectId, Guid issueId, Guid commentId, CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteComment(Guid commentId)
     {
-        var result = await _commentService.DeleteCommentAsync(projectId, issueId, commentId, CurrentUserId, IsSystemAdmin, cancellationToken);
+        var result = await _commentService.DeleteCommentAsync(commentId, CurrentUserId);
         return HandleResult(result);
     }
 }

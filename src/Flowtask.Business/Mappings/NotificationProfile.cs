@@ -1,5 +1,5 @@
 using AutoMapper;
-using Flowtask.Business.DTOs.Notifications;
+using Flowtask.EntityLayer.DTOs.Notifications;
 using Flowtask.EntityLayer.Entities;
 
 namespace Flowtask.Business.Mappings;

@@ -7,8 +7,10 @@ public class User : BaseEntity, ISoftDeletable
     public string FullName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
+    public string? PasswordSalt { get; set; }
     public string? AvatarUrl { get; set; }
     public string? JobTitle { get; set; }
+    public string? Department { get; set; }
     public string? PhoneNumber { get; set; }
     public bool IsActive { get; set; } = true;
     public bool IsSystemAdmin { get; set; } = false;

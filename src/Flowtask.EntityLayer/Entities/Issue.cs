@@ -9,11 +9,13 @@ public class Issue : BaseEntity, ISoftDeletable
     public Project Project { get; set; } = null!;
 
     public string IssueKey { get; set; } = string.Empty; // e.g. "FLW-101"
+    public string Key { get => IssueKey; set => IssueKey = value; }
     public int IssueNumber { get; set; }
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
 
     public IssueType IssueType { get; set; } = IssueType.Task;
+    public IssueType Type { get => IssueType; set => IssueType = value; }
     public IssueStatus Status { get; set; } = IssueStatus.Todo;
     public IssuePriority Priority { get; set; } = IssuePriority.Medium;
 
@@ -29,6 +31,7 @@ public class Issue : BaseEntity, ISoftDeletable
     public int? StoryPoints { get; set; }
     public DateTime? DueDate { get; set; }
     public double OrderIndex { get; set; } = 0; // Kanban column ordering
+    public double Order { get => OrderIndex; set => OrderIndex = value; }
 
     public bool IsDeleted { get; set; } = false;
     public DateTime? DeletedAt { get; set; }

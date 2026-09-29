@@ -1,6 +1,6 @@
 using AutoMapper;
-using Flowtask.Business.DTOs.Auth;
-using Flowtask.Business.DTOs.Users;
+using Flowtask.EntityLayer.DTOs.Auth;
+using Flowtask.EntityLayer.DTOs.Users;
 using Flowtask.EntityLayer.Entities;
 
 namespace Flowtask.Business.Mappings;

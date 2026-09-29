@@ -1,5 +1,5 @@
 using AutoMapper;
-using Flowtask.Business.DTOs.Issues;
+using Flowtask.EntityLayer.DTOs.Issues;
 using Flowtask.EntityLayer.Entities;
 
 namespace Flowtask.Business.Mappings;
@@ -9,6 +9,7 @@ public class IssueProfile : Profile
     public IssueProfile()
     {
         CreateMap<Issue, IssueDto>()
+            .ForMember(dest => dest.ProjectName, opt => opt.MapFrom(src => src.Project != null ? src.Project.Name : string.Empty))
             .ForMember(dest => dest.ProjectKey, opt => opt.MapFrom(src => src.Project != null ? src.Project.Key : string.Empty))
             .ForMember(dest => dest.ReporterName, opt => opt.MapFrom(src => src.Reporter != null ? src.Reporter.FullName : string.Empty))
             .ForMember(dest => dest.ReporterAvatarUrl, opt => opt.MapFrom(src => src.Reporter != null ? src.Reporter.AvatarUrl : null))

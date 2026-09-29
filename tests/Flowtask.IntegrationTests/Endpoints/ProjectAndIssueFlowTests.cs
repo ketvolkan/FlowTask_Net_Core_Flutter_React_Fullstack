@@ -1,11 +1,11 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using Flowtask.Business.DTOs.Auth;
-using Flowtask.Business.DTOs.Comments;
-using Flowtask.Business.DTOs.Issues;
-using Flowtask.Business.DTOs.Projects;
 using Flowtask.Core.Results;
+using Flowtask.EntityLayer.DTOs.Auth;
+using Flowtask.EntityLayer.DTOs.Comments;
+using Flowtask.EntityLayer.DTOs.Issues;
+using Flowtask.EntityLayer.DTOs.Projects;
 using Flowtask.EntityLayer.Enums;
 using Flowtask.IntegrationTests.Infrastructure;
 using FluentAssertions;
@@ -24,13 +24,13 @@ public class ProjectAndIssueFlowTests : IClassFixture<CustomWebApplicationFactor
 
     private async Task<string> GetTokenAsync(string email, string password)
     {
-        var response = await _client.PostAsJsonAsync("/api/auth/login", new LoginRequest
+        var response = await _client.PostAsJsonAsync("/api/auth/login", new UserForLoginDto
         {
             Email = email,
             Password = password
         });
 
-        var result = await response.Content.ReadFromJsonAsync<DataResult<LoginResponse>>();
+        var result = await response.Content.ReadFromJsonAsync<DataResult<TokenDto>>();
         return result!.Data!.AccessToken;
     }
 
@@ -43,7 +43,7 @@ public class ProjectAndIssueFlowTests : IClassFixture<CustomWebApplicationFactor
 
         // 2. Create Project
         var key = "TST" + Guid.NewGuid().ToString("N")[..3].ToUpperInvariant();
-        var createProjectResponse = await _client.PostAsJsonAsync("/api/projects", new CreateProjectRequest
+        var createProjectResponse = await _client.PostAsJsonAsync("/api/projects", new ProjectCreateDto
         {
             Name = "Integration Test Project",
             Key = key,
@@ -54,32 +54,32 @@ public class ProjectAndIssueFlowTests : IClassFixture<CustomWebApplicationFactor
         var projectId = projectResult!.Data!.Id;
 
         // 3. Create Issue 1
-        var createIssue1Response = await _client.PostAsJsonAsync($"/api/projects/{projectId}/issues", new CreateIssueRequest
+        var createIssue1Response = await _client.PostAsJsonAsync($"/api/issues/project/{projectId}", new IssueCreateDto
         {
             Title = "First Test Task",
             Description = "Task description",
-            IssueType = IssueType.Task,
+            Type = IssueType.Task,
             Priority = IssuePriority.High,
             Status = IssueStatus.Todo
         });
         createIssue1Response.StatusCode.Should().Be(HttpStatusCode.OK);
         var issue1Result = await createIssue1Response.Content.ReadFromJsonAsync<DataResult<IssueDto>>();
         var issue1Id = issue1Result!.Data!.Id;
-        issue1Result.Data.IssueKey.Should().Be($"{key}-1");
+        issue1Result.Data.Key.Should().Be($"{key}-1");
 
         // 4. Create Issue 2 (Verify auto-incrementing key)
-        var createIssue2Response = await _client.PostAsJsonAsync($"/api/projects/{projectId}/issues", new CreateIssueRequest
+        var createIssue2Response = await _client.PostAsJsonAsync($"/api/issues/project/{projectId}", new IssueCreateDto
         {
             Title = "Second Test Bug",
-            IssueType = IssueType.Bug,
+            Type = IssueType.Bug,
             Priority = IssuePriority.Highest
         });
         createIssue2Response.StatusCode.Should().Be(HttpStatusCode.OK);
         var issue2Result = await createIssue2Response.Content.ReadFromJsonAsync<DataResult<IssueDto>>();
-        issue2Result!.Data!.IssueKey.Should().Be($"{key}-2");
+        issue2Result!.Data!.Key.Should().Be($"{key}-2");
 
         // 5. Update Status of Issue 1 to InProgress
-        var updateStatusResponse = await _client.PatchAsJsonAsync($"/api/projects/{projectId}/issues/{issue1Id}/status", new UpdateIssueStatusRequest
+        var updateStatusResponse = await _client.PatchAsJsonAsync($"/api/issues/{issue1Id}/status", new UpdateIssueStatusDto
         {
             Status = IssueStatus.InProgress
         });
@@ -88,7 +88,7 @@ public class ProjectAndIssueFlowTests : IClassFixture<CustomWebApplicationFactor
         updatedStatusResult!.Data!.Status.Should().Be(IssueStatus.InProgress);
 
         // 6. Add Comment to Issue 1
-        var commentResponse = await _client.PostAsJsonAsync($"/api/projects/{projectId}/issues/{issue1Id}/comments", new CreateCommentRequest
+        var commentResponse = await _client.PostAsJsonAsync($"/api/comments/issue/{issue1Id}", new CommentCreateDto
         {
             Content = "Starting work on this task."
         });
@@ -96,9 +96,9 @@ public class ProjectAndIssueFlowTests : IClassFixture<CustomWebApplicationFactor
         var commentResult = await commentResponse.Content.ReadFromJsonAsync<DataResult<CommentDto>>();
         commentResult!.Data!.Content.Should().Be("Starting work on this task.");
 
-        // 7. IDOR Isolation check: Accessing issue with wrong project ID should fail
-        var randomProjectId = Guid.NewGuid();
-        var idorResponse = await _client.GetAsync($"/api/projects/{randomProjectId}/issues/{issue1Id}");
-        idorResponse.StatusCode.Should().BeOneOf(HttpStatusCode.BadRequest, HttpStatusCode.NotFound);
+        // 7. Isolation check: Accessing nonexistent issue should fail with NotFound
+        var randomIssueId = Guid.NewGuid();
+        var idorResponse = await _client.GetAsync($"/api/issues/{randomIssueId}");
+        idorResponse.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 }
