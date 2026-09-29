@@ -6,7 +6,7 @@ import { isAuthorizedUser } from '../../utils/permissionUtils';
 import { projectsApi } from '../../api/projectsApi';
 import { issuesApi } from '../../api/issuesApi';
 import { usersApi } from '../../api/usersApi';
-import { Project, ProjectMember, Issue, IssueStatus } from '../../types';
+import { Project, ProjectMember, ProjectRole, Issue, IssueStatus } from '../../types';
 import { UserAvatar } from '../../components/common/UserAvatar';
 import { DepartmentSelect } from '../../components/common/DepartmentSelect';
 import { ProjectRoleBadge, StatusBadge, PriorityBadge, TypeBadge } from '../../components/common/Badge';
@@ -30,6 +30,10 @@ import {
   Building2,
   Lock,
   Save,
+  Plus,
+  Trash2,
+  FolderPlus,
+  Folder,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { tr as trLocale, enUS } from 'date-fns/locale';
@@ -75,10 +79,50 @@ export const TeamPage: React.FC = () => {
   const [deptSaveSuccess, setDeptSaveSuccess] = useState<string | null>(null);
   const [deptSaveError, setDeptSaveError] = useState<string | null>(null);
 
+  // Member projects assignment state inside detail modal
+  const [userAssignedProjects, setUserAssignedProjects] = useState<{ project: Project; role: ProjectRole }[]>([]);
+  const [isLoadingUserProjects, setIsLoadingUserProjects] = useState(false);
+  const [selectedProjectToAdd, setSelectedProjectToAdd] = useState('');
+  const [selectedRoleToAdd, setSelectedRoleToAdd] = useState<ProjectRole>('Member');
+  const [isAddingToProject, setIsAddingToProject] = useState(false);
+  const [projectActionSuccess, setProjectActionSuccess] = useState<string | null>(null);
+  const [projectActionError, setProjectActionError] = useState<string | null>(null);
+
+  const fetchUserProjects = useCallback(async (userId: string) => {
+    if (!userId) return;
+    setIsLoadingUserProjects(true);
+    try {
+      const results = await Promise.all(
+        displayedProjects.map(async (p) => {
+          try {
+            const pMembers = await projectsApi.getMembers(p.id);
+            const m = pMembers.find((x) => x.userId === userId);
+            if (m) {
+              return { project: p, role: m.role };
+            }
+            return null;
+          } catch {
+            return null;
+          }
+        })
+      );
+      setUserAssignedProjects(results.filter(Boolean) as { project: Project; role: ProjectRole }[]);
+    } catch (err) {
+      console.error('Failed to load user projects', err);
+    } finally {
+      setIsLoadingUserProjects(false);
+    }
+  }, [displayedProjects]);
+
   useEffect(() => {
     if (selectedMemberForDetail?.member.userId) {
       setDeptSaveSuccess(null);
       setDeptSaveError(null);
+      setProjectActionSuccess(null);
+      setProjectActionError(null);
+      setSelectedProjectToAdd('');
+      setSelectedRoleToAdd('Member');
+
       usersApi
         .getUserById(selectedMemberForDetail.member.userId)
         .then((u) => {
@@ -87,8 +131,10 @@ export const TeamPage: React.FC = () => {
         .catch(() => {
           setMemberDept('');
         });
+
+      fetchUserProjects(selectedMemberForDetail.member.userId);
     }
-  }, [selectedMemberForDetail]);
+  }, [selectedMemberForDetail, fetchUserProjects]);
 
   const handleSaveMemberDepartment = async () => {
     if (!selectedMemberForDetail?.member.userId) return;
@@ -116,6 +162,61 @@ export const TeamPage: React.FC = () => {
       setIsSavingDept(false);
     }
   };
+
+  const handleAddUserToProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProjectToAdd || !selectedMemberForDetail?.member.userId) return;
+
+    setIsAddingToProject(true);
+    setProjectActionSuccess(null);
+    setProjectActionError(null);
+
+    try {
+      await projectsApi.addMember(selectedProjectToAdd, {
+        userId: selectedMemberForDetail.member.userId,
+        email: selectedMemberForDetail.member.userEmail || selectedMemberForDetail.member.email,
+        role: selectedRoleToAdd,
+      });
+
+      setProjectActionSuccess(t('team.addedToProjectSuccess', 'Kullanıcı başarıyla projeye dahil edildi!'));
+      setSelectedProjectToAdd('');
+      fetchUserProjects(selectedMemberForDetail.member.userId);
+      fetchTeamData();
+      setTimeout(() => setProjectActionSuccess(null), 3500);
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      setProjectActionError(e.response?.data?.message || 'Kullanıcı projeye eklenemedi.');
+    } finally {
+      setIsAddingToProject(false);
+    }
+  };
+
+  const handleRemoveUserFromProject = async (projectId: string, projectName: string) => {
+    if (!selectedMemberForDetail?.member.userId) return;
+    const userName = selectedMemberForDetail.member.userFullName || 'Kullanıcıyı';
+    if (!window.confirm(`${userName} adlı kullanıcıyı "${projectName}" projesinden çıkarmak istediğinize emin misiniz?`)) {
+      return;
+    }
+
+    setProjectActionSuccess(null);
+    setProjectActionError(null);
+
+    try {
+      await projectsApi.removeMember(projectId, selectedMemberForDetail.member.userId);
+      setProjectActionSuccess(t('team.removedFromProjectSuccess', 'Kullanıcı projeden başarıyla çıkarıldı.'));
+      fetchUserProjects(selectedMemberForDetail.member.userId);
+      fetchTeamData();
+      setTimeout(() => setProjectActionSuccess(null), 3500);
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      setProjectActionError(e.response?.data?.message || 'Kullanıcı projeden çıkarılamadı.');
+    }
+  };
+
+  const availableProjectsToAdd = useMemo(() => {
+    const assignedIds = new Set(userAssignedProjects.map((up) => up.project.id));
+    return displayedProjects.filter((p) => !assignedIds.has(p.id));
+  }, [displayedProjects, userAssignedProjects]);
 
   // Load Projects
   useEffect(() => {
@@ -788,6 +889,129 @@ export const TeamPage: React.FC = () => {
                     <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-white p-2.5 rounded-xl border border-slate-200">
                       <Building2 className="h-4 w-4 text-slate-400" />
                       <span>{memberDept || t('department.notSpecified', 'Departman belirtilmemiş')}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* User Projects & Project Assignment Management */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FolderKanban className="h-4 w-4 text-indigo-600" />
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                        {t('team.userProjectsTitle', 'Dahil Olduğu Projeler & Atamalar')}
+                      </h4>
+                    </div>
+                    <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
+                      {userAssignedProjects.length} Proje
+                    </span>
+                  </div>
+
+                  {projectActionSuccess && (
+                    <div className="flex items-center gap-2 rounded-xl bg-emerald-50 p-2.5 text-xs font-semibold text-emerald-800 border border-emerald-200">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      <span>{projectActionSuccess}</span>
+                    </div>
+                  )}
+
+                  {projectActionError && (
+                    <div className="rounded-xl bg-rose-50 p-2.5 text-xs font-medium text-rose-700 border border-rose-200">
+                      {projectActionError}
+                    </div>
+                  )}
+
+                  {/* List of current projects */}
+                  <div className="space-y-1.5">
+                    {isLoadingUserProjects ? (
+                      <div className="py-4 text-center text-xs text-slate-400">
+                        Projeler yükleniyor...
+                      </div>
+                    ) : userAssignedProjects.length === 0 ? (
+                      <div className="py-3 text-center text-xs text-slate-400 bg-white rounded-xl border border-slate-200">
+                        Kullanıcı henüz hiçbir şirkete ait projeye atanmamış.
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-1">
+                        {userAssignedProjects.map(({ project: p, role }) => (
+                          <div
+                            key={p.id}
+                            className="flex items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-700 font-bold text-xs shrink-0 border border-indigo-100">
+                                {p.key}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-xs font-bold text-slate-900 truncate">{p.name}</p>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <ProjectRoleBadge role={role} />
+                                </div>
+                              </div>
+                            </div>
+
+                            {canManageDept && (
+                              <button
+                                type="button"
+                                title="Projeden Çıkar"
+                                onClick={() => handleRemoveUserFromProject(p.id, p.name)}
+                                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer shrink-0 ml-2"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Add User to Project Form (Authorized Manager Only) */}
+                  {canManageDept && (
+                    <div className="pt-2 border-t border-slate-200">
+                      <form onSubmit={handleAddUserToProject} className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2">
+                        <div className="flex-1">
+                          <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                            Şirket Projesine Dahil Et
+                          </label>
+                          <select
+                            value={selectedProjectToAdd}
+                            onChange={(e) => setSelectedProjectToAdd(e.target.value)}
+                            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none"
+                          >
+                            <option value="">Proje seçiniz...</option>
+                            {availableProjectsToAdd.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                [{p.key}] {p.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="w-full sm:w-32">
+                          <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                            Rol
+                          </label>
+                          <select
+                            value={selectedRoleToAdd}
+                            onChange={(e) => setSelectedRoleToAdd(e.target.value as ProjectRole)}
+                            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none"
+                          >
+                            <option value="Member">Member (Üye)</option>
+                            <option value="Admin">Admin (Yönetici)</option>
+                            <option value="Viewer">Viewer (İzleyici)</option>
+                          </select>
+                        </div>
+
+                        <Button
+                          type="submit"
+                          size="sm"
+                          disabled={!selectedProjectToAdd}
+                          isLoading={isAddingToProject}
+                          leftIcon={<Plus className="h-3.5 w-3.5" />}
+                        >
+                          Projeye Ekle
+                        </Button>
+                      </form>
                     </div>
                   )}
                 </div>
