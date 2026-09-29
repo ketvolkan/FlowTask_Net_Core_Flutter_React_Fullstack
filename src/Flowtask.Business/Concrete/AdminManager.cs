@@ -5,7 +5,7 @@ using Flowtask.Core.Exceptions;
 using Flowtask.Core.Results;
 using Flowtask.Core.Security;
 using Flowtask.Core.Utilities;
-using Flowtask.DataAccess.UnitOfWork;
+using Flowtask.DataAccess.Abstract;
 using Flowtask.EntityLayer.DTOs.Admin;
 using Flowtask.EntityLayer.DTOs.Projects;
 using Flowtask.EntityLayer.DTOs.Users;
@@ -16,26 +16,41 @@ namespace Flowtask.Business.Concrete;
 
 public class AdminManager : IAdminService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IUserDal _userDal;
+    private readonly IRoleDal _roleDal;
+    private readonly IProjectDal _projectDal;
+    private readonly IIssueDal _issueDal;
+    private readonly ISprintDal _sprintDal;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IMapper _mapper;
 
-    public AdminManager(IUnitOfWork unitOfWork, IPasswordHasher passwordHasher, IMapper mapper)
+    public AdminManager(
+        IUserDal userDal,
+        IRoleDal roleDal,
+        IProjectDal projectDal,
+        IIssueDal issueDal,
+        ISprintDal sprintDal,
+        IPasswordHasher passwordHasher,
+        IMapper mapper)
     {
-        _unitOfWork = unitOfWork;
+        _userDal = userDal;
+        _roleDal = roleDal;
+        _projectDal = projectDal;
+        _issueDal = issueDal;
+        _sprintDal = sprintDal;
         _passwordHasher = passwordHasher;
         _mapper = mapper;
     }
 
     public async Task<IDataResult<SystemStatisticsDto>> GetSystemStatisticsAsync()
     {
-        var totalUsers = await _unitOfWork.Users.CountAsync();
-        var activeUsers = await _unitOfWork.Users.CountAsync(u => u.IsActive);
-        var totalProjects = await _unitOfWork.Projects.CountAsync();
-        var totalIssues = await _unitOfWork.Issues.CountAsync();
-        var completedIssues = await _unitOfWork.Issues.CountAsync(i => i.Status == IssueStatus.Done);
-        var totalSprints = await _unitOfWork.Sprints.CountAsync();
-        var activeSprints = await _unitOfWork.Sprints.CountAsync(s => s.Status == SprintStatus.Active);
+        var totalUsers = await _userDal.CountAsync();
+        var activeUsers = await _userDal.CountAsync(u => u.IsActive);
+        var totalProjects = await _projectDal.CountAsync();
+        var totalIssues = await _issueDal.CountAsync();
+        var completedIssues = await _issueDal.CountAsync(i => i.Status == IssueStatus.Done);
+        var totalSprints = await _sprintDal.CountAsync();
+        var activeSprints = await _sprintDal.CountAsync(s => s.Status == SprintStatus.Active);
 
         var stats = new SystemStatisticsDto
         {
@@ -53,7 +68,7 @@ public class AdminManager : IAdminService
 
     public async Task<IDataResult<PagedDataResult<UserDto>>> GetAllUsersAsync(PaginationParams pagination)
     {
-        var (users, totalCount) = await _unitOfWork.Users.GetPagedAsync(
+        var (users, totalCount) = await _userDal.GetPagedAsync(
             page: pagination.Page,
             pageSize: pagination.PageSize,
             includeProperties: "UserRoles.Role",
@@ -72,7 +87,7 @@ public class AdminManager : IAdminService
 
     public async Task<IDataResult<UserDto>> CreateUserAsync(CreateUserAdminDto request)
     {
-        var existingUser = await _unitOfWork.Users.GetAsync(u => u.Email.ToLower() == request.Email.Trim().ToLower());
+        var existingUser = await _userDal.GetAsync(u => u.Email.ToLower() == request.Email.Trim().ToLower());
         if (existingUser != null)
         {
             throw new ConflictException(Messages.UserAlreadyExists);
@@ -92,7 +107,7 @@ public class AdminManager : IAdminService
 
         if (request.Roles.Any())
         {
-            var allRoles = await _unitOfWork.Roles.GetAllAsync(r => request.Roles.Contains(r.Name));
+            var allRoles = await _roleDal.GetListAsync(r => request.Roles.Contains(r.Name));
             foreach (var role in allRoles)
             {
                 user.UserRoles.Add(new UserRole { UserId = user.Id, RoleId = role.Id });
@@ -100,17 +115,16 @@ public class AdminManager : IAdminService
         }
         else
         {
-            var memberRole = await _unitOfWork.Roles.GetAsync(r => r.Name == "Member");
+            var memberRole = await _roleDal.GetAsync(r => r.Name == "Member");
             if (memberRole != null)
             {
                 user.UserRoles.Add(new UserRole { UserId = user.Id, RoleId = memberRole.Id });
             }
         }
 
-        await _unitOfWork.Users.AddAsync(user);
-        await _unitOfWork.SaveChangesAsync();
+        await _userDal.AddAsync(user);
 
-        var created = await _unitOfWork.Users.GetAsync(u => u.Id == user.Id, includeProperties: "UserRoles.Role");
+        var created = await _userDal.GetAsync(u => u.Id == user.Id, includeProperties: "UserRoles.Role");
         var dto = _mapper.Map<UserDto>(created);
         dto.Roles = created!.UserRoles.Select(ur => ur.Role.Name).ToList();
 
@@ -119,7 +133,7 @@ public class AdminManager : IAdminService
 
     public async Task<IDataResult<UserDto>> UpdateUserAsync(Guid userId, UpdateUserAdminDto request)
     {
-        var user = await _unitOfWork.Users.GetAsync(u => u.Id == userId, includeProperties: "UserRoles.Role");
+        var user = await _userDal.GetAsync(u => u.Id == userId, includeProperties: "UserRoles.Role");
         if (user == null)
         {
             throw new NotFoundException(Messages.UserNotFound);
@@ -135,17 +149,16 @@ public class AdminManager : IAdminService
         user.UserRoles.Clear();
         if (request.Roles.Any())
         {
-            var allRoles = await _unitOfWork.Roles.GetAllAsync(r => request.Roles.Contains(r.Name));
+            var allRoles = await _roleDal.GetListAsync(r => request.Roles.Contains(r.Name));
             foreach (var role in allRoles)
             {
                 user.UserRoles.Add(new UserRole { UserId = user.Id, RoleId = role.Id });
             }
         }
 
-        _unitOfWork.Users.Update(user);
-        await _unitOfWork.SaveChangesAsync();
+        await _userDal.UpdateAsync(user);
 
-        var updated = await _unitOfWork.Users.GetAsync(u => u.Id == userId, includeProperties: "UserRoles.Role");
+        var updated = await _userDal.GetAsync(u => u.Id == userId, includeProperties: "UserRoles.Role");
         var dto = _mapper.Map<UserDto>(updated);
         dto.Roles = updated!.UserRoles.Select(ur => ur.Role.Name).ToList();
 
@@ -154,21 +167,20 @@ public class AdminManager : IAdminService
 
     public async Task<IResult> DeleteUserAsync(Guid userId)
     {
-        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        var user = await _userDal.GetByIdAsync(userId);
         if (user == null)
         {
             throw new NotFoundException(Messages.UserNotFound);
         }
 
-        _unitOfWork.Users.Delete(user);
-        await _unitOfWork.SaveChangesAsync();
+        await _userDal.DeleteAsync(user);
 
         return new SuccessResult(Messages.UserDeleted);
     }
 
     public async Task<IDataResult<PagedDataResult<ProjectDto>>> GetAllProjectsAsync(PaginationParams pagination)
     {
-        var (projects, totalCount) = await _unitOfWork.Projects.GetPagedAsync(
+        var (projects, totalCount) = await _projectDal.GetPagedAsync(
             page: pagination.Page,
             pageSize: pagination.PageSize,
             includeProperties: "Owner,Members,Issues",
@@ -188,14 +200,13 @@ public class AdminManager : IAdminService
 
     public async Task<IResult> DeleteProjectAsync(Guid projectId)
     {
-        var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
+        var project = await _projectDal.GetByIdAsync(projectId);
         if (project == null)
         {
             throw new NotFoundException(Messages.ProjectNotFound);
         }
 
-        _unitOfWork.Projects.Delete(project);
-        await _unitOfWork.SaveChangesAsync();
+        await _projectDal.DeleteAsync(project);
 
         return new SuccessResult(Messages.ProjectDeleted);
     }

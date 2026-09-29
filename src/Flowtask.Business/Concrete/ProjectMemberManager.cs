@@ -3,7 +3,7 @@ using Flowtask.Business.Abstract;
 using Flowtask.Business.Constants;
 using Flowtask.Core.Exceptions;
 using Flowtask.Core.Results;
-using Flowtask.DataAccess.UnitOfWork;
+using Flowtask.DataAccess.Abstract;
 using Flowtask.EntityLayer.DTOs.Projects;
 using Flowtask.EntityLayer.Entities;
 using Flowtask.EntityLayer.Enums;
@@ -12,24 +12,26 @@ namespace Flowtask.Business.Concrete;
 
 public class ProjectMemberManager : IProjectMemberService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IProjectMemberDal _projectMemberDal;
+    private readonly IUserDal _userDal;
     private readonly IMapper _mapper;
 
-    public ProjectMemberManager(IUnitOfWork unitOfWork, IMapper mapper)
+    public ProjectMemberManager(IProjectMemberDal projectMemberDal, IUserDal userDal, IMapper mapper)
     {
-        _unitOfWork = unitOfWork;
+        _projectMemberDal = projectMemberDal;
+        _userDal = userDal;
         _mapper = mapper;
     }
 
     public async Task<IDataResult<List<ProjectMemberDto>>> GetProjectMembersAsync(Guid projectId, Guid userId)
     {
-        var isMember = await _unitOfWork.ProjectMembers.ExistsAsync(pm => pm.ProjectId == projectId && pm.UserId == userId);
+        var isMember = await _projectMemberDal.ExistsAsync(pm => pm.ProjectId == projectId && pm.UserId == userId);
         if (!isMember)
         {
             throw new ForbiddenException(Messages.AuthorizationDenied);
         }
 
-        var members = await _unitOfWork.ProjectMembers.GetAllAsync(
+        var members = await _projectMemberDal.GetListAsync(
             filter: pm => pm.ProjectId == projectId,
             includeProperties: "User",
             orderBy: q => q.OrderBy(pm => pm.JoinedAt));
@@ -40,7 +42,7 @@ public class ProjectMemberManager : IProjectMemberService
 
     public async Task<IDataResult<ProjectMemberDto>> AddMemberAsync(Guid projectId, Guid currentUserId, AddProjectMemberDto request)
     {
-        var currentMember = await _unitOfWork.ProjectMembers.GetAsync(
+        var currentMember = await _projectMemberDal.GetAsync(
             pm => pm.ProjectId == projectId && pm.UserId == currentUserId);
 
         if (currentMember == null || (currentMember.Role != ProjectRoleType.Owner && currentMember.Role != ProjectRoleType.Admin))
@@ -48,7 +50,7 @@ public class ProjectMemberManager : IProjectMemberService
             throw new ForbiddenException(Messages.AuthorizationDenied);
         }
 
-        var existingMember = await _unitOfWork.ProjectMembers.GetAsync(
+        var existingMember = await _projectMemberDal.GetAsync(
             pm => pm.ProjectId == projectId && pm.UserId == request.UserId);
 
         if (existingMember != null)
@@ -56,7 +58,7 @@ public class ProjectMemberManager : IProjectMemberService
             throw new ConflictException(Messages.MemberAlreadyExists);
         }
 
-        var user = await _unitOfWork.Users.GetByIdAsync(request.UserId);
+        var user = await _userDal.GetByIdAsync(request.UserId);
         if (user == null)
         {
             throw new NotFoundException(Messages.UserNotFound);
@@ -69,8 +71,7 @@ public class ProjectMemberManager : IProjectMemberService
             Role = request.Role
         };
 
-        await _unitOfWork.ProjectMembers.AddAsync(projectMember);
-        await _unitOfWork.SaveChangesAsync();
+        await _projectMemberDal.AddAsync(projectMember);
 
         projectMember.User = user;
         var dto = _mapper.Map<ProjectMemberDto>(projectMember);
@@ -79,7 +80,7 @@ public class ProjectMemberManager : IProjectMemberService
 
     public async Task<IDataResult<ProjectMemberDto>> UpdateMemberRoleAsync(Guid projectId, Guid targetUserId, Guid currentUserId, UpdateMemberRoleDto request)
     {
-        var currentMember = await _unitOfWork.ProjectMembers.GetAsync(
+        var currentMember = await _projectMemberDal.GetAsync(
             pm => pm.ProjectId == projectId && pm.UserId == currentUserId);
 
         if (currentMember == null || (currentMember.Role != ProjectRoleType.Owner && currentMember.Role != ProjectRoleType.Admin))
@@ -87,7 +88,7 @@ public class ProjectMemberManager : IProjectMemberService
             throw new ForbiddenException(Messages.AuthorizationDenied);
         }
 
-        var targetMember = await _unitOfWork.ProjectMembers.GetAsync(
+        var targetMember = await _projectMemberDal.GetAsync(
             pm => pm.ProjectId == projectId && pm.UserId == targetUserId,
             includeProperties: "User");
 
@@ -97,8 +98,7 @@ public class ProjectMemberManager : IProjectMemberService
         }
 
         targetMember.Role = request.Role;
-        _unitOfWork.ProjectMembers.Update(targetMember);
-        await _unitOfWork.SaveChangesAsync();
+        await _projectMemberDal.UpdateAsync(targetMember);
 
         var dto = _mapper.Map<ProjectMemberDto>(targetMember);
         return new SuccessDataResult<ProjectMemberDto>(dto, Messages.ProjectMemberUpdated);
@@ -106,7 +106,7 @@ public class ProjectMemberManager : IProjectMemberService
 
     public async Task<IResult> RemoveMemberAsync(Guid projectId, Guid targetUserId, Guid currentUserId)
     {
-        var currentMember = await _unitOfWork.ProjectMembers.GetAsync(
+        var currentMember = await _projectMemberDal.GetAsync(
             pm => pm.ProjectId == projectId && pm.UserId == currentUserId);
 
         if (currentMember == null || (currentMember.Role != ProjectRoleType.Owner && currentMember.Role != ProjectRoleType.Admin))
@@ -114,7 +114,7 @@ public class ProjectMemberManager : IProjectMemberService
             throw new ForbiddenException(Messages.AuthorizationDenied);
         }
 
-        var targetMember = await _unitOfWork.ProjectMembers.GetAsync(
+        var targetMember = await _projectMemberDal.GetAsync(
             pm => pm.ProjectId == projectId && pm.UserId == targetUserId);
 
         if (targetMember == null)
@@ -127,8 +127,7 @@ public class ProjectMemberManager : IProjectMemberService
             throw new ValidationException(Messages.AuthorizationDenied);
         }
 
-        _unitOfWork.ProjectMembers.Delete(targetMember);
-        await _unitOfWork.SaveChangesAsync();
+        await _projectMemberDal.DeleteAsync(targetMember);
 
         return new SuccessResult(Messages.ProjectMemberRemoved);
     }

@@ -3,7 +3,7 @@ using Flowtask.Business.Abstract;
 using Flowtask.Business.Constants;
 using Flowtask.Core.Exceptions;
 using Flowtask.Core.Results;
-using Flowtask.DataAccess.UnitOfWork;
+using Flowtask.DataAccess.Abstract;
 using Flowtask.EntityLayer.DTOs.Sprints;
 using Flowtask.EntityLayer.Entities;
 using Flowtask.EntityLayer.Enums;
@@ -12,26 +12,32 @@ namespace Flowtask.Business.Concrete;
 
 public class SprintManager : ISprintService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ISprintDal _sprintDal;
+    private readonly IProjectMemberDal _projectMemberDal;
     private readonly IMapper _mapper;
     private readonly IActivityLogService _activityLogService;
 
-    public SprintManager(IUnitOfWork unitOfWork, IMapper mapper, IActivityLogService activityLogService)
+    public SprintManager(
+        ISprintDal sprintDal,
+        IProjectMemberDal projectMemberDal,
+        IMapper mapper,
+        IActivityLogService activityLogService)
     {
-        _unitOfWork = unitOfWork;
+        _sprintDal = sprintDal;
+        _projectMemberDal = projectMemberDal;
         _mapper = mapper;
         _activityLogService = activityLogService;
     }
 
     public async Task<IDataResult<List<SprintDto>>> GetProjectSprintsAsync(Guid projectId, Guid userId)
     {
-        var isMember = await _unitOfWork.ProjectMembers.ExistsAsync(pm => pm.ProjectId == projectId && pm.UserId == userId);
+        var isMember = await _projectMemberDal.ExistsAsync(pm => pm.ProjectId == projectId && pm.UserId == userId);
         if (!isMember)
         {
             throw new ForbiddenException(Messages.AuthorizationDenied);
         }
 
-        var sprints = await _unitOfWork.Sprints.GetAllAsync(
+        var sprints = await _sprintDal.GetListAsync(
             filter: s => s.ProjectId == projectId,
             includeProperties: "Issues",
             orderBy: q => q.OrderByDescending(s => s.CreatedAt));
@@ -51,7 +57,7 @@ public class SprintManager : ISprintService
 
     public async Task<IDataResult<SprintDetailDto>> GetSprintByIdAsync(Guid sprintId, Guid userId)
     {
-        var sprint = await _unitOfWork.Sprints.GetAsync(
+        var sprint = await _sprintDal.GetAsync(
             s => s.Id == sprintId && s.Project.Members.Any(m => m.UserId == userId),
             includeProperties: "Project,Issues.Reporter,Issues.Assignee,Issues.Comments,Issues.Attachments");
 
@@ -69,7 +75,7 @@ public class SprintManager : ISprintService
 
     public async Task<IDataResult<SprintDto>> CreateSprintAsync(Guid projectId, Guid userId, SprintCreateDto request)
     {
-        var isMember = await _unitOfWork.ProjectMembers.ExistsAsync(pm => pm.ProjectId == projectId && pm.UserId == userId);
+        var isMember = await _projectMemberDal.ExistsAsync(pm => pm.ProjectId == projectId && pm.UserId == userId);
         if (!isMember)
         {
             throw new ForbiddenException(Messages.AuthorizationDenied);
@@ -85,8 +91,7 @@ public class SprintManager : ISprintService
             Status = SprintStatus.Planned
         };
 
-        await _unitOfWork.Sprints.AddAsync(sprint);
-        await _unitOfWork.SaveChangesAsync();
+        await _sprintDal.AddAsync(sprint);
 
         var dto = _mapper.Map<SprintDto>(sprint);
         await _activityLogService.LogActivityAsync(userId, "CREATE", "Sprint", sprint.Id, $"Created sprint {sprint.Name}", projectId);
@@ -96,7 +101,7 @@ public class SprintManager : ISprintService
 
     public async Task<IDataResult<SprintDto>> UpdateSprintAsync(Guid sprintId, Guid userId, SprintUpdateDto request)
     {
-        var sprint = await _unitOfWork.Sprints.GetAsync(
+        var sprint = await _sprintDal.GetAsync(
             s => s.Id == sprintId && s.Project.Members.Any(m => m.UserId == userId),
             includeProperties: "Issues");
 
@@ -115,8 +120,7 @@ public class SprintManager : ISprintService
         }
         sprint.UpdatedAt = DateTime.UtcNow;
 
-        _unitOfWork.Sprints.Update(sprint);
-        await _unitOfWork.SaveChangesAsync();
+        await _sprintDal.UpdateAsync(sprint);
 
         var dto = _mapper.Map<SprintDto>(sprint);
         dto.IssueCount = sprint.Issues.Count;
@@ -131,7 +135,7 @@ public class SprintManager : ISprintService
 
     public async Task<IDataResult<SprintDto>> StartSprintAsync(Guid sprintId, Guid userId)
     {
-        var sprint = await _unitOfWork.Sprints.GetAsync(
+        var sprint = await _sprintDal.GetAsync(
             s => s.Id == sprintId && s.Project.Members.Any(m => m.UserId == userId),
             includeProperties: "Issues");
 
@@ -140,7 +144,7 @@ public class SprintManager : ISprintService
             throw new NotFoundException(Messages.SprintNotFound);
         }
 
-        var hasActiveSprint = await _unitOfWork.Sprints.ExistsAsync(
+        var hasActiveSprint = await _sprintDal.ExistsAsync(
             s => s.ProjectId == sprint.ProjectId && s.Status == SprintStatus.Active && s.Id != sprintId);
 
         if (hasActiveSprint)
@@ -152,8 +156,7 @@ public class SprintManager : ISprintService
         sprint.StartDate ??= DateTime.UtcNow;
         sprint.UpdatedAt = DateTime.UtcNow;
 
-        _unitOfWork.Sprints.Update(sprint);
-        await _unitOfWork.SaveChangesAsync();
+        await _sprintDal.UpdateAsync(sprint);
 
         var dto = _mapper.Map<SprintDto>(sprint);
         dto.IssueCount = sprint.Issues.Count;
@@ -168,7 +171,7 @@ public class SprintManager : ISprintService
 
     public async Task<IDataResult<SprintDto>> CompleteSprintAsync(Guid sprintId, Guid userId)
     {
-        var sprint = await _unitOfWork.Sprints.GetAsync(
+        var sprint = await _sprintDal.GetAsync(
             s => s.Id == sprintId && s.Project.Members.Any(m => m.UserId == userId),
             includeProperties: "Issues");
 
@@ -181,8 +184,7 @@ public class SprintManager : ISprintService
         sprint.EndDate ??= DateTime.UtcNow;
         sprint.UpdatedAt = DateTime.UtcNow;
 
-        _unitOfWork.Sprints.Update(sprint);
-        await _unitOfWork.SaveChangesAsync();
+        await _sprintDal.UpdateAsync(sprint);
 
         var dto = _mapper.Map<SprintDto>(sprint);
         dto.IssueCount = sprint.Issues.Count;
@@ -197,7 +199,7 @@ public class SprintManager : ISprintService
 
     public async Task<IResult> DeleteSprintAsync(Guid sprintId, Guid userId)
     {
-        var sprint = await _unitOfWork.Sprints.GetAsync(
+        var sprint = await _sprintDal.GetAsync(
             s => s.Id == sprintId && s.Project.Members.Any(m => m.UserId == userId));
 
         if (sprint == null)
@@ -205,8 +207,7 @@ public class SprintManager : ISprintService
             throw new NotFoundException(Messages.SprintNotFound);
         }
 
-        _unitOfWork.Sprints.Delete(sprint);
-        await _unitOfWork.SaveChangesAsync();
+        await _sprintDal.DeleteAsync(sprint);
 
         await _activityLogService.LogActivityAsync(userId, "DELETE", "Sprint", sprint.Id, $"Deleted sprint {sprint.Name}", sprint.ProjectId);
 

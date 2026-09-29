@@ -2,7 +2,7 @@ using AutoMapper;
 using Flowtask.Business.Abstract;
 using Flowtask.Core.Results;
 using Flowtask.Core.Utilities;
-using Flowtask.DataAccess.UnitOfWork;
+using Flowtask.DataAccess.Abstract;
 using Flowtask.EntityLayer.DTOs.ActivityLogs;
 using Flowtask.EntityLayer.Entities;
 
@@ -10,18 +10,18 @@ namespace Flowtask.Business.Concrete;
 
 public class ActivityLogManager : IActivityLogService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IActivityLogDal _activityLogDal;
     private readonly IMapper _mapper;
 
-    public ActivityLogManager(IUnitOfWork unitOfWork, IMapper mapper)
+    public ActivityLogManager(IActivityLogDal activityLogDal, IMapper mapper)
     {
-        _unitOfWork = unitOfWork;
+        _activityLogDal = activityLogDal;
         _mapper = mapper;
     }
 
     public async Task<IDataResult<PagedDataResult<ActivityLogDto>>> GetLogsAsync(Guid? projectId, PaginationParams pagination)
     {
-        var (logs, totalCount) = await _unitOfWork.ActivityLogs.GetPagedAsync(
+        var (logs, totalCount) = await _activityLogDal.GetPagedAsync(
             filter: l => !projectId.HasValue || l.ProjectId == projectId.Value,
             page: pagination.Page,
             pageSize: pagination.PageSize,
@@ -46,7 +46,6 @@ public class ActivityLogManager : IActivityLogService
             IpAddress = ipAddress
         };
 
-        await _unitOfWork.ActivityLogs.AddAsync(log);
-        await _unitOfWork.SaveChangesAsync();
+        await _activityLogDal.AddAsync(log);
     }
 }

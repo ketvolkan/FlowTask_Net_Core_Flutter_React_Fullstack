@@ -3,7 +3,7 @@ using Flowtask.Business.Abstract;
 using Flowtask.Business.Constants;
 using Flowtask.Core.Exceptions;
 using Flowtask.Core.Results;
-using Flowtask.DataAccess.UnitOfWork;
+using Flowtask.DataAccess.Abstract;
 using Flowtask.EntityLayer.DTOs.Attachments;
 using Flowtask.EntityLayer.Entities;
 
@@ -11,18 +11,22 @@ namespace Flowtask.Business.Concrete;
 
 public class AttachmentManager : IAttachmentService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IAttachmentDal _attachmentDal;
+    private readonly IIssueDal _issueDal;
+    private readonly IUserDal _userDal;
     private readonly IMapper _mapper;
 
-    public AttachmentManager(IUnitOfWork unitOfWork, IMapper mapper)
+    public AttachmentManager(IAttachmentDal attachmentDal, IIssueDal issueDal, IUserDal userDal, IMapper mapper)
     {
-        _unitOfWork = unitOfWork;
+        _attachmentDal = attachmentDal;
+        _issueDal = issueDal;
+        _userDal = userDal;
         _mapper = mapper;
     }
 
     public async Task<IDataResult<List<AttachmentDto>>> GetIssueAttachmentsAsync(Guid issueId, Guid userId)
     {
-        var issue = await _unitOfWork.Issues.GetAsync(
+        var issue = await _issueDal.GetAsync(
             i => i.Id == issueId && i.Project.Members.Any(m => m.UserId == userId));
 
         if (issue == null)
@@ -30,7 +34,7 @@ public class AttachmentManager : IAttachmentService
             throw new NotFoundException(Messages.IssueNotFound);
         }
 
-        var attachments = await _unitOfWork.Attachments.GetAllAsync(
+        var attachments = await _attachmentDal.GetListAsync(
             filter: a => a.IssueId == issueId,
             includeProperties: "UploadedBy",
             orderBy: q => q.OrderByDescending(a => a.CreatedAt));
@@ -41,7 +45,7 @@ public class AttachmentManager : IAttachmentService
 
     public async Task<IDataResult<AttachmentDto>> AddAttachmentAsync(Guid issueId, Guid userId, string fileName, string filePath, string contentType, long fileSizeBytes)
     {
-        var issue = await _unitOfWork.Issues.GetAsync(
+        var issue = await _issueDal.GetAsync(
             i => i.Id == issueId && i.Project.Members.Any(m => m.UserId == userId));
 
         if (issue == null)
@@ -60,10 +64,9 @@ public class AttachmentManager : IAttachmentService
             FileSize = fileSizeBytes
         };
 
-        await _unitOfWork.Attachments.AddAsync(attachment);
-        await _unitOfWork.SaveChangesAsync();
+        await _attachmentDal.AddAsync(attachment);
 
-        var uploader = await _unitOfWork.Users.GetByIdAsync(userId);
+        var uploader = await _userDal.GetByIdAsync(userId);
         attachment.UploadedBy = uploader!;
 
         var dto = _mapper.Map<AttachmentDto>(attachment);
@@ -72,7 +75,7 @@ public class AttachmentManager : IAttachmentService
 
     public async Task<IResult> DeleteAttachmentAsync(Guid attachmentId, Guid userId)
     {
-        var attachment = await _unitOfWork.Attachments.GetAsync(
+        var attachment = await _attachmentDal.GetAsync(
             a => a.Id == attachmentId && a.UploadedById == userId);
 
         if (attachment == null)
@@ -80,8 +83,7 @@ public class AttachmentManager : IAttachmentService
             throw new NotFoundException(Messages.AttachmentNotFound);
         }
 
-        _unitOfWork.Attachments.Delete(attachment);
-        await _unitOfWork.SaveChangesAsync();
+        await _attachmentDal.DeleteAsync(attachment);
 
         return new SuccessResult(Messages.AttachmentDeleted);
     }

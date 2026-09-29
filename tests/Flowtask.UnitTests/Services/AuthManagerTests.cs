@@ -4,8 +4,7 @@ using Flowtask.Business.Concrete;
 using Flowtask.Business.Mappings;
 using Flowtask.Core.Exceptions;
 using Flowtask.Core.Security;
-using Flowtask.DataAccess.Repositories;
-using Flowtask.DataAccess.UnitOfWork;
+using Flowtask.DataAccess.Abstract;
 using Flowtask.EntityLayer.DTOs.Auth;
 using Flowtask.EntityLayer.Entities;
 using FluentAssertions;
@@ -17,7 +16,9 @@ namespace Flowtask.UnitTests.Services;
 
 public class AuthManagerTests
 {
-    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
+    private readonly Mock<IUserDal> _userDalMock;
+    private readonly Mock<IRoleDal> _roleDalMock;
+    private readonly Mock<IRefreshTokenDal> _refreshTokenDalMock;
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
     private readonly Mock<ITokenHelper> _tokenHelperMock;
     private readonly IMapper _mapper;
@@ -25,7 +26,9 @@ public class AuthManagerTests
 
     public AuthManagerTests()
     {
-        _unitOfWorkMock = new Mock<IUnitOfWork>();
+        _userDalMock = new Mock<IUserDal>();
+        _roleDalMock = new Mock<IRoleDal>();
+        _refreshTokenDalMock = new Mock<IRefreshTokenDal>();
         _passwordHasherMock = new Mock<IPasswordHasher>();
         _tokenHelperMock = new Mock<ITokenHelper>();
 
@@ -36,7 +39,9 @@ public class AuthManagerTests
         _mapper = new Mapper(config);
 
         _authManager = new AuthManager(
-            _unitOfWorkMock.Object,
+            _userDalMock.Object,
+            _roleDalMock.Object,
+            _refreshTokenDalMock.Object,
             _passwordHasherMock.Object,
             _tokenHelperMock.Object,
             _mapper);
@@ -54,20 +59,11 @@ public class AuthManagerTests
             JobTitle = "Engineer"
         };
 
-        var userRepoMock = new Mock<IGenericRepository<User>>();
-        var roleRepoMock = new Mock<IGenericRepository<Role>>();
-        var refreshRepoMock = new Mock<IGenericRepository<RefreshToken>>();
-
-        userRepoMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<User, bool>>>(), It.IsAny<string?>(), It.IsAny<bool>(), default))
+        _userDalMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<User, bool>>>(), It.IsAny<string?>(), It.IsAny<bool>(), default))
             .ReturnsAsync((User?)null);
 
-        roleRepoMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Role, bool>>>(), It.IsAny<string?>(), It.IsAny<bool>(), default))
+        _roleDalMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Role, bool>>>(), It.IsAny<string?>(), It.IsAny<bool>(), default))
             .ReturnsAsync(new Role { Id = Guid.NewGuid(), Name = "Member" });
-
-        _unitOfWorkMock.Setup(u => u.Users).Returns(userRepoMock.Object);
-        _unitOfWorkMock.Setup(u => u.Roles).Returns(roleRepoMock.Object);
-        _unitOfWorkMock.Setup(u => u.RefreshTokens).Returns(refreshRepoMock.Object);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
         _passwordHasherMock.Setup(p => p.HashPassword(It.IsAny<string>()))
             .Returns("hashed_password");
@@ -98,11 +94,8 @@ public class AuthManagerTests
             FullName = "Existing User"
         };
 
-        var userRepoMock = new Mock<IGenericRepository<User>>();
-        userRepoMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<User, bool>>>(), It.IsAny<string?>(), It.IsAny<bool>(), default))
+        _userDalMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<User, bool>>>(), It.IsAny<string?>(), It.IsAny<bool>(), default))
             .ReturnsAsync(new User { Id = Guid.NewGuid(), Email = "existing@flowtask.com" });
-
-        _unitOfWorkMock.Setup(u => u.Users).Returns(userRepoMock.Object);
 
         // Act & Assert
         var act = async () => await _authManager.RegisterAsync(request);
@@ -128,15 +121,8 @@ public class AuthManagerTests
             IsActive = true
         };
 
-        var userRepoMock = new Mock<IGenericRepository<User>>();
-        var refreshRepoMock = new Mock<IGenericRepository<RefreshToken>>();
-
-        userRepoMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<User, bool>>>(), It.IsAny<string?>(), It.IsAny<bool>(), default))
+        _userDalMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<User, bool>>>(), It.IsAny<string?>(), It.IsAny<bool>(), default))
             .ReturnsAsync(user);
-
-        _unitOfWorkMock.Setup(u => u.Users).Returns(userRepoMock.Object);
-        _unitOfWorkMock.Setup(u => u.RefreshTokens).Returns(refreshRepoMock.Object);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
         _passwordHasherMock.Setup(p => p.VerifyPassword(request.Password, user.PasswordHash))
             .Returns(true);
@@ -172,11 +158,8 @@ public class AuthManagerTests
             IsActive = true
         };
 
-        var userRepoMock = new Mock<IGenericRepository<User>>();
-        userRepoMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<User, bool>>>(), It.IsAny<string?>(), It.IsAny<bool>(), default))
+        _userDalMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<User, bool>>>(), It.IsAny<string?>(), It.IsAny<bool>(), default))
             .ReturnsAsync(user);
-
-        _unitOfWorkMock.Setup(u => u.Users).Returns(userRepoMock.Object);
 
         _passwordHasherMock.Setup(p => p.VerifyPassword(request.Password, user.PasswordHash))
             .Returns(false);

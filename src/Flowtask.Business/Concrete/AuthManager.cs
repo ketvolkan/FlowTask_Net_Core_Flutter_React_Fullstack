@@ -4,7 +4,7 @@ using Flowtask.Business.Constants;
 using Flowtask.Core.Exceptions;
 using Flowtask.Core.Results;
 using Flowtask.Core.Security;
-using Flowtask.DataAccess.UnitOfWork;
+using Flowtask.DataAccess.Abstract;
 using Flowtask.EntityLayer.DTOs.Auth;
 using Flowtask.EntityLayer.Entities;
 
@@ -12,18 +12,24 @@ namespace Flowtask.Business.Concrete;
 
 public class AuthManager : IAuthService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IUserDal _userDal;
+    private readonly IRoleDal _roleDal;
+    private readonly IRefreshTokenDal _refreshTokenDal;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ITokenHelper _tokenHelper;
     private readonly IMapper _mapper;
 
     public AuthManager(
-        IUnitOfWork unitOfWork,
+        IUserDal userDal,
+        IRoleDal roleDal,
+        IRefreshTokenDal refreshTokenDal,
         IPasswordHasher passwordHasher,
         ITokenHelper tokenHelper,
         IMapper mapper)
     {
-        _unitOfWork = unitOfWork;
+        _userDal = userDal;
+        _roleDal = roleDal;
+        _refreshTokenDal = refreshTokenDal;
         _passwordHasher = passwordHasher;
         _tokenHelper = tokenHelper;
         _mapper = mapper;
@@ -31,7 +37,7 @@ public class AuthManager : IAuthService
 
     public async Task<IDataResult<TokenDto>> RegisterAsync(UserForRegisterDto request)
     {
-        var existingUser = await _unitOfWork.Users.GetAsync(u => u.Email.ToLower() == request.Email.Trim().ToLower());
+        var existingUser = await _userDal.GetAsync(u => u.Email.ToLower() == request.Email.Trim().ToLower());
         if (existingUser != null)
         {
             throw new ConflictException(Messages.UserAlreadyExists);
@@ -49,13 +55,13 @@ public class AuthManager : IAuthService
             IsActive = true
         };
 
-        var memberRole = await _unitOfWork.Roles.GetAsync(r => r.Name == "Member");
+        var memberRole = await _roleDal.GetAsync(r => r.Name == "Member");
         if (memberRole != null)
         {
             user.UserRoles.Add(new UserRole { UserId = user.Id, RoleId = memberRole.Id });
         }
 
-        await _unitOfWork.Users.AddAsync(user);
+        await _userDal.AddAsync(user);
 
         var roles = user.UserRoles.Select(ur => ur.Role?.Name ?? "Member").ToList();
         var permissions = new List<string>();
@@ -69,8 +75,7 @@ public class AuthManager : IAuthService
             ExpiresAt = DateTime.UtcNow.AddDays(7)
         };
 
-        await _unitOfWork.RefreshTokens.AddAsync(refreshToken);
-        await _unitOfWork.SaveChangesAsync();
+        await _refreshTokenDal.AddAsync(refreshToken);
 
         var authUser = _mapper.Map<AuthUserDto>(user);
         authUser.Roles = roles;
@@ -89,7 +94,7 @@ public class AuthManager : IAuthService
 
     public async Task<IDataResult<TokenDto>> LoginAsync(UserForLoginDto request)
     {
-        var user = await _unitOfWork.Users.GetAsync(
+        var user = await _userDal.GetAsync(
             u => u.Email.ToLower() == request.Email.Trim().ToLower() && u.IsActive,
             includeProperties: "UserRoles.Role.RolePermissions.Permission");
 
@@ -118,8 +123,7 @@ public class AuthManager : IAuthService
             ExpiresAt = DateTime.UtcNow.AddDays(7)
         };
 
-        await _unitOfWork.RefreshTokens.AddAsync(refreshToken);
-        await _unitOfWork.SaveChangesAsync();
+        await _refreshTokenDal.AddAsync(refreshToken);
 
         var authUser = _mapper.Map<AuthUserDto>(user);
         authUser.Roles = roles;
@@ -138,7 +142,7 @@ public class AuthManager : IAuthService
 
     public async Task<IDataResult<TokenDto>> RefreshTokenAsync(RefreshTokenDto request)
     {
-        var tokenRecord = await _unitOfWork.RefreshTokens.GetAsync(
+        var tokenRecord = await _refreshTokenDal.GetAsync(
             r => r.Token == request.RefreshToken && r.RevokedAt == null,
             includeProperties: "User.UserRoles.Role.RolePermissions.Permission");
 
@@ -154,7 +158,7 @@ public class AuthManager : IAuthService
         }
 
         tokenRecord.RevokedAt = DateTime.UtcNow;
-        _unitOfWork.RefreshTokens.Update(tokenRecord);
+        await _refreshTokenDal.UpdateAsync(tokenRecord);
 
         var roles = user.UserRoles.Select(ur => ur.Role.Name).Distinct().ToList();
         var permissions = user.UserRoles
@@ -171,8 +175,7 @@ public class AuthManager : IAuthService
             ExpiresAt = DateTime.UtcNow.AddDays(7)
         };
 
-        await _unitOfWork.RefreshTokens.AddAsync(newRefreshToken);
-        await _unitOfWork.SaveChangesAsync();
+        await _refreshTokenDal.AddAsync(newRefreshToken);
 
         var authUser = _mapper.Map<AuthUserDto>(user);
         authUser.Roles = roles;
@@ -191,12 +194,11 @@ public class AuthManager : IAuthService
 
     public async Task<IResult> RevokeTokenAsync(RefreshTokenDto request)
     {
-        var tokenRecord = await _unitOfWork.RefreshTokens.GetAsync(r => r.Token == request.RefreshToken);
+        var tokenRecord = await _refreshTokenDal.GetAsync(r => r.Token == request.RefreshToken);
         if (tokenRecord != null)
         {
             tokenRecord.RevokedAt = DateTime.UtcNow;
-            _unitOfWork.RefreshTokens.Update(tokenRecord);
-            await _unitOfWork.SaveChangesAsync();
+            await _refreshTokenDal.UpdateAsync(tokenRecord);
         }
 
         return new SuccessResult();
@@ -204,7 +206,7 @@ public class AuthManager : IAuthService
 
     public async Task<IDataResult<AuthUserDto>> GetCurrentUserAsync(Guid userId)
     {
-        var user = await _unitOfWork.Users.GetAsync(
+        var user = await _userDal.GetAsync(
             u => u.Id == userId && u.IsActive,
             includeProperties: "UserRoles.Role.RolePermissions.Permission");
 

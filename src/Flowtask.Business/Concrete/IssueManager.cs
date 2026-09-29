@@ -3,7 +3,7 @@ using Flowtask.Business.Abstract;
 using Flowtask.Business.Constants;
 using Flowtask.Core.Exceptions;
 using Flowtask.Core.Results;
-using Flowtask.DataAccess.UnitOfWork;
+using Flowtask.DataAccess.Abstract;
 using Flowtask.EntityLayer.DTOs.Issues;
 using Flowtask.EntityLayer.Entities;
 using Flowtask.EntityLayer.Enums;
@@ -12,20 +12,29 @@ namespace Flowtask.Business.Concrete;
 
 public class IssueManager : IIssueService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IIssueDal _issueDal;
+    private readonly IProjectDal _projectDal;
+    private readonly IProjectMemberDal _projectMemberDal;
     private readonly IMapper _mapper;
     private readonly IActivityLogService _activityLogService;
 
-    public IssueManager(IUnitOfWork unitOfWork, IMapper mapper, IActivityLogService activityLogService)
+    public IssueManager(
+        IIssueDal issueDal,
+        IProjectDal projectDal,
+        IProjectMemberDal projectMemberDal,
+        IMapper mapper,
+        IActivityLogService activityLogService)
     {
-        _unitOfWork = unitOfWork;
+        _issueDal = issueDal;
+        _projectDal = projectDal;
+        _projectMemberDal = projectMemberDal;
         _mapper = mapper;
         _activityLogService = activityLogService;
     }
 
     public async Task<IDataResult<PagedDataResult<IssueDto>>> GetIssuesAsync(Guid userId, IssueFilterParams filter)
     {
-        var (issues, totalCount) = await _unitOfWork.Issues.GetPagedAsync(
+        var (issues, totalCount) = await _issueDal.GetPagedAsync(
             filter: i =>
                 (!filter.ProjectId.HasValue || i.ProjectId == filter.ProjectId.Value) &&
                 (!filter.SprintId.HasValue || i.SprintId == filter.SprintId.Value) &&
@@ -48,7 +57,7 @@ public class IssueManager : IIssueService
 
     public async Task<IDataResult<IssueDto>> GetIssueByIdAsync(Guid issueId, Guid userId)
     {
-        var issue = await _unitOfWork.Issues.GetAsync(
+        var issue = await _issueDal.GetAsync(
             i => i.Id == issueId && i.Project.Members.Any(m => m.UserId == userId),
             includeProperties: "Project,Sprint,Reporter,Assignee,Comments.User,Attachments.UploadedBy");
 
@@ -63,23 +72,23 @@ public class IssueManager : IIssueService
 
     public async Task<IDataResult<IssueDto>> CreateIssueAsync(Guid projectId, Guid userId, IssueCreateDto request)
     {
-        var isMember = await _unitOfWork.ProjectMembers.ExistsAsync(pm => pm.ProjectId == projectId && pm.UserId == userId);
+        var isMember = await _projectMemberDal.ExistsAsync(pm => pm.ProjectId == projectId && pm.UserId == userId);
         if (!isMember)
         {
             throw new ForbiddenException(Messages.AuthorizationDenied);
         }
 
-        var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
+        var project = await _projectDal.GetByIdAsync(projectId);
         if (project == null)
         {
             throw new NotFoundException(Messages.ProjectNotFound);
         }
 
-        var issueCount = await _unitOfWork.Issues.CountAsync(i => i.ProjectId == projectId);
+        var issueCount = await _issueDal.CountAsync(i => i.ProjectId == projectId);
         var issueNumber = issueCount + 1;
         var issueKey = $"{project.Key}-{issueNumber}";
 
-        var maxOrder = await _unitOfWork.Issues.CountAsync(i => i.ProjectId == projectId && i.Status == request.Status);
+        var maxOrder = await _issueDal.CountAsync(i => i.ProjectId == projectId && i.Status == request.Status);
 
         var issue = new Issue
         {
@@ -98,10 +107,9 @@ public class IssueManager : IIssueService
             Order = (maxOrder + 1) * 1000.0
         };
 
-        await _unitOfWork.Issues.AddAsync(issue);
-        await _unitOfWork.SaveChangesAsync();
+        await _issueDal.AddAsync(issue);
 
-        var createdIssue = await _unitOfWork.Issues.GetAsync(
+        var createdIssue = await _issueDal.GetAsync(
             i => i.Id == issue.Id,
             includeProperties: "Project,Sprint,Reporter,Assignee,Comments.User,Attachments.UploadedBy");
 
@@ -114,7 +122,7 @@ public class IssueManager : IIssueService
 
     public async Task<IDataResult<IssueDto>> UpdateIssueAsync(Guid issueId, Guid userId, IssueUpdateDto request)
     {
-        var issue = await _unitOfWork.Issues.GetAsync(
+        var issue = await _issueDal.GetAsync(
             i => i.Id == issueId && i.Project.Members.Any(m => m.UserId == userId),
             includeProperties: "Project,Sprint,Reporter,Assignee,Comments.User,Attachments.UploadedBy");
 
@@ -135,8 +143,7 @@ public class IssueManager : IIssueService
         issue.AssigneeId = request.AssigneeId;
         issue.UpdatedAt = DateTime.UtcNow;
 
-        _unitOfWork.Issues.Update(issue);
-        await _unitOfWork.SaveChangesAsync();
+        await _issueDal.UpdateAsync(issue);
 
         var dto = _mapper.Map<IssueDto>(issue);
         await _activityLogService.LogActivityAsync(userId, "UPDATE", "Issue", issue.Id, $"Updated issue {issue.Key}", issue.ProjectId);
@@ -146,7 +153,7 @@ public class IssueManager : IIssueService
 
     public async Task<IDataResult<IssueDto>> UpdateStatusAsync(Guid issueId, Guid userId, UpdateIssueStatusDto request)
     {
-        var issue = await _unitOfWork.Issues.GetAsync(
+        var issue = await _issueDal.GetAsync(
             i => i.Id == issueId && i.Project.Members.Any(m => m.UserId == userId),
             includeProperties: "Project,Sprint,Reporter,Assignee,Comments.User,Attachments.UploadedBy");
 
@@ -167,8 +174,7 @@ public class IssueManager : IIssueService
         }
         issue.UpdatedAt = DateTime.UtcNow;
 
-        _unitOfWork.Issues.Update(issue);
-        await _unitOfWork.SaveChangesAsync();
+        await _issueDal.UpdateAsync(issue);
 
         var dto = _mapper.Map<IssueDto>(issue);
         await _activityLogService.LogActivityAsync(userId, "STATUS_CHANGE", "Issue", issue.Id, $"Changed status of {issue.Key} from {oldStatus} to {request.Status}", issue.ProjectId);
@@ -178,7 +184,7 @@ public class IssueManager : IIssueService
 
     public async Task<IDataResult<IssueDto>> AssignIssueAsync(Guid issueId, Guid userId, AssignIssueDto request)
     {
-        var issue = await _unitOfWork.Issues.GetAsync(
+        var issue = await _issueDal.GetAsync(
             i => i.Id == issueId && i.Project.Members.Any(m => m.UserId == userId),
             includeProperties: "Project,Sprint,Reporter,Assignee,Comments.User,Attachments.UploadedBy");
 
@@ -190,10 +196,9 @@ public class IssueManager : IIssueService
         issue.AssigneeId = request.AssigneeId;
         issue.UpdatedAt = DateTime.UtcNow;
 
-        _unitOfWork.Issues.Update(issue);
-        await _unitOfWork.SaveChangesAsync();
+        await _issueDal.UpdateAsync(issue);
 
-        var updated = await _unitOfWork.Issues.GetAsync(
+        var updated = await _issueDal.GetAsync(
             i => i.Id == issueId,
             includeProperties: "Project,Sprint,Reporter,Assignee,Comments.User,Attachments.UploadedBy");
 
@@ -205,7 +210,7 @@ public class IssueManager : IIssueService
 
     public async Task<IResult> DeleteIssueAsync(Guid issueId, Guid userId)
     {
-        var issue = await _unitOfWork.Issues.GetAsync(
+        var issue = await _issueDal.GetAsync(
             i => i.Id == issueId && i.Project.Members.Any(m => m.UserId == userId));
 
         if (issue == null)
@@ -213,8 +218,7 @@ public class IssueManager : IIssueService
             throw new NotFoundException(Messages.IssueNotFound);
         }
 
-        _unitOfWork.Issues.Delete(issue);
-        await _unitOfWork.SaveChangesAsync();
+        await _issueDal.DeleteAsync(issue);
 
         await _activityLogService.LogActivityAsync(userId, "DELETE", "Issue", issue.Id, $"Deleted issue {issue.Key}", issue.ProjectId);
 

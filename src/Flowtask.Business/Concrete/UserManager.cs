@@ -5,27 +5,27 @@ using Flowtask.Core.Exceptions;
 using Flowtask.Core.Results;
 using Flowtask.Core.Security;
 using Flowtask.Core.Utilities;
-using Flowtask.DataAccess.UnitOfWork;
+using Flowtask.DataAccess.Abstract;
 using Flowtask.EntityLayer.DTOs.Users;
 
 namespace Flowtask.Business.Concrete;
 
 public class UserManager : IUserService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IUserDal _userDal;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IMapper _mapper;
 
-    public UserManager(IUnitOfWork unitOfWork, IPasswordHasher passwordHasher, IMapper mapper)
+    public UserManager(IUserDal userDal, IPasswordHasher passwordHasher, IMapper mapper)
     {
-        _unitOfWork = unitOfWork;
+        _userDal = userDal;
         _passwordHasher = passwordHasher;
         _mapper = mapper;
     }
 
     public async Task<IDataResult<UserDto>> GetCurrentUserAsync(Guid currentUserId)
     {
-        var user = await _unitOfWork.Users.GetAsync(
+        var user = await _userDal.GetAsync(
             u => u.Id == currentUserId,
             includeProperties: "UserRoles.Role");
 
@@ -41,7 +41,7 @@ public class UserManager : IUserService
 
     public async Task<IDataResult<UserDto>> UpdateProfileAsync(Guid currentUserId, UpdateProfileDto request)
     {
-        var user = await _unitOfWork.Users.GetAsync(u => u.Id == currentUserId, includeProperties: "UserRoles.Role");
+        var user = await _userDal.GetAsync(u => u.Id == currentUserId, includeProperties: "UserRoles.Role");
         if (user == null)
         {
             throw new NotFoundException(Messages.UserNotFound);
@@ -53,8 +53,7 @@ public class UserManager : IUserService
         user.Department = request.Department?.Trim();
         user.UpdatedAt = DateTime.UtcNow;
 
-        _unitOfWork.Users.Update(user);
-        await _unitOfWork.SaveChangesAsync();
+        await _userDal.UpdateAsync(user);
 
         var dto = _mapper.Map<UserDto>(user);
         dto.Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
@@ -63,7 +62,7 @@ public class UserManager : IUserService
 
     public async Task<IResult> ChangePasswordAsync(Guid currentUserId, ChangePasswordDto request)
     {
-        var user = await _unitOfWork.Users.GetByIdAsync(currentUserId);
+        var user = await _userDal.GetByIdAsync(currentUserId);
         if (user == null)
         {
             throw new NotFoundException(Messages.UserNotFound);
@@ -77,15 +76,14 @@ public class UserManager : IUserService
         user.PasswordHash = _passwordHasher.HashPassword(request.NewPassword);
         user.UpdatedAt = DateTime.UtcNow;
 
-        _unitOfWork.Users.Update(user);
-        await _unitOfWork.SaveChangesAsync();
+        await _userDal.UpdateAsync(user);
 
         return new SuccessResult(Messages.PasswordChanged);
     }
 
     public async Task<IDataResult<PagedDataResult<UserDto>>> GetAllUsersAsync(PaginationParams pagination)
     {
-        var (users, totalCount) = await _unitOfWork.Users.GetPagedAsync(
+        var (users, totalCount) = await _userDal.GetPagedAsync(
             page: pagination.Page,
             pageSize: pagination.PageSize,
             includeProperties: "UserRoles.Role");
@@ -103,7 +101,7 @@ public class UserManager : IUserService
 
     public async Task<IDataResult<UserDto>> GetUserByIdAsync(Guid id)
     {
-        var user = await _unitOfWork.Users.GetAsync(u => u.Id == id, includeProperties: "UserRoles.Role");
+        var user = await _userDal.GetAsync(u => u.Id == id, includeProperties: "UserRoles.Role");
         if (user == null)
         {
             throw new NotFoundException(Messages.UserNotFound);

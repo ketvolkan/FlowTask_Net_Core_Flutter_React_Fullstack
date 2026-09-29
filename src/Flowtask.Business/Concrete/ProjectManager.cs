@@ -4,7 +4,7 @@ using Flowtask.Business.Constants;
 using Flowtask.Core.Exceptions;
 using Flowtask.Core.Results;
 using Flowtask.Core.Utilities;
-using Flowtask.DataAccess.UnitOfWork;
+using Flowtask.DataAccess.Abstract;
 using Flowtask.EntityLayer.DTOs.Projects;
 using Flowtask.EntityLayer.Entities;
 using Flowtask.EntityLayer.Enums;
@@ -13,20 +13,29 @@ namespace Flowtask.Business.Concrete;
 
 public class ProjectManager : IProjectService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IProjectDal _projectDal;
+    private readonly IProjectMemberDal _projectMemberDal;
+    private readonly IUserDal _userDal;
     private readonly IMapper _mapper;
     private readonly IActivityLogService _activityLogService;
 
-    public ProjectManager(IUnitOfWork unitOfWork, IMapper mapper, IActivityLogService activityLogService)
+    public ProjectManager(
+        IProjectDal projectDal,
+        IProjectMemberDal projectMemberDal,
+        IUserDal userDal,
+        IMapper mapper,
+        IActivityLogService activityLogService)
     {
-        _unitOfWork = unitOfWork;
+        _projectDal = projectDal;
+        _projectMemberDal = projectMemberDal;
+        _userDal = userDal;
         _mapper = mapper;
         _activityLogService = activityLogService;
     }
 
     public async Task<IDataResult<PagedDataResult<ProjectDto>>> GetUserProjectsAsync(Guid userId, PaginationParams pagination)
     {
-        var (projects, totalCount) = await _unitOfWork.Projects.GetPagedAsync(
+        var (projects, totalCount) = await _projectDal.GetPagedAsync(
             filter: p => p.Members.Any(m => m.UserId == userId),
             page: pagination.Page,
             pageSize: pagination.PageSize,
@@ -47,7 +56,7 @@ public class ProjectManager : IProjectService
 
     public async Task<IDataResult<ProjectDetailDto>> GetProjectByIdAsync(Guid projectId, Guid userId)
     {
-        var project = await _unitOfWork.Projects.GetAsync(
+        var project = await _projectDal.GetAsync(
             p => p.Id == projectId && p.Members.Any(m => m.UserId == userId),
             includeProperties: "Owner,Members.User,Issues");
 
@@ -66,7 +75,7 @@ public class ProjectManager : IProjectService
 
     public async Task<IDataResult<ProjectDto>> CreateProjectAsync(Guid userId, ProjectCreateDto request)
     {
-        var existingKey = await _unitOfWork.Projects.GetAsync(p => p.Key.ToUpper() == request.Key.Trim().ToUpper());
+        var existingKey = await _projectDal.GetAsync(p => p.Key.ToUpper() == request.Key.Trim().ToUpper());
         if (existingKey != null)
         {
             throw new ConflictException(Messages.ProjectKeyExists);
@@ -87,10 +96,9 @@ public class ProjectManager : IProjectService
             Role = ProjectRoleType.Owner
         });
 
-        await _unitOfWork.Projects.AddAsync(project);
-        await _unitOfWork.SaveChangesAsync();
+        await _projectDal.AddAsync(project);
 
-        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        var user = await _userDal.GetByIdAsync(userId);
         project.Owner = user!;
 
         var dto = _mapper.Map<ProjectDto>(project);
@@ -104,7 +112,7 @@ public class ProjectManager : IProjectService
 
     public async Task<IDataResult<ProjectDto>> UpdateProjectAsync(Guid projectId, Guid userId, ProjectUpdateDto request)
     {
-        var project = await _unitOfWork.Projects.GetAsync(
+        var project = await _projectDal.GetAsync(
             p => p.Id == projectId,
             includeProperties: "Owner,Members,Issues");
 
@@ -126,10 +134,9 @@ public class ProjectManager : IProjectService
         project.IsArchived = request.IsArchived;
         project.UpdatedAt = DateTime.UtcNow;
 
-        _unitOfWork.Projects.Update(project);
-        await _unitOfWork.SaveChangesAsync();
+        await _projectDal.UpdateAsync(project);
 
-        var updated = await _unitOfWork.Projects.GetAsync(
+        var updated = await _projectDal.GetAsync(
             p => p.Id == projectId,
             includeProperties: "Owner,Members,Issues");
 
@@ -144,7 +151,7 @@ public class ProjectManager : IProjectService
 
     public async Task<IResult> DeleteProjectAsync(Guid projectId, Guid userId)
     {
-        var project = await _unitOfWork.Projects.GetAsync(
+        var project = await _projectDal.GetAsync(
             p => p.Id == projectId,
             includeProperties: "Members");
 
@@ -159,8 +166,7 @@ public class ProjectManager : IProjectService
             throw new ForbiddenException(Messages.AuthorizationDenied);
         }
 
-        _unitOfWork.Projects.Delete(project);
-        await _unitOfWork.SaveChangesAsync();
+        await _projectDal.DeleteAsync(project);
 
         await _activityLogService.LogActivityAsync(userId, "DELETE", "Project", project.Id, $"Deleted project {project.Name}", project.Id);
 

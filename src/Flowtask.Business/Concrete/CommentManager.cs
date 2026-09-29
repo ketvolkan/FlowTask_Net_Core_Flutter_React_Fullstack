@@ -3,7 +3,7 @@ using Flowtask.Business.Abstract;
 using Flowtask.Business.Constants;
 using Flowtask.Core.Exceptions;
 using Flowtask.Core.Results;
-using Flowtask.DataAccess.UnitOfWork;
+using Flowtask.DataAccess.Abstract;
 using Flowtask.EntityLayer.DTOs.Comments;
 using Flowtask.EntityLayer.Entities;
 
@@ -11,18 +11,22 @@ namespace Flowtask.Business.Concrete;
 
 public class CommentManager : ICommentService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ICommentDal _commentDal;
+    private readonly IIssueDal _issueDal;
+    private readonly IUserDal _userDal;
     private readonly IMapper _mapper;
 
-    public CommentManager(IUnitOfWork unitOfWork, IMapper mapper)
+    public CommentManager(ICommentDal commentDal, IIssueDal issueDal, IUserDal userDal, IMapper mapper)
     {
-        _unitOfWork = unitOfWork;
+        _commentDal = commentDal;
+        _issueDal = issueDal;
+        _userDal = userDal;
         _mapper = mapper;
     }
 
     public async Task<IDataResult<List<CommentDto>>> GetIssueCommentsAsync(Guid issueId, Guid userId)
     {
-        var issue = await _unitOfWork.Issues.GetAsync(
+        var issue = await _issueDal.GetAsync(
             i => i.Id == issueId && i.Project.Members.Any(m => m.UserId == userId));
 
         if (issue == null)
@@ -30,7 +34,7 @@ public class CommentManager : ICommentService
             throw new NotFoundException(Messages.IssueNotFound);
         }
 
-        var comments = await _unitOfWork.Comments.GetAllAsync(
+        var comments = await _commentDal.GetListAsync(
             filter: c => c.IssueId == issueId,
             includeProperties: "User",
             orderBy: q => q.OrderBy(c => c.CreatedAt));
@@ -41,7 +45,7 @@ public class CommentManager : ICommentService
 
     public async Task<IDataResult<CommentDto>> AddCommentAsync(Guid issueId, Guid userId, CommentCreateDto request)
     {
-        var issue = await _unitOfWork.Issues.GetAsync(
+        var issue = await _issueDal.GetAsync(
             i => i.Id == issueId && i.Project.Members.Any(m => m.UserId == userId));
 
         if (issue == null)
@@ -56,10 +60,9 @@ public class CommentManager : ICommentService
             Content = request.Content.Trim()
         };
 
-        await _unitOfWork.Comments.AddAsync(comment);
-        await _unitOfWork.SaveChangesAsync();
+        await _commentDal.AddAsync(comment);
 
-        var user = await _unitOfWork.Users.GetByIdAsync(userId);
+        var user = await _userDal.GetByIdAsync(userId);
         comment.User = user!;
 
         var dto = _mapper.Map<CommentDto>(comment);
@@ -68,7 +71,7 @@ public class CommentManager : ICommentService
 
     public async Task<IDataResult<CommentDto>> UpdateCommentAsync(Guid commentId, Guid userId, CommentUpdateDto request)
     {
-        var comment = await _unitOfWork.Comments.GetAsync(
+        var comment = await _commentDal.GetAsync(
             c => c.Id == commentId && c.UserId == userId,
             includeProperties: "User");
 
@@ -80,8 +83,7 @@ public class CommentManager : ICommentService
         comment.Content = request.Content.Trim();
         comment.UpdatedAt = DateTime.UtcNow;
 
-        _unitOfWork.Comments.Update(comment);
-        await _unitOfWork.SaveChangesAsync();
+        await _commentDal.UpdateAsync(comment);
 
         var dto = _mapper.Map<CommentDto>(comment);
         return new SuccessDataResult<CommentDto>(dto, Messages.CommentUpdated);
@@ -89,14 +91,13 @@ public class CommentManager : ICommentService
 
     public async Task<IResult> DeleteCommentAsync(Guid commentId, Guid userId)
     {
-        var comment = await _unitOfWork.Comments.GetAsync(c => c.Id == commentId && c.UserId == userId);
+        var comment = await _commentDal.GetAsync(c => c.Id == commentId && c.UserId == userId);
         if (comment == null)
         {
             throw new NotFoundException(Messages.CommentNotFound);
         }
 
-        _unitOfWork.Comments.Delete(comment);
-        await _unitOfWork.SaveChangesAsync();
+        await _commentDal.DeleteAsync(comment);
 
         return new SuccessResult(Messages.CommentDeleted);
     }

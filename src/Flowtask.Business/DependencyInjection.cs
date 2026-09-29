@@ -5,8 +5,8 @@ using Flowtask.Business.Mappings;
 using Flowtask.Business.ValidationRules.FluentValidation;
 using Flowtask.Core.Caching;
 using Flowtask.Core.Security;
-using Flowtask.DataAccess.Repositories;
-using Flowtask.DataAccess.UnitOfWork;
+using Flowtask.DataAccess.Abstract;
+using Flowtask.DataAccess.Concrete.EntityFramework;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
@@ -42,9 +42,21 @@ public static class DependencyInjection
             services.AddSingleton<ICacheService, MemoryCacheService>();
         }
 
-        // Data Access
-        services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-        services.AddScoped<IUnitOfWork, UnitOfWork>();
+        // Data Access Layer (DALs)
+        services.AddScoped<IUserDal, EfUserDal>();
+        services.AddScoped<IRoleDal, EfRoleDal>();
+        services.AddScoped<IPermissionDal, EfPermissionDal>();
+        services.AddScoped<IUserRoleDal, EfUserRoleDal>();
+        services.AddScoped<IRolePermissionDal, EfRolePermissionDal>();
+        services.AddScoped<IRefreshTokenDal, EfRefreshTokenDal>();
+        services.AddScoped<IProjectDal, EfProjectDal>();
+        services.AddScoped<IProjectMemberDal, EfProjectMemberDal>();
+        services.AddScoped<IIssueDal, EfIssueDal>();
+        services.AddScoped<ISprintDal, EfSprintDal>();
+        services.AddScoped<ICommentDal, EfCommentDal>();
+        services.AddScoped<IAttachmentDal, EfAttachmentDal>();
+        services.AddScoped<INotificationDal, EfNotificationDal>();
+        services.AddScoped<IActivityLogDal, EfActivityLogDal>();
 
         // Business Managers / Services
         services.AddScoped<IAuthService, AuthManager>();

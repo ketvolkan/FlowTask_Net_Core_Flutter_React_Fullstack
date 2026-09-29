@@ -4,8 +4,7 @@ using Flowtask.Business.Abstract;
 using Flowtask.Business.Concrete;
 using Flowtask.Business.Mappings;
 using Flowtask.Core.Exceptions;
-using Flowtask.DataAccess.Repositories;
-using Flowtask.DataAccess.UnitOfWork;
+using Flowtask.DataAccess.Abstract;
 using Flowtask.EntityLayer.DTOs.Projects;
 using Flowtask.EntityLayer.Entities;
 using Flowtask.EntityLayer.Enums;
@@ -18,14 +17,18 @@ namespace Flowtask.UnitTests.Services;
 
 public class ProjectManagerTests
 {
-    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
+    private readonly Mock<IProjectDal> _projectDalMock;
+    private readonly Mock<IProjectMemberDal> _projectMemberDalMock;
+    private readonly Mock<IUserDal> _userDalMock;
     private readonly Mock<IActivityLogService> _activityLogMock;
     private readonly IMapper _mapper;
     private readonly ProjectManager _projectManager;
 
     public ProjectManagerTests()
     {
-        _unitOfWorkMock = new Mock<IUnitOfWork>();
+        _projectDalMock = new Mock<IProjectDal>();
+        _projectMemberDalMock = new Mock<IProjectMemberDal>();
+        _userDalMock = new Mock<IUserDal>();
         _activityLogMock = new Mock<IActivityLogService>();
 
         var config = new MapperConfiguration(cfg =>
@@ -34,7 +37,12 @@ public class ProjectManagerTests
         }, new LoggerFactory());
         _mapper = new Mapper(config);
 
-        _projectManager = new ProjectManager(_unitOfWorkMock.Object, _mapper, _activityLogMock.Object);
+        _projectManager = new ProjectManager(
+            _projectDalMock.Object,
+            _projectMemberDalMock.Object,
+            _userDalMock.Object,
+            _mapper,
+            _activityLogMock.Object);
     }
 
     [Fact]
@@ -49,18 +57,11 @@ public class ProjectManagerTests
             Description = "Core Platform backend"
         };
 
-        var projectRepoMock = new Mock<IGenericRepository<Project>>();
-        var userRepoMock = new Mock<IGenericRepository<User>>();
-
-        projectRepoMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Project, bool>>>(), It.IsAny<string?>(), It.IsAny<bool>(), default))
+        _projectDalMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Project, bool>>>(), It.IsAny<string?>(), It.IsAny<bool>(), default))
             .ReturnsAsync((Project?)null);
 
-        userRepoMock.Setup(r => r.GetByIdAsync(userId, It.IsAny<string?>(), It.IsAny<bool>(), default))
+        _userDalMock.Setup(r => r.GetByIdAsync(userId, It.IsAny<string?>(), It.IsAny<bool>(), default))
             .ReturnsAsync(new User { Id = userId, FullName = "Admin User", Email = "admin@flowtask.com" });
-
-        _unitOfWorkMock.Setup(u => u.Projects).Returns(projectRepoMock.Object);
-        _unitOfWorkMock.Setup(u => u.Users).Returns(userRepoMock.Object);
-        _unitOfWorkMock.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
 
         // Act
         var result = await _projectManager.CreateProjectAsync(userId, request);
@@ -81,11 +82,8 @@ public class ProjectManagerTests
         var userId = Guid.NewGuid();
         var request = new ProjectCreateDto { Name = "Core Platform", Key = "CP" };
 
-        var projectRepoMock = new Mock<IGenericRepository<Project>>();
-        projectRepoMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Project, bool>>>(), It.IsAny<string?>(), It.IsAny<bool>(), default))
+        _projectDalMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Project, bool>>>(), It.IsAny<string?>(), It.IsAny<bool>(), default))
             .ReturnsAsync(new Project { Id = Guid.NewGuid(), Key = "CP", Name = "Existing" });
-
-        _unitOfWorkMock.Setup(u => u.Projects).Returns(projectRepoMock.Object);
 
         // Act & Assert
         var act = async () => await _projectManager.CreateProjectAsync(userId, request);
@@ -111,11 +109,8 @@ public class ProjectManagerTests
             }
         };
 
-        var projectRepoMock = new Mock<IGenericRepository<Project>>();
-        projectRepoMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Project, bool>>>(), It.IsAny<string?>(), It.IsAny<bool>(), default))
+        _projectDalMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Project, bool>>>(), It.IsAny<string?>(), It.IsAny<bool>(), default))
             .ReturnsAsync(project);
-
-        _unitOfWorkMock.Setup(u => u.Projects).Returns(projectRepoMock.Object);
 
         // Act & Assert
         var act = async () => await _projectManager.UpdateProjectAsync(projectId, userId, request);
