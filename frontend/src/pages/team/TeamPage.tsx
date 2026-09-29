@@ -137,6 +137,10 @@ export const TeamPage: React.FC = () => {
   }, [selectedMemberForDetail, fetchUserProjects]);
 
   const handleSaveMemberDepartment = async () => {
+    if (!canManageDept) {
+      setDeptSaveError(t('common.unauthorized', 'Bu işlemi yapmaya yetkiniz bulunmamaktadır.'));
+      return;
+    }
     if (!selectedMemberForDetail?.member.userId) return;
     setIsSavingDept(true);
     setDeptSaveSuccess(null);
@@ -165,6 +169,10 @@ export const TeamPage: React.FC = () => {
 
   const handleAddUserToProject = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canManageDept) {
+      setProjectActionError(t('common.unauthorized', 'Bu işlemi yapmaya yetkiniz bulunmamaktadır.'));
+      return;
+    }
     if (!selectedProjectToAdd || !selectedMemberForDetail?.member.userId) return;
 
     setIsAddingToProject(true);
@@ -192,6 +200,10 @@ export const TeamPage: React.FC = () => {
   };
 
   const handleRemoveUserFromProject = async (projectId: string, projectName: string) => {
+    if (!canManageDept) {
+      setProjectActionError(t('common.unauthorized', 'Bu işlemi yapmaya yetkiniz bulunmamaktadır.'));
+      return;
+    }
     if (!selectedMemberForDetail?.member.userId) return;
     const userName = selectedMemberForDetail.member.userFullName || 'Kullanıcıyı';
     if (!window.confirm(`${userName} adlı kullanıcıyı "${projectName}" projesinden çıkarmak istediğinize emin misiniz?`)) {
