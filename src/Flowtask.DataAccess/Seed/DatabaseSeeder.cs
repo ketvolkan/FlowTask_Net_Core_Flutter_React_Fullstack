@@ -67,9 +67,10 @@ public static class DatabaseSeeder
         var usersToSeed = new List<(string Email, string Name, string Title, string Dept, bool IsAdmin, string Password)>
         {
             ("admin@flowtask.com", "Sistem Yöneticisi", "Platform SuperAdmin", "Sistem Yönetimi", true, "Admin123*"),
-            ("manager@flowtask.com", "Ahmet Tekin", "Şirket Yöneticisi & CTO", "Yönetim & Teknoloji", false, "Manager123*"),
+            ("manager@techflow.com", "Ahmet Tekin", "TechFlow Kurucu & CTO", "Yönetim & Teknoloji", false, "Manager123*"),
+            ("admin@acmeglobal.com", "Burak Demir", "Acme Global Ürün Direktörü", "Üst Yönetim", false, "Manager123*"),
             ("demo@flowtask.com", "Demo Project Manager", "Kıdemli Proje Yöneticisi", "Ürün Yönetimi", false, "Demo123*"),
-            ("ayse.yilmaz@flowtask.com", "Ayşe Yılmaz", "Senior Frontend Architect", "Frontend Ekibi", false, "User123*"),
+            ("ayse.yilmaz@flowtask.com", "Ayşe Yılmaz", "Senior Frontend Architect (Çoklu Şirket)", "Frontend Ekibi", false, "User123*"),
             ("mehmet.kaya@flowtask.com", "Mehmet Kaya", "Principal Backend Engineer", "Backend Ekibi", false, "User123*"),
             ("zeynep.ozkan@flowtask.com", "Zeynep Özkan", "Senior UI/UX Designer", "Tasarım Ekibi", false, "User123*"),
             ("caner.erdogan@flowtask.com", "Caner Erdoğan", "DevOps & Cloud Specialist", "Altyapı Ekibi", false, "User123*")
@@ -111,23 +112,24 @@ public static class DatabaseSeeder
         }
 
         var adminUser = userMap["admin@flowtask.com"];
-        var managerUser = userMap["manager@flowtask.com"];
+        var techflowManager = userMap["manager@techflow.com"];
+        var acmeManager = userMap["admin@acmeglobal.com"];
         var demoUser = userMap["demo@flowtask.com"];
         var ayseUser = userMap["ayse.yilmaz@flowtask.com"];
         var mehmetUser = userMap["mehmet.kaya@flowtask.com"];
         var zeynepUser = userMap["zeynep.ozkan@flowtask.com"];
         var canerUser = userMap["caner.erdogan@flowtask.com"];
 
-        // 4. Project 1: Flowtask Core Platform (FLOW)
+        // 4. Project 1: TechFlow - Flowtask Core Platform (FLOW)
         var flowProject = await context.Projects.FirstOrDefaultAsync(p => p.Key == "FLOW");
         if (flowProject == null)
         {
             flowProject = new Project
             {
-                Name = "Flowtask Core Platform",
+                Name = "TechFlow — Flowtask Core Platform",
                 Key = "FLOW",
-                Description = "Kurumsal görev takibi, sprint yönetimi ve Kanban pano altyapısı.",
-                OwnerId = adminUser.Id,
+                Description = "TechFlow Solutions kurumsal görev takibi, sprint yönetimi ve Kanban pano altyapısı.",
+                OwnerId = techflowManager.Id,
                 IsArchived = false
             };
             await context.Projects.AddAsync(flowProject);
@@ -135,7 +137,7 @@ public static class DatabaseSeeder
 
             await AddMembersAsync(context, flowProject.Id, new[]
             {
-                (adminUser.Id, ProjectRoleType.Owner),
+                (techflowManager.Id, ProjectRoleType.Owner),
                 (demoUser.Id, ProjectRoleType.Admin),
                 (ayseUser.Id, ProjectRoleType.Member),
                 (mehmetUser.Id, ProjectRoleType.Member),

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
+import { useCompany } from '../../context/CompanyContext';
 import { projectsApi } from '../../api/projectsApi';
 import { Project } from '../../types';
 import { Button } from '../../components/common/Button';
@@ -19,6 +20,7 @@ import {
 
 export const ProjectsPage: React.FC = () => {
   const { t } = useLanguage();
+  const { selectedCompany, filterProjectsByCompany } = useCompany();
   const [projects, setProjects] = useState<Project[]>([]);
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -40,7 +42,8 @@ export const ProjectsPage: React.FC = () => {
     fetchProjects();
   }, []);
 
-  const filteredProjects = (projects || []).filter(
+  const companyFiltered = filterProjectsByCompany(projects || []);
+  const filteredProjects = companyFiltered.filter(
     (p) =>
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.key.toLowerCase().includes(search.toLowerCase())

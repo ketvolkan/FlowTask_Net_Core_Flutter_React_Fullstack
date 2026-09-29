@@ -85,22 +85,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </div>
 
-          {/* Desktop Collapse / Mobile Close Buttons */}
-          <div className="flex items-center gap-1">
-            <button
-              onClick={onClose}
-              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 lg:hidden"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <button
-              onClick={onToggleCollapse}
-              className="hidden lg:flex items-center justify-center rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
-              title={isCollapsed ? t('common.expandSidebar', 'Genişlet') : t('common.collapseSidebar', 'Daralt')}
-            >
-              {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            </button>
-          </div>
+          {/* Mobile Close Button only */}
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 lg:hidden"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
         {/* Navigation Items */}

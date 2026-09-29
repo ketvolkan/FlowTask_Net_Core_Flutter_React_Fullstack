@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
+import { useCompany } from '../../context/CompanyContext';
 import { projectsApi } from '../../api/projectsApi';
 import { issuesApi } from '../../api/issuesApi';
 import { Project, ProjectMember, Issue, IssueStatus } from '../../types';
@@ -41,6 +42,7 @@ interface MemberWorkload {
 
 export const TeamPage: React.FC = () => {
   const { t, isTurkish } = useLanguage();
+  const { filterProjectsByCompany } = useCompany();
   const dateLocale = isTurkish ? trLocale : enUS;
 
   const [projects, setProjects] = useState<Project[]>([]);
@@ -48,6 +50,8 @@ export const TeamPage: React.FC = () => {
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [issues, setIssues] = useState<Issue[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const displayedProjects = filterProjectsByCompany(projects);
 
   // Filters & Views
   const [viewMode, setViewMode] = useState<'board' | 'grid'>('board');
@@ -71,6 +75,16 @@ export const TeamPage: React.FC = () => {
     };
     loadProjects();
   }, [selectedProjectId]);
+
+  // Adjust selectedProjectId if it doesn't belong to current company filter
+  useEffect(() => {
+    if (displayedProjects.length > 0) {
+      const exists = displayedProjects.some((p) => p.id === selectedProjectId);
+      if (!exists) {
+        setSelectedProjectId(displayedProjects[0].id);
+      }
+    }
+  }, [displayedProjects, selectedProjectId]);
 
   // Load Members & Issues for selected project
   const fetchTeamData = useCallback(async () => {
@@ -201,7 +215,7 @@ export const TeamPage: React.FC = () => {
             onChange={(e) => setSelectedProjectId(e.target.value)}
             className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-900 shadow-xs focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
-            {projects.map((p) => (
+            {displayedProjects.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name} ({p.key})
               </option>

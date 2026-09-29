@@ -5,13 +5,14 @@ import { useLanguage } from '../../context/LanguageContext';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
 import { LanguageSwitcher } from '../../components/common/LanguageSwitcher';
-import { Kanban, Lock, Mail, User, Briefcase, Building, ArrowRight } from 'lucide-react';
+import { Kanban, Lock, Mail, User, Briefcase, Building2, ArrowRight, ShieldCheck } from 'lucide-react';
 
 export const RegisterPage: React.FC = () => {
   const { t } = useLanguage();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [companyName, setCompanyName] = useState('');
   const [jobTitle, setJobTitle] = useState('');
   const [department, setDepartment] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -35,8 +36,8 @@ export const RegisterPage: React.FC = () => {
         fullName: fullName.trim(),
         email: email.trim(),
         password,
-        jobTitle: jobTitle.trim() || undefined,
-        department: department.trim() || undefined,
+        jobTitle: jobTitle.trim() || (companyName.trim() ? `${companyName.trim()} Yöneticisi` : undefined),
+        department: companyName.trim() || department.trim() || undefined,
       });
       navigate('/dashboard');
     } catch (err: unknown) {
@@ -58,10 +59,10 @@ export const RegisterPage: React.FC = () => {
           <Kanban className="h-6 w-6" />
         </div>
         <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">
-          {t('auth.registerTitle', 'Yeni Hesap Oluşturun')}
+          {t('auth.registerTitle', 'Şirket & Hesap Kaydı')}
         </h2>
         <p className="mt-1.5 text-xs text-slate-500">
-          {t('auth.registerSubtitle', 'Flowtask ile ekibinizin üretkenliğini artırın.')}
+          {t('auth.registerSubtitle', 'Şirketiniz veya ekibiniz için Flowtask çalışma alanını hemen başlatın.')}
         </p>
       </div>
 
@@ -75,8 +76,16 @@ export const RegisterPage: React.FC = () => {
             )}
 
             <Input
-              label={t('profile.fullName', 'Ad Soyad')}
-              placeholder="Alex Johnson"
+              label="Şirket / Organizasyon Adı"
+              placeholder="Örn: Acme Teknoloji A.Ş."
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              leftIcon={<Building2 className="h-4 w-4" />}
+            />
+
+            <Input
+              label={t('profile.fullName', 'Yetkili / Ad Soyad')}
+              placeholder="Ahmet Tekin"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               leftIcon={<User className="h-4 w-4" />}
@@ -84,9 +93,9 @@ export const RegisterPage: React.FC = () => {
             />
 
             <Input
-              label={t('auth.email', 'E-Posta Adresi')}
+              label={t('auth.email', 'Kurumsal E-Posta Adresi')}
               type="email"
-              placeholder="alex@company.com"
+              placeholder="ahmet@sirketiniz.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               leftIcon={<Mail className="h-4 w-4" />}
@@ -105,8 +114,8 @@ export const RegisterPage: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input
-                label={t('profile.jobTitle', 'Ünvan / Pozisyon')}
-                placeholder="e.g. Frontend Dev"
+                label={t('profile.jobTitle', 'Pozisyon / Rol')}
+                placeholder="Örn: Kurucu & CEO"
                 value={jobTitle}
                 onChange={(e) => setJobTitle(e.target.value)}
                 leftIcon={<Briefcase className="h-4 w-4" />}
@@ -114,11 +123,18 @@ export const RegisterPage: React.FC = () => {
 
               <Input
                 label={t('profile.department', 'Departman')}
-                placeholder="e.g. Product"
+                placeholder="Örn: Yazılım / Ar-Ge"
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
-                leftIcon={<Building className="h-4 w-4" />}
+                leftIcon={<Building2 className="h-4 w-4" />}
               />
+            </div>
+
+            <div className="rounded-xl bg-indigo-50/70 p-3 border border-indigo-100 flex items-start gap-2.5">
+              <ShieldCheck className="h-4 w-4 text-indigo-600 mt-0.5 shrink-0" />
+              <p className="text-[11px] text-indigo-900 leading-tight">
+                Şirket yöneticisi olarak kaydolduğunuzda kendi projelerinizi, sprintlerinizi oluşturabilir ve ekip üyelerini davet edebilirsiniz.
+              </p>
             </div>
 
             <Button
@@ -127,7 +143,7 @@ export const RegisterPage: React.FC = () => {
               isLoading={isLoading}
               rightIcon={<ArrowRight className="h-4 w-4" />}
             >
-              {t('auth.signUp', 'Kayıt Ol')}
+              {t('auth.signUp', 'Şirket Hesabını Oluştur')}
             </Button>
           </form>
 

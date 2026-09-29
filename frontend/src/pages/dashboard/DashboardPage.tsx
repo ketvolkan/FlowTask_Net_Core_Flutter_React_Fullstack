@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useCompany } from '../../context/CompanyContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { projectsApi } from '../../api/projectsApi';
 import { issuesApi } from '../../api/issuesApi';
@@ -42,6 +43,7 @@ interface MemberWorkloadSummary {
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
+  const { selectedCompany, filterProjectsByCompany } = useCompany();
   const { t, language } = useLanguage();
   const [projects, setProjects] = useState<Project[]>([]);
   const [myIssues, setMyIssues] = useState<Issue[]>([]);
@@ -125,6 +127,7 @@ export const DashboardPage: React.FC = () => {
     fetchDashboardData();
   }, [user]);
 
+  const displayedProjects = filterProjectsByCompany(projects);
   const issuesList = myIssues || [];
   const completedCount = issuesList.filter((i) => i.status === 'Done').length;
   const inProgressCount = issuesList.filter((i) => i.status === 'InProgress').length;
@@ -144,7 +147,11 @@ export const DashboardPage: React.FC = () => {
               {t('dashboard.welcome', 'Tekrar hoş geldin')}, {user?.fullName}!
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-indigo-200/80">
-              {t('dashboard.subtitle', 'Bugün projeleriniz, ekip iş yükü ve görevlerinizdeki son durum burada.')}
+              {selectedCompany.id !== 'all' ? (
+                <span>Aktif Çalışma Alanı: <strong>{selectedCompany.name}</strong> • Görevler ve projeler filtrelendi.</span>
+              ) : (
+                t('dashboard.subtitle', 'Bugün projeleriniz, ekip iş yükü ve görevlerinizdeki son durum burada.')
+              )}
             </p>
           </div>
 
@@ -226,7 +233,7 @@ export const DashboardPage: React.FC = () => {
               <FolderKanban className="h-5 w-5" />
             </div>
           </div>
-          <p className="mt-3 text-2xl font-bold text-slate-900">{projects.length}</p>
+          <p className="mt-3 text-2xl font-bold text-slate-900">{displayedProjects.length}</p>
           <p className="mt-1 text-xs text-slate-400">{t('dashboard.workspaces', 'Dahil olunan projeler')}</p>
         </div>
       </div>
@@ -386,17 +393,17 @@ export const DashboardPage: React.FC = () => {
               <p className="text-xs text-slate-400">{t('dashboard.recentProjectsSubtitle', 'Çalışma alanlarına hızlı erişim')}</p>
             </div>
             <Link to="/projects" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
-              {t('common.all', 'Tümü')} ({projects.length})
+              {t('common.all', 'Tümü')} ({displayedProjects.length})
             </Link>
           </div>
 
           <div className="space-y-3">
             {isLoading ? (
               <div className="py-8 text-center text-xs text-slate-400">{t('common.loading', 'Yükleniyor...')}</div>
-            ) : projects.length === 0 ? (
+            ) : displayedProjects.length === 0 ? (
               <div className="py-8 text-center text-xs text-slate-400">{t('dashboard.noProjects', 'Kayıtlı proje bulunamadı.')}</div>
             ) : (
-              projects.map((proj) => (
+              displayedProjects.map((proj) => (
                 <Link
                   key={proj.id}
                   to={`/projects/${proj.id}`}
