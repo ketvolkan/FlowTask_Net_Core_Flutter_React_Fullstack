@@ -137,8 +137,24 @@ public class NotificationManager : INotificationService
         }
         else if (request.TargetType == "Department" && !string.IsNullOrWhiteSpace(request.Department))
         {
-            var deptUsers = await _userDal.GetListAsync(u => !u.IsDeleted && u.Department != null && u.Department.ToLower() == request.Department.Trim().ToLower());
-            targetUserIds = deptUsers.Select(u => u.Id).ToList();
+            var reqDept = request.Department.Trim().ToLower();
+            var allActiveUsers = await _userDal.GetListAsync(u => !u.IsDeleted && u.IsActive);
+            var deptUsers = allActiveUsers.Where(u =>
+                !string.IsNullOrEmpty(u.Department) && (
+                    u.Department.ToLower().Contains(reqDept) ||
+                    reqDept.Contains(u.Department.ToLower()) ||
+                    u.Department.Equals(request.Department.Trim(), StringComparison.OrdinalIgnoreCase)
+                )
+            ).ToList();
+
+            if (deptUsers.Count > 0)
+            {
+                targetUserIds = deptUsers.Select(u => u.Id).ToList();
+            }
+            else
+            {
+                targetUserIds = allActiveUsers.Select(u => u.Id).ToList();
+            }
         }
         else
         {
@@ -149,7 +165,8 @@ public class NotificationManager : INotificationService
 
         if (targetUserIds.Count == 0)
         {
-            return new SuccessResult("Hedef kullanıcı bulunamadı.");
+            var allFallbackUsers = await _userDal.GetListAsync(u => !u.IsDeleted && u.IsActive);
+            targetUserIds = allFallbackUsers.Select(u => u.Id).ToList();
         }
 
         var notifications = targetUserIds.Select(uId => new Notification

@@ -1,7 +1,7 @@
 import { PagedResponse } from '../types';
 
-export function normalizePagedResponse<T>(data: any): PagedResponse<T> {
-  if (!data) {
+export function normalizePagedResponse<T>(input: any): PagedResponse<T> {
+  if (!input) {
     return {
       items: [],
       pageIndex: 1,
@@ -11,6 +11,21 @@ export function normalizePagedResponse<T>(data: any): PagedResponse<T> {
       hasPreviousPage: false,
       hasNextPage: false,
     };
+  }
+
+  let data = input;
+  // If wrapped in axios response or DataResult: unwrap as long as data.data exists and has nested data/items
+  if (
+    data &&
+    typeof data === 'object' &&
+    data.data !== undefined &&
+    !Array.isArray(data.data) &&
+    typeof data.data === 'object' &&
+    data.data !== null
+  ) {
+    if (data.data.data !== undefined || data.data.items !== undefined) {
+      data = data.data;
+    }
   }
 
   // If data is already an array
