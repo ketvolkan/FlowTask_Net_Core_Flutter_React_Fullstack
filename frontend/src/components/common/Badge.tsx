@@ -101,18 +101,21 @@ export const SprintStatusBadge: React.FC<{ status: SprintStatus }> = ({ status }
   }
 };
 
-export const ProjectRoleBadge: React.FC<{ role: ProjectRole }> = ({ role }) => {
+export const ProjectRoleBadge: React.FC<{ role: ProjectRole | number | string }> = ({ role }) => {
   const { t } = useLanguage();
-  switch (role) {
-    case 'Owner':
-      return <Badge variant="purple">{t('role.owner', 'Proje Sahibi')}</Badge>;
-    case 'Admin':
-      return <Badge variant="info">{t('role.admin', 'Yönetici')}</Badge>;
-    case 'Member':
-      return <Badge variant="default">{t('role.member', 'Üye')}</Badge>;
-    case 'Viewer':
-      return <Badge variant="default">{t('role.viewer', 'Gözlemci')}</Badge>;
-    default:
-      return <Badge>{role}</Badge>;
+  const normalizedRole = String(role).toLowerCase();
+
+  if (role === 'Owner' || role === 1 || normalizedRole === 'owner') {
+    return <Badge variant="purple">{t('role.owner', 'Proje Sahibi')}</Badge>;
   }
+  if (role === 'Admin' || role === 2 || normalizedRole === 'admin') {
+    return <Badge variant="info">{t('role.admin', 'Yönetici')}</Badge>;
+  }
+  if (role === 'Member' || role === 3 || normalizedRole === 'member') {
+    return <Badge variant="default">{t('role.member', 'Üye')}</Badge>;
+  }
+  if (role === 'Viewer' || role === 4 || normalizedRole === 'viewer') {
+    return <Badge variant="default">{t('role.viewer', 'Gözlemci')}</Badge>;
+  }
+  return <Badge>{role}</Badge>;
 };

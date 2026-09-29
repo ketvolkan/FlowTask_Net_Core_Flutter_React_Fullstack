@@ -60,13 +60,17 @@ export interface ProjectDetail extends Project {
 
 export interface ProjectMember {
   id: string;
-  projectId: string;
+  projectId?: string;
   userId: string;
-  userFullName: string;
-  userEmail: string;
+  userFullName?: string;
+  fullName?: string;
+  userEmail?: string;
+  email?: string;
   userAvatarUrl?: string;
+  avatarUrl?: string;
+  jobTitle?: string;
   role: ProjectRole;
-  joinedAt: string;
+  joinedAt?: string;
 }
 
 export interface Issue {

@@ -5,6 +5,7 @@ import { projectsApi } from '../../api/projectsApi';
 import { ProjectDetail } from '../../types';
 import { Button } from '../../components/common/Button';
 import { UserAvatar } from '../../components/common/UserAvatar';
+import { ProjectRoleBadge } from '../../components/common/Badge';
 import { ProjectMembersModal } from '../../components/projects/ProjectMembersModal';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -206,18 +207,27 @@ export const ProjectDetailPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-          {project.members.map((m) => (
-            <div
-              key={m.id}
-              className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100"
-            >
-              <UserAvatar name={m.userFullName} avatarUrl={m.userAvatarUrl} size="sm" />
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-slate-900 truncate">{m.userFullName}</p>
-                <p className="text-[11px] text-slate-500 capitalize">{m.role}</p>
-              </div>
-            </div>
-          ))}
+          {project.members && project.members.length > 0 ? (
+            project.members.map((m) => {
+              const name = m.userFullName || m.fullName || m.userEmail || m.email || 'İsimsiz Üye';
+              return (
+                <div
+                  key={m.id}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100"
+                >
+                  <UserAvatar name={name} avatarUrl={m.userAvatarUrl || m.avatarUrl} size="sm" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-slate-900 truncate">{name}</p>
+                    <div className="mt-0.5">
+                      <ProjectRoleBadge role={m.role} />
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <p className="text-xs text-slate-400 py-2">{t('projectDetail.noMembers', 'Henüz üye eklenmemiş.')}</p>
+          )}
         </div>
       </div>
 

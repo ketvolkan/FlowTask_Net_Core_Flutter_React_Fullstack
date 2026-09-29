@@ -154,50 +154,57 @@ export const ProjectMembersModal: React.FC<ProjectMembersModalProps> = ({
           ) : members.length === 0 ? (
             <div className="py-8 text-center text-xs text-slate-400">{t('membersModal.noMembers', 'Üye bulunamadı.')}</div>
           ) : (
-            members.map((m) => (
-              <div key={m.id} className="flex items-center justify-between py-3">
-                <div className="flex items-center gap-3">
-                  <UserAvatar name={m.userFullName} avatarUrl={m.userAvatarUrl} size="sm" />
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs font-semibold text-slate-900">{m.userFullName}</p>
-                      {m.userId === user?.id && (
-                        <span className="text-[10px] font-medium text-slate-400 bg-slate-100 px-1.5 py-0.2 rounded">
-                          {t('common.you', 'Sen')}
-                        </span>
-                      )}
+            members.map((m) => {
+              const name = m.userFullName || m.fullName || m.userEmail || m.email || 'İsimsiz Üye';
+              const email = m.userEmail || m.email || '';
+              const isOwner = m.role === 'Owner' || (m.role as unknown) === 1 || String(m.role).toLowerCase() === 'owner';
+              const roleVal = typeof m.role === 'number' ? (m.role === 1 ? 'Owner' : m.role === 2 ? 'Admin' : m.role === 3 ? 'Member' : 'Viewer') : m.role;
+
+              return (
+                <div key={m.id} className="flex items-center justify-between py-3">
+                  <div className="flex items-center gap-3">
+                    <UserAvatar name={name} avatarUrl={m.userAvatarUrl || m.avatarUrl} size="sm" />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-semibold text-slate-900">{name}</p>
+                        {m.userId === user?.id && (
+                          <span className="text-[10px] font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                            {t('common.you', 'Sen')}
+                          </span>
+                        )}
+                      </div>
+                      {email && <p className="text-[11px] text-slate-500">{email}</p>}
                     </div>
-                    <p className="text-[11px] text-slate-500">{m.userEmail}</p>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    {isOwner ? (
+                      <ProjectRoleBadge role={m.role} />
+                    ) : (
+                      <select
+                        value={roleVal}
+                        onChange={(e) => handleRoleChange(m.userId, e.target.value as ProjectRole)}
+                        className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-700 font-medium focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      >
+                        <option value="Admin">{t('role.admin', 'Yönetici')}</option>
+                        <option value="Member">{t('role.member', 'Üye')}</option>
+                        <option value="Viewer">{t('role.viewer', 'Gözlemci')}</option>
+                      </select>
+                    )}
+
+                    {!isOwner && m.userId !== user?.id && (
+                      <button
+                        onClick={() => handleRemoveMember(m.userId)}
+                        className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                        title={t('common.delete', 'Sil')}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
-
-                <div className="flex items-center gap-3">
-                  {m.role === 'Owner' ? (
-                    <ProjectRoleBadge role={m.role} />
-                  ) : (
-                    <select
-                      value={m.role}
-                      onChange={(e) => handleRoleChange(m.userId, e.target.value as ProjectRole)}
-                      className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-700 font-medium focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    >
-                      <option value="Admin">{t('role.admin', 'Yönetici')}</option>
-                      <option value="Member">{t('role.member', 'Üye')}</option>
-                      <option value="Viewer">{t('role.viewer', 'Gözlemci')}</option>
-                    </select>
-                  )}
-
-                  {m.role !== 'Owner' && m.userId !== user?.id && (
-                    <button
-                      onClick={() => handleRemoveMember(m.userId)}
-                      className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
-                      title={t('common.delete', 'Sil')}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
