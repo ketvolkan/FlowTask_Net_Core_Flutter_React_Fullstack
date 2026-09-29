@@ -401,6 +401,11 @@ export const tr = {
   'auth.haveAccount': 'Zaten hesabınız var mı?',
   'auth.loginNow': 'Giriş Yapın',
 
+  // Profile & Department Authorization
+  'profile.deptReadOnlyNotice': 'Departman bilginiz yalnızca yetkili yöneticiler tarafından güncellenebilir.',
+  'department.locked': 'Yetki Gerekli',
+  'department.onlyManagersCanCreate': 'Sadece yetkili yöneticiler yeni departman oluşturabilir.',
+
   // Language Switcher
   'lang.switch': 'Dil / Language',
   'lang.tr': 'Türkçe',

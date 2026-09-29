@@ -1,13 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useDepartments } from '../../context/DepartmentContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { Building2, ChevronDown, Check, Plus, Search, Sparkles } from 'lucide-react';
+import { Building2, ChevronDown, Check, Plus, Search, Lock } from 'lucide-react';
 
 interface DepartmentSelectProps {
   label?: string;
   value: string;
   onChange: (deptName: string) => void;
   allowCreate?: boolean;
+  disabled?: boolean;
+  disabledReason?: string;
   required?: boolean;
   className?: string;
   placeholder?: string;
@@ -18,6 +20,8 @@ export const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
   value,
   onChange,
   allowCreate = true,
+  disabled = false,
+  disabledReason,
   required = false,
   className = '',
   placeholder = 'Departman seçiniz...',
@@ -61,33 +65,55 @@ export const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
   return (
     <div className={`space-y-1 ${className}`} ref={dropdownRef}>
       {label && (
-        <label className="block text-xs font-semibold text-slate-700">
-          {label} {required && <span className="text-rose-500">*</span>}
-        </label>
+        <div className="flex items-center justify-between">
+          <label className="block text-xs font-semibold text-slate-700">
+            {label} {required && <span className="text-rose-500">*</span>}
+          </label>
+          {disabled && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-400">
+              <Lock className="h-2.5 w-2.5" /> {t('department.locked', 'Kilitli')}
+            </span>
+          )}
+        </div>
       )}
 
       <div className="relative">
         <button
           type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          className={`flex w-full items-center justify-between rounded-xl border bg-white px-3.5 py-2 text-xs font-medium text-slate-800 transition-all cursor-pointer select-none focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
-            value ? 'border-slate-300' : 'border-slate-200 text-slate-400'
+          disabled={disabled}
+          onClick={() => !disabled && setIsOpen(!isOpen)}
+          className={`flex w-full items-center justify-between rounded-xl border px-3.5 py-2 text-xs font-medium transition-all select-none focus:outline-none ${
+            disabled
+              ? 'bg-slate-50/80 border-slate-200 text-slate-500 cursor-not-allowed opacity-90'
+              : value
+              ? 'bg-white border-slate-300 text-slate-800 cursor-pointer focus:ring-1 focus:ring-indigo-500'
+              : 'bg-white border-slate-200 text-slate-400 cursor-pointer focus:ring-1 focus:ring-indigo-500'
           }`}
         >
           <div className="flex items-center gap-2 truncate">
-            <Building2 className="h-4 w-4 text-slate-400 shrink-0" />
+            <Building2 className={`h-4 w-4 shrink-0 ${disabled ? 'text-slate-400' : 'text-slate-400'}`} />
             <span className={value ? 'text-slate-900 font-semibold' : 'text-slate-400'}>
               {value || placeholder}
             </span>
           </div>
-          <ChevronDown
-            className={`h-4 w-4 text-slate-400 shrink-0 transition-transform ${
-              isOpen ? 'rotate-180' : ''
-            }`}
-          />
+          {disabled ? (
+            <Lock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+          ) : (
+            <ChevronDown
+              className={`h-4 w-4 text-slate-400 shrink-0 transition-transform ${
+                isOpen ? 'rotate-180' : ''
+              }`}
+            />
+          )}
         </button>
 
-        {isOpen && (
+        {disabled && disabledReason && (
+          <p className="mt-1 text-[11px] text-slate-400 flex items-center gap-1">
+            <span>ℹ️</span> {disabledReason}
+          </p>
+        )}
+
+        {!disabled && isOpen && (
           <div className="absolute left-0 mt-1.5 w-full min-w-[260px] rounded-2xl bg-white shadow-xl ring-1 ring-black/5 z-50 border border-slate-200 py-1.5 animate-scale-in flex flex-col max-h-72">
             {/* Search Input */}
             <div className="p-2 border-b border-slate-100">
@@ -138,7 +164,7 @@ export const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
               )}
             </div>
 
-            {/* Inline Department Creation for Managers */}
+            {/* Inline Department Creation for Authorized Managers */}
             {allowCreate && (
               <div className="p-2 border-t border-slate-100 bg-slate-50/50">
                 {!isCreating ? (

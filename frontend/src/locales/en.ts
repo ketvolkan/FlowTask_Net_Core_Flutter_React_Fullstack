@@ -402,6 +402,11 @@ export const en: Record<string, string> = {
   'auth.haveAccount': 'Already have an account?',
   'auth.loginNow': 'Sign in',
 
+  // Profile & Department Authorization
+  'profile.deptReadOnlyNotice': 'Your department information can only be updated by authorized managers.',
+  'department.locked': 'Permission Required',
+  'department.onlyManagersCanCreate': 'Only authorized managers can create new departments.',
+
   // Language Switcher
   'lang.switch': 'Language / Dil',
   'lang.tr': 'Türkçe',

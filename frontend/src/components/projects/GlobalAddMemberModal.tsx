@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
@@ -7,6 +8,7 @@ import { Input } from '../common/Input';
 import { DepartmentSelect } from '../common/DepartmentSelect';
 import { projectsApi } from '../../api/projectsApi';
 import { Project, ProjectRole } from '../../types';
+import { isAuthorizedUser } from '../../utils/permissionUtils';
 import { UserPlus, CheckCircle2 } from 'lucide-react';
 
 interface GlobalAddMemberModalProps {
@@ -20,7 +22,9 @@ export const GlobalAddMemberModal: React.FC<GlobalAddMemberModalProps> = ({
   onClose,
   defaultProjectId,
 }) => {
+  const { user } = useAuth();
   const { t } = useLanguage();
+  const canCreateDept = isAuthorizedUser(user);
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>(defaultProjectId || '');
   const [email, setEmail] = useState('');
@@ -124,7 +128,7 @@ export const GlobalAddMemberModal: React.FC<GlobalAddMemberModalProps> = ({
           label="Departman / Birim"
           value={department}
           onChange={setDepartment}
-          allowCreate={true}
+          allowCreate={canCreateDept}
         />
 
         <Select

@@ -7,11 +7,14 @@ import { Input } from '../../components/common/Input';
 import { DepartmentSelect } from '../../components/common/DepartmentSelect';
 import { UserAvatar } from '../../components/common/UserAvatar';
 import { Badge } from '../../components/common/Badge';
+import { isAuthorizedUser } from '../../utils/permissionUtils';
 import { User, Lock, Save, Shield } from 'lucide-react';
 
 export const ProfileSettingsPage: React.FC = () => {
   const { user, refreshUser } = useAuth();
   const { t } = useLanguage();
+
+  const canManageDept = isAuthorizedUser(user);
 
   const [fullName, setFullName] = useState(user?.fullName || '');
   const [jobTitle, setJobTitle] = useState(user?.jobTitle || '');
@@ -39,7 +42,7 @@ export const ProfileSettingsPage: React.FC = () => {
       await axiosClient.put('/users/profile', {
         fullName: fullName.trim(),
         jobTitle: jobTitle.trim() || undefined,
-        department: department.trim() || undefined,
+        department: canManageDept ? (department.trim() || undefined) : (user?.department || undefined),
         avatarUrl: avatarUrl.trim() || undefined,
       });
 
@@ -165,7 +168,9 @@ export const ProfileSettingsPage: React.FC = () => {
               label={t('profile.department', 'Departman')}
               value={department}
               onChange={setDepartment}
-              allowCreate={true}
+              disabled={!canManageDept}
+              allowCreate={canManageDept}
+              disabledReason={t('profile.deptReadOnlyNotice', 'Departman bilginiz yalnızca yetkili yöneticiler tarafından güncellenebilir.')}
             />
           </div>
 

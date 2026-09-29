@@ -50,7 +50,29 @@ public class UserManager : IUserService
         user.FullName = request.FullName.Trim();
         user.AvatarUrl = request.AvatarUrl;
         user.JobTitle = request.JobTitle?.Trim();
-        user.Department = request.Department?.Trim();
+
+        // Only authorized users (SystemAdmin, Admin, Manager, Lead/Director titles) can update their department
+        bool isAuthorized = user.IsSystemAdmin ||
+                            user.UserRoles.Any(ur => ur.Role.Name == "Admin" || ur.Role.Name == "Manager" || ur.Role.Name == "CompanyAdmin" || ur.Role.Name == "ProjectManager") ||
+                            (!string.IsNullOrEmpty(user.JobTitle) && (
+                                user.JobTitle.Contains("Manager", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("Yönetici", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("Director", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("Direktör", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("Lead", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("Lider", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("Owner", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("CTO", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("CEO", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("Kurucu", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("PM", StringComparison.OrdinalIgnoreCase)
+                            ));
+
+        if (isAuthorized)
+        {
+            user.Department = request.Department?.Trim();
+        }
+
         user.UpdatedAt = DateTime.UtcNow;
 
         await _userDal.UpdateAsync(user);
