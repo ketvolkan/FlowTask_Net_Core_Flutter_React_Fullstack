@@ -7,6 +7,7 @@ import { Button } from '../common/Button';
 import { Input } from '../common/Input';
 import { DepartmentSelect } from '../common/DepartmentSelect';
 import { notificationsApi } from '../../api/notificationsApi';
+import { usersApi } from '../../api/usersApi';
 import { adminApi } from '../../api/adminApi';
 import { User } from '../../types';
 import { isAuthorizedUser } from '../../utils/permissionUtils';
@@ -21,6 +22,7 @@ import {
   Megaphone,
   AlertTriangle,
   Info,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface SendNotificationModalProps {
@@ -44,7 +46,7 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
   const [targetType, setTargetType] = useState<'All' | 'SpecificUsers' | 'Department'>('All');
   const [selectedDepartment, setSelectedDepartment] = useState('');
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
-  const [notificationType, setNotificationType] = useState<number>(8); // 8: SystemAlert
+  const [notificationType, setNotificationType] = useState<number>(8); // 8: SystemAlert, 9: UrgentAlert
 
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [userSearch, setUserSearch] = useState('');
@@ -59,12 +61,24 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
   useEffect(() => {
     if (isOpen && canSend) {
       setIsLoadingUsers(true);
-      adminApi
-        .getAllUsers(1, 100)
+      // Fetch users using usersApi (accessible to all managers), with fallback to adminApi
+      usersApi
+        .getUsers(1, 100)
         .then((res) => {
-          setAllUsers(res?.items || []);
+          if (res?.items && res.items.length > 0) {
+            setAllUsers(res.items);
+          } else {
+            return adminApi.getAllUsers(1, 100).then((adminRes) => {
+              setAllUsers(adminRes?.items || []);
+            });
+          }
         })
-        .catch(console.error)
+        .catch(() => {
+          adminApi
+            .getAllUsers(1, 100)
+            .then((adminRes) => setAllUsers(adminRes?.items || []))
+            .catch((err) => console.error('Failed to load users for notifications', err));
+        })
         .finally(() => setIsLoadingUsers(false));
 
       // Reset fields
@@ -79,16 +93,18 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
     }
   }, [isOpen, canSend]);
 
-  // Filter users by company scope
+  // Filter users strictly by selected company scope
   const scopedUsers = useMemo(() => {
     if (!isCompanyScoped) {
       return allUsers;
     }
     return allUsers.filter((u) => {
       const comp = getUserCompany(u);
+      // Include users mapped to this company OR multi-company users assigned across all 5 companies
       return (
         comp.code.toLowerCase() === selectedCompany.code.toLowerCase() ||
         comp.name.toLowerCase().includes(selectedCompany.shortName.toLowerCase()) ||
+        comp.isMultiCompany === true ||
         (u.department && selectedCompany.name.toLowerCase().includes(u.department.toLowerCase()))
       );
     });
@@ -99,7 +115,8 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
       (u) =>
         u.fullName.toLowerCase().includes(userSearch.toLowerCase()) ||
         u.email.toLowerCase().includes(userSearch.toLowerCase()) ||
-        (u.department && u.department.toLowerCase().includes(userSearch.toLowerCase()))
+        (u.department && u.department.toLowerCase().includes(userSearch.toLowerCase())) ||
+        (u.jobTitle && u.jobTitle.toLowerCase().includes(userSearch.toLowerCase()))
     );
   }, [scopedUsers, userSearch]);
 
@@ -168,7 +185,7 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
         department: targetType === 'Department' ? selectedDepartment.trim() : undefined,
       });
 
-      setSuccessMessage(res?.message || t('notifications.sentSuccess', 'Bildirim başarıyla gönderildi!'));
+      setSuccessMessage(res?.message || t('notifications.sentSuccess', 'Bildirim anlık WebSocket ile başarıyla gönderildi!'));
       onSent?.();
       setTimeout(() => {
         setSuccessMessage(null);
@@ -186,15 +203,25 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={t('notifications.sendTitle', 'Kullanıcılara Bildirim / Duyuru Gönder')}
-      description={
-        isCompanyScoped
-          ? `${selectedCompany.name} bünyesindeki ekip üyelerine duyuru yayınlayın.`
-          : t('notifications.sendSubtitle', 'Tüm şirket üyelerine veya belirli kullanıcılara anlık duyuru iletin.')
-      }
+      title={t('notifications.sendTitle', 'Bildirim & Duyuru Gönder')}
       size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Company Scope Notice */}
+        {isCompanyScoped && (
+          <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+            <div className="flex items-center gap-2 font-semibold text-slate-700">
+              <Building2 className="h-4 w-4 text-indigo-600" />
+              <span>
+                Şirket Kapsamı: <strong>{selectedCompany.name}</strong>
+              </span>
+            </div>
+            <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
+              {scopedUsers.length} Şirket Üyesi
+            </span>
+          </div>
+        )}
+
         {error && (
           <div className="rounded-xl bg-rose-50 p-3 text-xs font-medium text-rose-700 border border-rose-200">
             {error}
@@ -239,7 +266,7 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
                   {isCompanyScoped ? `${selectedCompany.shortName} Tüm Üyeler` : t('notifications.allUsers', 'Tüm Kullanıcılar')}
                 </p>
                 <p className="text-[10px] text-slate-500 truncate">
-                  {isCompanyScoped ? `${scopedUsers.length} şirket üyesi` : t('notifications.allDesc', 'Genel şirket duyurusu')}
+                  {isCompanyScoped ? `${scopedUsers.length} şirket çalışanı` : t('notifications.allDesc', 'Genel şirket duyurusu')}
                 </p>
               </div>
             </button>
@@ -273,7 +300,7 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
                 <p className="text-[10px] text-slate-500 truncate">
                   {selectedUserIds.length > 0
                     ? `${selectedUserIds.length} kişi seçildi`
-                    : `${scopedUsers.length} aday arasından seç`}
+                    : `${scopedUsers.length} şirket üyesi`}
                 </p>
               </div>
             </button>
@@ -312,13 +339,13 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
           </div>
         </div>
 
-        {/* Conditional Department Selector */}
+        {/* Conditional Department Selector strictly scoped to active company */}
         {targetType === 'Department' && (
-          <div className="rounded-2xl bg-slate-50 p-3.5 border border-slate-200">
+          <div className="rounded-2xl bg-slate-50 p-3.5 border border-slate-200 space-y-2">
             <DepartmentSelect
               label={
                 isCompanyScoped
-                  ? `${selectedCompany.shortName} - ${t('notifications.selectTargetDept', 'Hedef Departmanı Seçin')}`
+                  ? `${selectedCompany.name} - ${t('notifications.selectTargetDept', 'Hedef Departmanı Seçin')}`
                   : t('notifications.selectTargetDept', 'Hedef Departmanı Seçin')
               }
               value={selectedDepartment}
@@ -327,6 +354,11 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
               allowCreate={false}
               required
             />
+            {selectedDepartment && (
+              <p className="text-[11px] text-slate-500 font-medium">
+                Bu departmandaki {scopedUsers.filter(u => u.department && u.department.toLowerCase() === selectedDepartment.toLowerCase()).length} kullanıcıya anlık bildirim iletilecektir.
+              </p>
+            )}
           </div>
         )}
 
@@ -335,7 +367,7 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
           <div className="rounded-2xl bg-slate-50 p-3.5 border border-slate-200 space-y-2.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-700">
-                {t('notifications.selectUsersList', 'Kullanıcıları Seçin')} ({selectedUserIds.length} / {scopedUsers.length} seçili)
+                {isCompanyScoped ? `${selectedCompany.shortName} Kullanıcıları` : t('notifications.selectUsersList', 'Kullanıcıları Seçin')} ({selectedUserIds.length} / {scopedUsers.length} seçili)
               </span>
               <div className="flex items-center gap-2 text-xs">
                 <button
@@ -356,54 +388,61 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
               </div>
             </div>
 
-            {/* Search Input */}
+            {/* Search filter for users */}
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
               <input
                 type="text"
-                placeholder={t('notifications.searchUsersPlaceholder', 'İsim, e-posta veya departmana göre ara...')}
+                placeholder={isCompanyScoped ? `${selectedCompany.shortName} çalışanlarında ara...` : t('notifications.searchUsersPlaceholder', 'İsim, e-posta veya departmana göre ara...')}
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-white pl-8 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none"
+                className="w-full pl-8.5 pr-3 py-1.5 text-xs rounded-xl border border-slate-300 bg-white placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </div>
 
             {/* User List with Checkboxes */}
-            <div className="max-h-40 overflow-y-auto divide-y divide-slate-100 rounded-xl bg-white border border-slate-200">
+            <div className="max-h-48 overflow-y-auto divide-y divide-slate-200/70 rounded-xl border border-slate-200 bg-white p-1">
               {isLoadingUsers ? (
-                <div className="py-4 text-center text-xs text-slate-400">{t('admin.loadingUsers', 'Kullanıcılar yükleniyor...')}</div>
+                <div className="py-6 text-center text-xs text-slate-400 font-medium">
+                  {t('common.loading', 'Kullanıcılar yükleniyor...')}
+                </div>
               ) : filteredUsers.length === 0 ? (
-                <div className="py-4 text-center text-xs text-slate-400">{t('admin.noUsersMatch', 'Kullanıcı bulunamadı.')}</div>
+                <div className="py-6 text-center text-xs text-slate-400 font-medium">
+                  {userSearch ? 'Aramaya uygun kullanıcı bulunamadı.' : 'Bu şirket için kayıtlı kullanıcı bulunmuyor.'}
+                </div>
               ) : (
                 filteredUsers.map((u) => {
                   const isChecked = selectedUserIds.includes(u.id);
                   const userComp = getUserCompany(u);
-
                   return (
                     <label
                       key={u.id}
-                      onClick={() => toggleUserSelection(u.id)}
-                      className={`flex items-center justify-between px-3 py-2 cursor-pointer transition-colors text-xs ${
-                        isChecked ? 'bg-indigo-50/60' : 'hover:bg-slate-50'
+                      className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${
+                        isChecked ? 'bg-indigo-50/70 text-indigo-950 font-medium' : 'hover:bg-slate-50 text-slate-700'
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div
-                          className={`flex h-4 w-4 items-center justify-center rounded border transition-colors shrink-0 ${
-                            isChecked
-                              ? 'bg-indigo-600 border-indigo-600 text-white'
-                              : 'border-slate-300 bg-white'
-                          }`}
-                        >
-                          {isChecked && <Check className="h-3 w-3 stroke-[3]" />}
-                        </div>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleUserSelection(u.id)}
+                          className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                        />
                         <div className="truncate">
-                          <p className="font-semibold text-slate-900 truncate">{u.fullName}</p>
-                          <p className="text-[10px] text-slate-400 truncate">
-                            {u.email} {u.department ? `• ${u.department}` : ''} {!isCompanyScoped && `• ${userComp.name}`}
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold text-slate-900 text-xs truncate">{u.fullName}</span>
+                            {userComp.isMultiCompany && (
+                              <span className="text-[9px] font-bold text-indigo-600 bg-indigo-50 px-1 py-0.2 rounded border border-indigo-100">
+                                5 Şirket
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                            {u.email} {u.department ? `• ${u.department}` : ''} {u.jobTitle ? `• ${u.jobTitle}` : ''}
                           </p>
                         </div>
                       </div>
+                      {isChecked && <Check className="h-4 w-4 text-indigo-600 shrink-0 ml-2" />}
                     </label>
                   );
                 })

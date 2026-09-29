@@ -98,10 +98,9 @@ export const getUserCompany = (u: {
     email === 'manager@techflow.com' ||
     email === 'mehmet.kaya@flowtask.com' ||
     email === 'caner.erdogan@flowtask.com' ||
-    email === 'selin.arslan@techflow.com' ||
-    email === 'emre.celik@techflow.com' ||
-    email === 'merve.aydin@techflow.com' ||
-    email === 'tolga.yilmaz@techflow.com' ||
+    email === 'elif.yildirim@techflow.com' ||
+    email === 'burak.celik@techflow.com' ||
+    email === 'duygu.sen@techflow.com' ||
     dept.includes('techflow') ||
     title.includes('techflow')
   ) {
@@ -112,12 +111,11 @@ export const getUserCompany = (u: {
   if (
     email.includes('acme') ||
     email === 'admin@acmeglobal.com' ||
-    email === 'zeynep.ozkan@flowtask.com' ||
-    email === 'deniz.kurt@acmeglobal.com' ||
-    email === 'onur.sahin@acmeglobal.com' ||
-    email === 'ece.yildirim@acmeglobal.com' ||
-    email === 'hakan.celik@acmeglobal.com' ||
-    email === 'pinar.koc@acmeglobal.com' ||
+    email === 'selin.arslan@acmeglobal.com' ||
+    email === 'kerem.yurt@acmeglobal.com' ||
+    email === 'busra.aydin@acmeglobal.com' ||
+    email === 'murat.dogan@acmeglobal.com' ||
+    email === 'gizem.tuncer@acmeglobal.com' ||
     dept.includes('acme') ||
     title.includes('acme')
   ) {
@@ -128,6 +126,12 @@ export const getUserCompany = (u: {
   if (
     email.includes('nexus') ||
     email.includes('fintech') ||
+    email === 'sinan.vural@nexusfin.com' ||
+    email === 'deniz.aksoy@nexusfin.com' ||
+    email === 'melike.guler@nexusfin.com' ||
+    email === 'ozan.koc@nexusfin.com' ||
+    email === 'ece.bulut@nexusfin.com' ||
+    dept.includes('bankacılık') ||
     dept.includes('fintech') ||
     dept.includes('ödeme') ||
     title.includes('fintech') ||
@@ -140,8 +144,15 @@ export const getUserCompany = (u: {
   if (
     email.includes('pulse') ||
     email.includes('health') ||
+    email === 'hakan.ozturk@pulsehealth.com' ||
+    email === 'zeynep.ozkan@flowtask.com' ||
+    email === 'tolga.sahin@pulsehealth.com' ||
+    email === 'asli.kara@pulsehealth.com' ||
+    email === 'cem.akbulut@pulsehealth.com' ||
     dept.includes('sağlık') ||
     dept.includes('medikal') ||
+    dept.includes('tele-tıp') ||
+    dept.includes('klinik') ||
     title.includes('health') ||
     title.includes('medikal') ||
     title.includes('pulse')
@@ -153,8 +164,15 @@ export const getUserCompany = (u: {
   if (
     email.includes('vortex') ||
     email.includes('logistics') ||
+    email === 'erdem.soylu@vortexlog.com' ||
+    email === 'yasemin.cetin@vortexlog.com' ||
+    email === 'baris.yildiz@vortexlog.com' ||
+    email === 'merve.polat@vortexlog.com' ||
+    email === 'serdar.kurt@vortexlog.com' ||
     dept.includes('lojistik') ||
     dept.includes('tedarik') ||
+    dept.includes('filo') ||
+    dept.includes('rota') ||
     title.includes('logistics') ||
     title.includes('vortex')
   ) {
