@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { UserAvatar } from '../common/UserAvatar';
@@ -9,6 +10,7 @@ import { CommentList } from './CommentList';
 import { AttachmentList } from './AttachmentList';
 import { Trash2, Save } from 'lucide-react';
 import { format } from 'date-fns';
+import { tr as dateFnsTr, enUS as dateFnsEn } from 'date-fns/locale';
 
 interface IssueDetailModalProps {
   isOpen: boolean;
@@ -29,6 +31,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
   onIssueUpdated,
   onIssueDeleted,
 }) => {
+  const { t, language } = useLanguage();
   const [issue, setIssue] = useState<Issue | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -61,11 +64,11 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
       setDueDate(data.dueDate ? data.dueDate.split('T')[0] : '');
     } catch (err) {
       console.error(err);
-      setError('Failed to load issue details');
+      setError(t('issueDetail.notFound', 'Görev bulunamadı.'));
     } finally {
       setIsLoading(false);
     }
-  }, [issueId]);
+  }, [issueId, t]);
 
   useEffect(() => {
     if (isOpen && issueId) {
@@ -85,10 +88,10 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
         status,
         priority,
         type,
-        assigneeId: assigneeId || undefined,
-        sprintId: sprintId || undefined,
-        storyPoints: storyPoints ? Number(storyPoints) : undefined,
-        dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
+        assigneeId: assigneeId && assigneeId.trim() !== '' ? assigneeId.trim() : undefined,
+        sprintId: sprintId && sprintId.trim() !== '' ? sprintId.trim() : undefined,
+        storyPoints: storyPoints !== undefined && storyPoints !== null && !isNaN(Number(storyPoints)) ? Number(storyPoints) : undefined,
+        dueDate: dueDate && dueDate.trim() !== '' ? new Date(dueDate).toISOString() : undefined,
       });
 
       onIssueUpdated();
@@ -103,7 +106,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
   const handleDelete = async () => {
     if (!issue) return;
-    if (!window.confirm(`Are you sure you want to delete ${issue.key}?`)) return;
+    if (!window.confirm(t('issueDetail.deleteConfirm', 'Bu görevi silmek istediğinize emin misiniz?'))) return;
 
     try {
       await issuesApi.deleteIssue(issue.id);
@@ -115,6 +118,8 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
     }
   };
 
+  const dateLocale = language === 'tr' ? dateFnsTr : dateFnsEn;
+
   return (
     <Modal
       isOpen={isOpen}
@@ -122,9 +127,9 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
       size="2xl"
     >
       {isLoading ? (
-        <div className="py-16 text-center text-xs text-slate-400">Loading issue details...</div>
+        <div className="py-16 text-center text-xs text-slate-400">{t('issueDetail.loading', 'Görev detayları yükleniyor...')}</div>
       ) : !issue ? (
-        <div className="py-16 text-center text-xs text-rose-500">Issue not found.</div>
+        <div className="py-16 text-center text-xs text-rose-500">{t('issueDetail.notFound', 'Görev bulunamadı.')}</div>
       ) : (
         <div className="space-y-6">
           {error && (
@@ -152,7 +157,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                 onClick={handleDelete}
                 leftIcon={<Trash2 className="h-3.5 w-3.5" />}
               >
-                Delete
+                {t('common.delete', 'Sil')}
               </Button>
               <Button
                 size="sm"
@@ -160,7 +165,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                 onClick={handleSave}
                 leftIcon={<Save className="h-3.5 w-3.5" />}
               >
-                Save Changes
+                {t('common.save', 'Kaydet')}
               </Button>
             </div>
           </div>
@@ -171,7 +176,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
             <div className="lg:col-span-2 space-y-6">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Title
+                  {t('createIssue.issueTitle', 'Başlık')}
                 </label>
                 <input
                   type="text"
@@ -183,13 +188,13 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Description
+                  {t('createIssue.issueDescription', 'Açıklama')}
                 </label>
                 <textarea
                   rows={4}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Add a detailed description..."
+                  placeholder={t('createIssue.issueDescriptionPlaceholder', 'Detaylar, kabul kriterleri veya adımları ekleyin...')}
                   className="block w-full rounded-xl border border-slate-300 bg-white p-3 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 />
               </div>
@@ -216,63 +221,63 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
             {/* Right 1 Col: Metadata & Field Properties */}
             <div className="space-y-4 rounded-2xl bg-slate-50 p-4 border border-slate-100">
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600">
-                Details & Properties
+                {t('issueDetail.details', 'Detaylar')}
               </h4>
 
               {/* Status */}
               <div>
-                <label className="block text-[11px] font-semibold text-slate-500 mb-1">Status</label>
+                <label className="block text-[11px] font-semibold text-slate-500 mb-1">{t('issueDetail.status', 'Durum')}</label>
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value as IssueStatus)}
                   className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 font-medium focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 >
-                  <option value="Todo">To Do</option>
-                  <option value="InProgress">In Progress</option>
-                  <option value="InReview">In Review</option>
-                  <option value="Done">Done</option>
+                  <option value="Todo">{t('status.todo', 'Yapılacak')}</option>
+                  <option value="InProgress">{t('status.inProgress', 'Devam Eden')}</option>
+                  <option value="InReview">{t('status.inReview', 'İncelemede')}</option>
+                  <option value="Done">{t('status.done', 'Tamamlandı')}</option>
                 </select>
               </div>
 
               {/* Priority */}
               <div>
-                <label className="block text-[11px] font-semibold text-slate-500 mb-1">Priority</label>
+                <label className="block text-[11px] font-semibold text-slate-500 mb-1">{t('issueDetail.priority', 'Öncelik')}</label>
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value as IssuePriority)}
                   className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 font-medium focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 >
-                  <option value="Low">Low</option>
-                  <option value="Medium">Medium</option>
-                  <option value="High">High</option>
-                  <option value="Urgent">Urgent</option>
+                  <option value="Low">{t('priority.low', 'Düşük')}</option>
+                  <option value="Medium">{t('priority.medium', 'Orta')}</option>
+                  <option value="High">{t('priority.high', 'Yüksek')}</option>
+                  <option value="Urgent">{t('priority.urgent', 'Acil')}</option>
                 </select>
               </div>
 
               {/* Type */}
               <div>
-                <label className="block text-[11px] font-semibold text-slate-500 mb-1">Type</label>
+                <label className="block text-[11px] font-semibold text-slate-500 mb-1">{t('createIssue.type', 'Tip')}</label>
                 <select
                   value={type}
                   onChange={(e) => setType(e.target.value as IssueType)}
                   className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 font-medium focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 >
-                  <option value="Task">Task</option>
-                  <option value="Bug">Bug</option>
-                  <option value="Story">Story</option>
-                  <option value="Epic">Epic</option>
+                  <option value="Task">{t('type.task', 'Görev')}</option>
+                  <option value="Bug">{t('type.bug', 'Hata')}</option>
+                  <option value="Story">{t('type.story', 'Hikaye')}</option>
+                  <option value="Epic">{t('type.epic', 'Epik')}</option>
                 </select>
               </div>
 
               {/* Assignee */}
               <div>
-                <label className="block text-[11px] font-semibold text-slate-500 mb-1">Assignee</label>
+                <label className="block text-[11px] font-semibold text-slate-500 mb-1">{t('issueDetail.assignee', 'Sorumlu')}</label>
                 <select
                   value={assigneeId}
                   onChange={(e) => setAssigneeId(e.target.value)}
                   className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 font-medium focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 >
-                  <option value="">Unassigned</option>
+                  <option value="">{t('common.unassigned', 'Atanmamış')}</option>
                   {members.map((m) => (
                     <option key={m.userId} value={m.userId}>
                       {m.userFullName}
@@ -283,13 +288,13 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
               {/* Sprint */}
               <div>
-                <label className="block text-[11px] font-semibold text-slate-500 mb-1">Sprint</label>
+                <label className="block text-[11px] font-semibold text-slate-500 mb-1">{t('issueDetail.sprint', 'Sprint')}</label>
                 <select
                   value={sprintId}
                   onChange={(e) => setSprintId(e.target.value)}
                   className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 font-medium focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 >
-                  <option value="">Backlog (No Sprint)</option>
+                  <option value="">{t('createIssue.noSprintBacklog', 'Backlog (Sprint Yok)')}</option>
                   {sprints.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name} ({s.status})
@@ -300,7 +305,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
               {/* Story Points */}
               <div>
-                <label className="block text-[11px] font-semibold text-slate-500 mb-1">Story Points</label>
+                <label className="block text-[11px] font-semibold text-slate-500 mb-1">{t('issueDetail.storyPoints', 'Hikaye Puanı')}</label>
                 <input
                   type="number"
                   min={0}
@@ -314,7 +319,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
               {/* Due Date */}
               <div>
-                <label className="block text-[11px] font-semibold text-slate-500 mb-1">Due Date</label>
+                <label className="block text-[11px] font-semibold text-slate-500 mb-1">{t('issueDetail.dueDate', 'Bitiş Tarihi')}</label>
                 <input
                   type="date"
                   value={dueDate}
@@ -325,7 +330,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
               {/* Reporter Info */}
               <div className="pt-2 border-t border-slate-200/60 text-xs">
-                <span className="text-[11px] text-slate-400">Reporter:</span>
+                <span className="text-[11px] text-slate-400">{t('issueDetail.reporter', 'Oluşturan')}:</span>
                 <div className="flex items-center gap-2 mt-1">
                   <UserAvatar name={issue.reporterName} avatarUrl={issue.reporterAvatarUrl} size="xs" />
                   <span className="font-semibold text-slate-800">{issue.reporterName || 'Unknown'}</span>
@@ -334,7 +339,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
 
               {/* Created info */}
               <div className="text-[10px] text-slate-400">
-                Created on {format(new Date(issue.createdAt), 'MMM dd, yyyy HH:mm')}
+                {t('issueDetail.created', 'Oluşturuldu')}: {format(new Date(issue.createdAt), 'MMM dd, yyyy HH:mm', { locale: dateLocale })}
               </div>
             </div>
           </div>

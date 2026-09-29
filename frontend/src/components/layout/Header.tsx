@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { UserAvatar } from '../common/UserAvatar';
 import { NotificationDropdown } from './NotificationDropdown';
 import { LogOut, User as UserIcon, Shield, Menu } from 'lucide-react';
@@ -11,6 +12,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -64,7 +66,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
                 <p className="text-[11px] text-slate-500 truncate">{user?.email}</p>
                 {user?.isSystemAdmin && (
                   <span className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 uppercase tracking-wider">
-                    <Shield className="h-3 w-3" /> System Admin
+                    <Shield className="h-3 w-3" /> {t('header.systemAdmin', 'Sistem Yöneticisi')}
                   </span>
                 )}
               </div>
@@ -76,7 +78,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
                   className="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors"
                 >
                   <UserIcon className="h-4 w-4 text-slate-400" />
-                  Account Settings
+                  {t('header.accountSettings', 'Hesap Ayarları')}
                 </Link>
                 {user?.isSystemAdmin && (
                   <Link
@@ -85,7 +87,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
                     className="flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors"
                   >
                     <Shield className="h-4 w-4 text-slate-400" />
-                    Admin Panel
+                    {t('header.adminPanel', 'Yönetici Paneli')}
                   </Link>
                 )}
               </div>
@@ -96,7 +98,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
                   className="flex w-full items-center gap-2.5 px-4 py-2 text-xs text-rose-600 hover:bg-rose-50 transition-colors font-medium"
                 >
                   <LogOut className="h-4 w-4 text-rose-500" />
-                  Sign Out
+                  {t('header.signOut', 'Çıkış Yap')}
                 </button>
               </div>
             </div>

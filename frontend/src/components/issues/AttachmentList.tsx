@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import { Attachment } from '../../types';
 import { attachmentsApi } from '../../api/attachmentsApi';
 import { Button } from '../common/Button';
@@ -17,6 +18,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
   onAttachmentChanged,
 }) => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -38,7 +40,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
   };
 
   const handleDeleteAttachment = async (attachmentId: string) => {
-    if (!window.confirm('Delete this file?')) return;
+    if (!window.confirm('Bu dosyayı silmek istediğinize emin misiniz?')) return;
     try {
       await attachmentsApi.deleteAttachment(attachmentId);
       onAttachmentChanged();
@@ -57,7 +59,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-          Attachments ({attachments.length})
+          {t('issueDetail.attachments', 'Ekler')} ({attachments.length})
         </h4>
         <div>
           <input
@@ -74,7 +76,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
             onClick={() => fileInputRef.current?.click()}
             leftIcon={<Paperclip className="h-3.5 w-3.5" />}
           >
-            Attach File
+            {t('issueDetail.uploadFile', 'Dosya Yükle')}
           </Button>
         </div>
       </div>
@@ -115,7 +117,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
                   <button
                     onClick={() => handleDeleteAttachment(att.id)}
                     className="rounded p-1 text-slate-400 hover:text-rose-600 transition-colors"
-                    title="Delete"
+                    title={t('common.delete', 'Sil')}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>

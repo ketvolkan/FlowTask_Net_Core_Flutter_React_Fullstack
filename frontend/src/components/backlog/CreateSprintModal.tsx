@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import { Modal } from '../common/Modal';
 import { Input } from '../common/Input';
 import { Select } from '../common/Select';
@@ -23,6 +24,7 @@ export const CreateSprintModal: React.FC<CreateSprintModalProps> = ({
   onSprintCreated,
   onOpenCreateProject,
 }) => {
+  const { t } = useLanguage();
   const [selectedProjectId, setSelectedProjectId] = useState<string>(initialProjectId || '');
   const [name, setName] = useState('Sprint 1');
   const [goal, setGoal] = useState('');
@@ -45,12 +47,12 @@ export const CreateSprintModal: React.FC<CreateSprintModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProjectId) {
-      setError('Please select a project');
+      setError(t('board.selectProject', 'Lütfen bir proje seçin veya oluşturun.'));
       return;
     }
 
     if (!name.trim()) {
-      setError('Sprint name is required');
+      setError(t('createSprint.name', 'Sprint Adı') + ' zorunludur');
       return;
     }
 
@@ -83,13 +85,13 @@ export const CreateSprintModal: React.FC<CreateSprintModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Create Sprint"
-      description="Plan sprint cycles, duration, and main goals."
+      title={t('createSprint.title', 'Sprint Oluştur')}
+      description={t('createSprint.description', 'Sprint döngüsü, süresi ve ana hedeflerini belirleyin.')}
     >
       {!selectedProjectId && projects.length === 0 ? (
         <div className="py-6 text-center space-y-4">
           <p className="text-sm text-slate-600">
-            No projects available. You must create or join a project before creating sprints.
+            {t('createIssue.noProjects', 'Kullanılabilir proje bulunamadı. Görev oluşturmadan önce bir proje oluşturmalı veya bir projeye katılmalısınız.')}
           </p>
           {onOpenCreateProject && (
             <Button
@@ -98,7 +100,7 @@ export const CreateSprintModal: React.FC<CreateSprintModalProps> = ({
                 onOpenCreateProject();
               }}
             >
-              Create New Project
+              {t('createIssue.createNewProject', 'Yeni Proje Oluştur')}
             </Button>
           )}
         </div>
@@ -113,7 +115,7 @@ export const CreateSprintModal: React.FC<CreateSprintModalProps> = ({
           {/* Project Selector if multiple projects */}
           {projects.length > 1 && (
             <Select
-              label="Project"
+              label={t('createIssue.project', 'Proje')}
               value={selectedProjectId}
               onChange={(e) => setSelectedProjectId(e.target.value)}
               required
@@ -127,8 +129,8 @@ export const CreateSprintModal: React.FC<CreateSprintModalProps> = ({
           )}
 
           <Input
-            label="Sprint Name"
-            placeholder="e.g. Sprint 1"
+            label={t('createSprint.name', 'Sprint Adı')}
+            placeholder={t('createSprint.namePlaceholder', 'Örn: Sprint 1')}
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
@@ -136,11 +138,11 @@ export const CreateSprintModal: React.FC<CreateSprintModalProps> = ({
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-              Sprint Goal
+              {t('createSprint.goal', 'Sprint Hedefi')}
             </label>
             <textarea
               rows={2}
-              placeholder="What is the team committing to achieve this sprint?"
+              placeholder={t('createSprint.goalPlaceholder', 'Takım bu sprintte neyi başarmayı taahhüt ediyor?')}
               value={goal}
               onChange={(e) => setGoal(e.target.value)}
               className="block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
@@ -150,14 +152,14 @@ export const CreateSprintModal: React.FC<CreateSprintModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
               type="date"
-              label="Start Date"
+              label={t('createSprint.startDate', 'Başlangıç Tarihi')}
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
 
             <Input
               type="date"
-              label="End Date"
+              label={t('createSprint.endDate', 'Bitiş Tarihi')}
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
@@ -165,10 +167,10 @@ export const CreateSprintModal: React.FC<CreateSprintModalProps> = ({
 
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
             <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
-              Cancel
+              {t('common.cancel', 'İptal')}
             </Button>
             <Button type="submit" isLoading={isLoading}>
-              Create Sprint
+              {t('createSprint.submit', 'Sprint Oluştur')}
             </Button>
           </div>
         </form>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
 import { projectsApi } from '../../api/projectsApi';
 import { ProjectDetail } from '../../types';
 import { Button } from '../../components/common/Button';
@@ -17,10 +18,12 @@ import {
   Settings,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import { tr as dateFnsTr, enUS as dateFnsEn } from 'date-fns/locale';
 
 export const ProjectDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
 
   const [project, setProject] = useState<ProjectDetail | null>(null);
@@ -46,7 +49,7 @@ export const ProjectDetailPage: React.FC = () => {
 
   const handleDeleteProject = async () => {
     if (!id || !project) return;
-    if (!window.confirm(`Are you sure you want to delete project ${project.name}? This cannot be undone.`)) {
+    if (!window.confirm(t('projectDetail.deleteConfirm', 'Bu projeyi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.'))) {
       return;
     }
 
@@ -59,12 +62,14 @@ export const ProjectDetailPage: React.FC = () => {
     }
   };
 
+  const dateLocale = language === 'tr' ? dateFnsTr : dateFnsEn;
+
   if (isLoading) {
-    return <div className="py-20 text-center text-xs text-slate-400">Loading project details...</div>;
+    return <div className="py-20 text-center text-xs text-slate-400">{t('projectDetail.loading', 'Proje detayları yükleniyor...')}</div>;
   }
 
   if (!project) {
-    return <div className="py-20 text-center text-xs text-rose-500">Project not found.</div>;
+    return <div className="py-20 text-center text-xs text-rose-500">{t('projectDetail.notFound', 'Proje bulunamadı.')}</div>;
   }
 
   const isOwnerOrAdmin =
@@ -91,15 +96,15 @@ export const ProjectDetailPage: React.FC = () => {
                 </span>
               </div>
               <p className="mt-1.5 text-xs sm:text-sm text-slate-500 max-w-2xl">
-                {project.description || 'No description provided.'}
+                {project.description || t('projects.noDescription', 'Açıklama belirtilmemiş.')}
               </p>
               <div className="mt-3 flex items-center gap-4 text-xs text-slate-400">
                 <span className="flex items-center gap-1">
                   <Calendar className="h-3.5 w-3.5" />
-                  Created {format(new Date(project.createdAt), 'MMMM d, yyyy')}
+                  {t('projectDetail.created', 'Oluşturulma:')} {format(new Date(project.createdAt), 'MMMM d, yyyy', { locale: dateLocale })}
                 </span>
                 <span>•</span>
-                <span>Owner: <strong className="text-slate-700">{project.ownerName}</strong></span>
+                <span>{t('projectDetail.owner', 'Sahibi:')} <strong className="text-slate-700">{project.ownerName}</strong></span>
               </div>
             </div>
           </div>
@@ -107,13 +112,13 @@ export const ProjectDetailPage: React.FC = () => {
           <div className="flex flex-wrap items-center gap-2">
             <Link to={`/board?project=${project.id}`}>
               <Button size="sm" variant="outline" leftIcon={<Kanban className="h-4 w-4" />}>
-                Kanban Board
+                {t('nav.board', 'Kanban Panosu')}
               </Button>
             </Link>
 
             <Link to={`/backlog?project=${project.id}`}>
               <Button size="sm" variant="outline" leftIcon={<Layers className="h-4 w-4" />}>
-                Sprints & Backlog
+                {t('nav.backlog', 'Sprintler & Backlog')}
               </Button>
             </Link>
 
@@ -123,7 +128,7 @@ export const ProjectDetailPage: React.FC = () => {
               onClick={() => setIsMembersModalOpen(true)}
               leftIcon={<Users className="h-4 w-4" />}
             >
-              Team ({project.members.length})
+              {t('projectDetail.team', 'Ekip')} ({project.members.length})
             </Button>
 
             {isOwnerOrAdmin && (
@@ -134,7 +139,7 @@ export const ProjectDetailPage: React.FC = () => {
                 onClick={handleDeleteProject}
                 leftIcon={<Trash2 className="h-4 w-4" />}
               >
-                Delete
+                {t('common.delete', 'Sil')}
               </Button>
             )}
           </div>
@@ -146,40 +151,40 @@ export const ProjectDetailPage: React.FC = () => {
         <div className="rounded-2xl bg-white p-5 border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Total Issues
+              {t('projectDetail.totalIssues', 'Toplam Görev')}
             </span>
             <div className="rounded-xl bg-indigo-50 p-2.5 text-indigo-600">
               <Kanban className="h-5 w-5" />
             </div>
           </div>
           <p className="mt-3 text-2xl font-bold text-slate-900">{project.totalIssues}</p>
-          <p className="mt-1 text-xs text-slate-400">Across all statuses</p>
+          <p className="mt-1 text-xs text-slate-400">{t('projectDetail.acrossStatuses', 'Tüm durumlar dahil')}</p>
         </div>
 
         <div className="rounded-2xl bg-white p-5 border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Open Issues
+              {t('projectDetail.openIssues', 'Açık Görevler')}
             </span>
             <div className="rounded-xl bg-blue-50 p-2.5 text-blue-600">
               <Clock className="h-5 w-5" />
             </div>
           </div>
           <p className="mt-3 text-2xl font-bold text-slate-900">{project.openIssues}</p>
-          <p className="mt-1 text-xs text-slate-400">Todo & In Progress</p>
+          <p className="mt-1 text-xs text-slate-400">{t('projectDetail.openSubtitle', 'Yapılacak & Devam Eden')}</p>
         </div>
 
         <div className="rounded-2xl bg-white p-5 border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Done Issues
+              {t('projectDetail.doneIssues', 'Biten Görevler')}
             </span>
             <div className="rounded-xl bg-emerald-50 p-2.5 text-emerald-600">
               <CheckCircle2 className="h-5 w-5" />
             </div>
           </div>
           <p className="mt-3 text-2xl font-bold text-slate-900">{project.doneIssues}</p>
-          <p className="mt-1 text-xs text-slate-400">Completed items</p>
+          <p className="mt-1 text-xs text-slate-400">{t('projectDetail.doneSubtitle', 'Tamamlanmış işler')}</p>
         </div>
       </div>
 
@@ -187,8 +192,8 @@ export const ProjectDetailPage: React.FC = () => {
       <div className="rounded-2xl bg-white p-6 border border-slate-200/80 shadow-xs">
         <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
           <div>
-            <h3 className="text-sm font-bold text-slate-900">Project Team Members</h3>
-            <p className="text-xs text-slate-400">People with access to this workspace</p>
+            <h3 className="text-sm font-bold text-slate-900">{t('projectDetail.teamMembers', 'Proje Ekip Üyeleri')}</h3>
+            <p className="text-xs text-slate-400">{t('projectDetail.teamSubtitle', 'Bu çalışma alanına erişimi olan kişiler')}</p>
           </div>
           <Button
             size="sm"
@@ -196,7 +201,7 @@ export const ProjectDetailPage: React.FC = () => {
             onClick={() => setIsMembersModalOpen(true)}
             leftIcon={<Settings className="h-3.5 w-3.5" />}
           >
-            Manage Team
+            {t('projectDetail.manageTeam', 'Ekibi Yönet')}
           </Button>
         </div>
 

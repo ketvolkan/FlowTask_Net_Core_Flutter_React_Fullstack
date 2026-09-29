@@ -3,10 +3,15 @@ import { adminApi } from '../../api/adminApi';
 import { Project } from '../../types';
 import { Input } from '../../components/common/Input';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
 import { Search, Trash2, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
+import { tr as trLocale, enUS } from 'date-fns/locale';
 
 export const AdminProjectsPage: React.FC = () => {
+  const { t, isTurkish } = useLanguage();
+  const dateLocale = isTurkish ? trLocale : enUS;
+
   const [projects, setProjects] = useState<Project[]>([]);
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -28,13 +33,13 @@ export const AdminProjectsPage: React.FC = () => {
   }, []);
 
   const handleDeleteProject = async (projectId: string, name: string) => {
-    if (!window.confirm(`Are you sure you want to permanently delete project ${name}?`)) return;
+    if (!window.confirm(`${name} ${t('admin.deleteProjectConfirm', 'adlı projeyi kalıcı olarak silmek istediğinize emin misiniz?')}`)) return;
     try {
       await adminApi.deleteProject(projectId);
       fetchProjects();
     } catch (e) {
       console.error('Failed to delete project', e);
-      alert('Failed to delete project');
+      alert(t('admin.deleteFailed', 'Failed to delete project'));
     }
   };
 
@@ -49,16 +54,18 @@ export const AdminProjectsPage: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Project Governance</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          {t('admin.projectGovernance', 'Project Governance')}
+        </h1>
         <p className="mt-1 text-xs text-slate-500">
-          Manage, inspect, or remove workspaces across the entire platform.
+          {t('admin.projectsSubtitle', 'Manage, inspect, or remove workspaces across the entire platform.')}
         </p>
       </div>
 
       {/* Search Bar */}
       <div className="max-w-md">
         <Input
-          placeholder="Search by project name, key, or owner..."
+          placeholder={t('admin.searchProjectsPlaceholder', 'Search by project name, key, or owner...')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           leftIcon={<Search className="h-4 w-4" />}
@@ -71,26 +78,26 @@ export const AdminProjectsPage: React.FC = () => {
           <table className="w-full text-left text-xs">
             <thead className="border-b border-slate-100 bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
               <tr>
-                <th className="px-6 py-3.5">Project</th>
-                <th className="px-6 py-3.5">Key</th>
-                <th className="px-6 py-3.5">Owner</th>
-                <th className="px-6 py-3.5">Members</th>
-                <th className="px-6 py-3.5">Issues</th>
-                <th className="px-6 py-3.5">Created</th>
-                <th className="px-6 py-3.5 text-right">Actions</th>
+                <th className="px-6 py-3.5">{t('admin.tableProject', 'Project')}</th>
+                <th className="px-6 py-3.5">{t('admin.tableKey', 'Key')}</th>
+                <th className="px-6 py-3.5">{t('admin.tableOwner', 'Owner')}</th>
+                <th className="px-6 py-3.5">{t('admin.tableMembers', 'Members')}</th>
+                <th className="px-6 py-3.5">{t('admin.tableIssues', 'Issues')}</th>
+                <th className="px-6 py-3.5">{t('admin.tableCreated', 'Created')}</th>
+                <th className="px-6 py-3.5 text-right">{t('admin.tableActions', 'Actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-slate-400">
-                    Loading projects...
+                    {t('admin.loadingProjects', 'Loading projects...')}
                   </td>
                 </tr>
               ) : filteredProjects.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-slate-400">
-                    No projects found.
+                    {t('admin.noProjectsFound', 'No projects found.')}
                   </td>
                 </tr>
               ) : (
@@ -104,7 +111,7 @@ export const AdminProjectsPage: React.FC = () => {
                         <div>
                           <p className="font-semibold text-slate-900">{p.name}</p>
                           <p className="text-[11px] text-slate-400 line-clamp-1">
-                            {p.description || 'No description'}
+                            {p.description || t('projects.noDescription', 'No description')}
                           </p>
                         </div>
                       </div>
@@ -129,7 +136,7 @@ export const AdminProjectsPage: React.FC = () => {
                     </td>
 
                     <td className="px-6 py-4 text-slate-500">
-                      {format(new Date(p.createdAt), 'MMM d, yyyy')}
+                      {format(new Date(p.createdAt), 'd MMM yyyy', { locale: dateLocale })}
                     </td>
 
                     <td className="px-6 py-4 text-right">
@@ -137,14 +144,14 @@ export const AdminProjectsPage: React.FC = () => {
                         <Link
                           to={`/projects/${p.id}`}
                           className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-indigo-600 transition-colors"
-                          title="Open project"
+                          title={t('projects.openBoard', 'Open project')}
                         >
                           <ExternalLink className="h-4 w-4" />
                         </Link>
                         <button
                           onClick={() => handleDeleteProject(p.id, p.name)}
                           className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
-                          title="Delete project"
+                          title={t('common.delete', 'Delete project')}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
 import { projectsApi } from '../../api/projectsApi';
 import { issuesApi } from '../../api/issuesApi';
 import { sprintsApi } from '../../api/sprintsApi';
@@ -11,6 +12,7 @@ import { Button } from '../../components/common/Button';
 import { Plus, Search } from 'lucide-react';
 
 export const BoardPage: React.FC = () => {
+  const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedProjectIdParam = searchParams.get('project');
 
@@ -126,7 +128,7 @@ export const BoardPage: React.FC = () => {
             onChange={(e) => setSelectedSprintId(e.target.value)}
             className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
-            <option value="">All Sprints & Backlog</option>
+            <option value="">{t('board.allSprintsBacklog', 'Tüm Sprintler & Backlog')}</option>
             {sprints.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name} ({s.status})
@@ -140,7 +142,7 @@ export const BoardPage: React.FC = () => {
             onChange={(e) => setSelectedAssigneeId(e.target.value)}
             className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
-            <option value="">All Assignees</option>
+            <option value="">{t('board.allAssignees', 'Tüm Sorumlular')}</option>
             {members.map((m) => (
               <option key={m.userId} value={m.userId}>
                 {m.userFullName}
@@ -154,11 +156,11 @@ export const BoardPage: React.FC = () => {
             onChange={(e) => setSelectedPriority(e.target.value)}
             className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
-            <option value="">All Priorities</option>
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
-            <option value="Urgent">Urgent</option>
+            <option value="">{t('priority.all', 'Tüm Öncelikler')}</option>
+            <option value="Low">{t('priority.low', 'Düşük')}</option>
+            <option value="Medium">{t('priority.medium', 'Orta')}</option>
+            <option value="High">{t('priority.high', 'Yüksek')}</option>
+            <option value="Urgent">{t('priority.urgent', 'Acil')}</option>
           </select>
 
           {/* Type Filter */}
@@ -167,11 +169,11 @@ export const BoardPage: React.FC = () => {
             onChange={(e) => setSelectedType(e.target.value)}
             className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
-            <option value="">All Types</option>
-            <option value="Task">Task</option>
-            <option value="Bug">Bug</option>
-            <option value="Story">Story</option>
-            <option value="Epic">Epic</option>
+            <option value="">{t('type.all', 'Tüm Tipler')}</option>
+            <option value="Task">{t('type.task', 'Görev')}</option>
+            <option value="Bug">{t('type.bug', 'Hata')}</option>
+            <option value="Story">{t('type.story', 'Hikaye')}</option>
+            <option value="Epic">{t('type.epic', 'Epik')}</option>
           </select>
         </div>
 
@@ -181,7 +183,7 @@ export const BoardPage: React.FC = () => {
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Search issues..."
+              placeholder={t('board.searchIssues', 'Görevlerde ara...')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
@@ -196,16 +198,16 @@ export const BoardPage: React.FC = () => {
             }}
             leftIcon={<Plus className="h-4 w-4" />}
           >
-            Create Issue
+            {t('board.createIssue', 'Görev Oluştur')}
           </Button>
         </div>
       </div>
 
       {/* Kanban Board Canvas */}
       {isLoading && issues.length === 0 ? (
-        <div className="py-24 text-center text-xs text-slate-400">Loading board...</div>
+        <div className="py-24 text-center text-xs text-slate-400">{t('board.loading', 'Pano yükleniyor...')}</div>
       ) : !selectedProjectId ? (
-        <div className="py-24 text-center text-xs text-slate-400">Please select or create a project.</div>
+        <div className="py-24 text-center text-xs text-slate-400">{t('board.selectProject', 'Lütfen bir proje seçin veya oluşturun.')}</div>
       ) : (
         <KanbanBoard
           issues={issues}

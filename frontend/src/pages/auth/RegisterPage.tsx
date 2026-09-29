@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
+import { LanguageSwitcher } from '../../components/common/LanguageSwitcher';
 import { Kanban, Lock, Mail, User, Briefcase, Building, ArrowRight } from 'lucide-react';
 
 export const RegisterPage: React.FC = () => {
+  const { t } = useLanguage();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,7 +23,7 @@ export const RegisterPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || !email.trim() || !password) {
-      setError('Please fill in all required fields');
+      setError('Lütfen tüm zorunlu alanları doldurun.');
       return;
     }
 
@@ -38,23 +41,27 @@ export const RegisterPage: React.FC = () => {
       navigate('/dashboard');
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };
-      setError(e.response?.data?.message || 'Registration failed');
+      setError(e.response?.data?.message || 'Kayıt işlemi başarısız oldu.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative">
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+        <LanguageSwitcher compact />
+      </div>
+
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/30">
           <Kanban className="h-6 w-6" />
         </div>
         <h2 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">
-          Create Flowtask Account
+          {t('auth.registerTitle', 'Yeni Hesap Oluşturun')}
         </h2>
         <p className="mt-1.5 text-xs text-slate-500">
-          Start collaborating on projects with your team
+          {t('auth.registerSubtitle', 'Flowtask ile ekibinizin üretkenliğini artırın.')}
         </p>
       </div>
 
@@ -68,7 +75,7 @@ export const RegisterPage: React.FC = () => {
             )}
 
             <Input
-              label="Full Name"
+              label={t('profile.fullName', 'Ad Soyad')}
               placeholder="Alex Johnson"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
@@ -77,7 +84,7 @@ export const RegisterPage: React.FC = () => {
             />
 
             <Input
-              label="Email Address"
+              label={t('auth.email', 'E-Posta Adresi')}
               type="email"
               placeholder="alex@company.com"
               value={email}
@@ -87,7 +94,7 @@ export const RegisterPage: React.FC = () => {
             />
 
             <Input
-              label="Password (min 6 characters)"
+              label={t('auth.password', 'Şifre (en az 6 karakter)')}
               type="password"
               placeholder="••••••••"
               value={password}
@@ -98,7 +105,7 @@ export const RegisterPage: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input
-                label="Job Title"
+                label={t('profile.jobTitle', 'Ünvan / Pozisyon')}
                 placeholder="e.g. Frontend Dev"
                 value={jobTitle}
                 onChange={(e) => setJobTitle(e.target.value)}
@@ -106,7 +113,7 @@ export const RegisterPage: React.FC = () => {
               />
 
               <Input
-                label="Department"
+                label={t('profile.department', 'Departman')}
                 placeholder="e.g. Product"
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
@@ -120,14 +127,14 @@ export const RegisterPage: React.FC = () => {
               isLoading={isLoading}
               rightIcon={<ArrowRight className="h-4 w-4" />}
             >
-              Create Account
+              {t('auth.signUp', 'Kayıt Ol')}
             </Button>
           </form>
 
           <div className="mt-6 text-center text-xs text-slate-500">
-            Already have an account?{' '}
+            {t('auth.haveAccount', 'Zaten hesabınız var mı?')}{' '}
             <Link to="/login" className="font-semibold text-indigo-600 hover:text-indigo-700">
-              Sign in
+              {t('auth.loginNow', 'Giriş Yapın')}
             </Link>
           </div>
         </div>

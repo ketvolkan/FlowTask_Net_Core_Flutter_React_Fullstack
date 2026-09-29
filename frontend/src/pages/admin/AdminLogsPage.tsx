@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { adminApi } from '../../api/adminApi';
 import { ActivityLog } from '../../types';
 import { Button } from '../../components/common/Button';
+import { useLanguage } from '../../context/LanguageContext';
 import { RefreshCw, Activity } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const AdminLogsPage: React.FC = () => {
+  const { t } = useLanguage();
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -35,10 +37,10 @@ export const AdminLogsPage: React.FC = () => {
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-              Audit & Activity Logs
+              {t('admin.auditLogs', 'Audit & Activity Logs')}
             </h1>
             <p className="text-xs text-slate-500">
-              Full traceability of all mutations, issue transitions, and project events.
+              {t('admin.logsSubtitle', 'Full traceability of all mutations, issue transitions, and project events.')}
             </p>
           </div>
         </div>
@@ -50,7 +52,7 @@ export const AdminLogsPage: React.FC = () => {
           isLoading={isLoading}
           leftIcon={<RefreshCw className="h-4 w-4" />}
         >
-          Refresh Logs
+          {t('admin.refreshLogs', 'Refresh Logs')}
         </Button>
       </div>
 
@@ -60,24 +62,24 @@ export const AdminLogsPage: React.FC = () => {
           <table className="w-full text-left text-xs">
             <thead className="border-b border-slate-100 bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
               <tr>
-                <th className="px-6 py-3.5">Action</th>
-                <th className="px-6 py-3.5">Entity</th>
-                <th className="px-6 py-3.5">Details</th>
-                <th className="px-6 py-3.5">User</th>
-                <th className="px-6 py-3.5">Timestamp</th>
+                <th className="px-6 py-3.5">{t('admin.tableAction', 'Action')}</th>
+                <th className="px-6 py-3.5">{t('admin.tableEntity', 'Entity')}</th>
+                <th className="px-6 py-3.5">{t('admin.tableDetails', 'Details')}</th>
+                <th className="px-6 py-3.5">{t('admin.user', 'User')}</th>
+                <th className="px-6 py-3.5">{t('admin.tableTimestamp', 'Timestamp')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-slate-400">
-                    Loading audit logs...
+                    {t('admin.loadingLogs', 'Loading audit logs...')}
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-slate-400">
-                    No activity logs recorded yet.
+                    {t('admin.noLogs', 'No activity logs recorded yet.')}
                   </td>
                 </tr>
               ) : (

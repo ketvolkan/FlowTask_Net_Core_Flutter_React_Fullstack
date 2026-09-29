@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import { Comment } from '../../types';
 import { commentsApi } from '../../api/commentsApi';
 import { UserAvatar } from '../common/UserAvatar';
 import { Button } from '../common/Button';
 import { formatDistanceToNow } from 'date-fns';
+import { tr as dateFnsTr, enUS as dateFnsEn } from 'date-fns/locale';
 import { useAuth } from '../../context/AuthContext';
 import { Trash2, Send } from 'lucide-react';
 
@@ -19,6 +21,7 @@ export const CommentList: React.FC<CommentListProps> = ({
   onCommentChanged,
 }) => {
   const { user } = useAuth();
+  const { t, language } = useLanguage();
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -39,7 +42,7 @@ export const CommentList: React.FC<CommentListProps> = ({
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    if (!window.confirm('Delete this comment?')) return;
+    if (!window.confirm('Bu yorumu silmek istediğinize emin misiniz?')) return;
     try {
       await commentsApi.deleteComment(commentId);
       onCommentChanged();
@@ -48,10 +51,12 @@ export const CommentList: React.FC<CommentListProps> = ({
     }
   };
 
+  const dateLocale = language === 'tr' ? dateFnsTr : dateFnsEn;
+
   return (
     <div className="space-y-4">
       <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-        Comments ({comments.length})
+        {t('issueDetail.comments', 'Yorumlar')} ({comments.length})
       </h4>
 
       {/* Comment Form */}
@@ -62,7 +67,7 @@ export const CommentList: React.FC<CommentListProps> = ({
             rows={2}
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Add a comment... (markdown supported)"
+            placeholder={t('issueDetail.commentPlaceholder', 'Bir yorum yazın...')}
             className="block w-full rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           />
           <div className="mt-2 flex justify-end">
@@ -73,7 +78,7 @@ export const CommentList: React.FC<CommentListProps> = ({
               disabled={!content.trim()}
               leftIcon={<Send className="h-3.5 w-3.5" />}
             >
-              Post Comment
+              {t('issueDetail.sendComment', 'Yorum Yap')}
             </Button>
           </div>
         </div>
@@ -92,14 +97,14 @@ export const CommentList: React.FC<CommentListProps> = ({
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold text-slate-900">{comment.userFullName}</span>
                   <span className="text-[10px] text-slate-400">
-                    {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true, locale: dateLocale })}
                   </span>
                 </div>
                 {comment.userId === user?.id && (
                   <button
                     onClick={() => handleDeleteComment(comment.id)}
                     className="opacity-0 group-hover:opacity-100 rounded p-1 text-slate-400 hover:text-rose-600 transition-opacity"
-                    title="Delete comment"
+                    title={t('common.delete', 'Sil')}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>

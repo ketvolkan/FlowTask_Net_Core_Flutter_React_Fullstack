@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { axiosClient } from '../../api/axiosClient';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
@@ -9,6 +10,7 @@ import { User, Lock, Save, Shield } from 'lucide-react';
 
 export const ProfileSettingsPage: React.FC = () => {
   const { user, refreshUser } = useAuth();
+  const { t } = useLanguage();
 
   const [fullName, setFullName] = useState(user?.fullName || '');
   const [jobTitle, setJobTitle] = useState(user?.jobTitle || '');
@@ -40,7 +42,7 @@ export const ProfileSettingsPage: React.FC = () => {
         avatarUrl: avatarUrl.trim() || undefined,
       });
 
-      setProfileSuccess('Profile updated successfully!');
+      setProfileSuccess(t('profile.updatedSuccess', 'Profil bilgileriniz başarıyla güncellendi.'));
       await refreshUser();
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };
@@ -53,7 +55,7 @@ export const ProfileSettingsPage: React.FC = () => {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      setPasswordError('New passwords do not match');
+      setPasswordError('Yeni şifreler birbiriyle eşleşmiyor');
       return;
     }
 
@@ -67,7 +69,7 @@ export const ProfileSettingsPage: React.FC = () => {
         newPassword,
       });
 
-      setPasswordSuccess('Password changed successfully!');
+      setPasswordSuccess(t('profile.passwordSuccess', 'Şifreniz başarıyla değiştirildi.'));
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
@@ -83,9 +85,9 @@ export const ProfileSettingsPage: React.FC = () => {
     <div className="space-y-6 max-w-4xl">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Profile Settings</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t('profile.title', 'Profil Ayarları')}</h1>
         <p className="mt-1 text-xs text-slate-500">
-          Manage your personal details, workspace preferences, and security credentials.
+          {t('profile.subtitle', 'Kişisel hesap bilgilerinizi ve şifrenizi güncelleyin.')}
         </p>
       </div>
 
@@ -98,7 +100,7 @@ export const ProfileSettingsPage: React.FC = () => {
               <h3 className="text-base font-bold text-slate-900">{user?.fullName}</h3>
               {user?.isSystemAdmin && (
                 <span className="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700">
-                  <Shield className="h-3 w-3" /> Admin
+                  <Shield className="h-3 w-3" /> {t('header.systemAdmin', 'Sistem Yöneticisi')}
                 </span>
               )}
             </div>
@@ -118,7 +120,7 @@ export const ProfileSettingsPage: React.FC = () => {
       <div className="rounded-2xl bg-white p-6 border border-slate-200/80 shadow-xs">
         <div className="flex items-center gap-2 border-b border-slate-100 pb-4 mb-5">
           <User className="h-4 w-4 text-indigo-600" />
-          <h3 className="text-sm font-bold text-slate-900">Personal Information</h3>
+          <h3 className="text-sm font-bold text-slate-900">{t('profile.personalInfo', 'Kişisel Bilgiler')}</h3>
         </div>
 
         <form onSubmit={handleUpdateProfile} className="space-y-4">
@@ -136,14 +138,14 @@ export const ProfileSettingsPage: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Full Name"
+              label={t('profile.fullName', 'Ad Soyad')}
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
             />
 
             <Input
-              label="Avatar Image URL"
+              label="Avatar URL"
               placeholder="https://..."
               value={avatarUrl}
               onChange={(e) => setAvatarUrl(e.target.value)}
@@ -152,14 +154,14 @@ export const ProfileSettingsPage: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Job Title"
+              label={t('profile.jobTitle', 'Ünvan / Pozisyon')}
               placeholder="e.g. Lead Software Engineer"
               value={jobTitle}
               onChange={(e) => setJobTitle(e.target.value)}
             />
 
             <Input
-              label="Department"
+              label={t('profile.department', 'Departman')}
               placeholder="e.g. Core Engineering"
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
@@ -173,7 +175,7 @@ export const ProfileSettingsPage: React.FC = () => {
               isLoading={isUpdatingProfile}
               leftIcon={<Save className="h-4 w-4" />}
             >
-              Save Profile
+              {t('profile.saveProfile', 'Profili Güncelle')}
             </Button>
           </div>
         </form>
@@ -183,7 +185,7 @@ export const ProfileSettingsPage: React.FC = () => {
       <div className="rounded-2xl bg-white p-6 border border-slate-200/80 shadow-xs">
         <div className="flex items-center gap-2 border-b border-slate-100 pb-4 mb-5">
           <Lock className="h-4 w-4 text-indigo-600" />
-          <h3 className="text-sm font-bold text-slate-900">Change Password</h3>
+          <h3 className="text-sm font-bold text-slate-900">{t('profile.changePassword', 'Şifre Değiştir')}</h3>
         </div>
 
         <form onSubmit={handleChangePassword} className="space-y-4 max-w-lg">
@@ -200,7 +202,7 @@ export const ProfileSettingsPage: React.FC = () => {
           )}
 
           <Input
-            label="Current Password"
+            label={t('profile.currentPassword', 'Mevcut Şifre')}
             type="password"
             placeholder="••••••••"
             value={currentPassword}
@@ -209,7 +211,7 @@ export const ProfileSettingsPage: React.FC = () => {
           />
 
           <Input
-            label="New Password"
+            label={t('profile.newPassword', 'Yeni Şifre')}
             type="password"
             placeholder="••••••••"
             value={newPassword}
@@ -218,7 +220,7 @@ export const ProfileSettingsPage: React.FC = () => {
           />
 
           <Input
-            label="Confirm New Password"
+            label={t('profile.confirmPassword', 'Yeni Şifre (Tekrar)')}
             type="password"
             placeholder="••••••••"
             value={confirmPassword}
@@ -234,7 +236,7 @@ export const ProfileSettingsPage: React.FC = () => {
               isLoading={isChangingPassword}
               leftIcon={<Lock className="h-4 w-4" />}
             >
-              Update Password
+              {t('profile.updatePassword', 'Şifreyi Güncelle')}
             </Button>
           </div>
         </form>

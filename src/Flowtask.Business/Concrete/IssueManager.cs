@@ -15,6 +15,7 @@ public class IssueManager : IIssueService
     private readonly IIssueDal _issueDal;
     private readonly IProjectDal _projectDal;
     private readonly IProjectMemberDal _projectMemberDal;
+    private readonly IUserDal _userDal;
     private readonly IMapper _mapper;
     private readonly IActivityLogService _activityLogService;
 
@@ -22,12 +23,14 @@ public class IssueManager : IIssueService
         IIssueDal issueDal,
         IProjectDal projectDal,
         IProjectMemberDal projectMemberDal,
+        IUserDal userDal,
         IMapper mapper,
         IActivityLogService activityLogService)
     {
         _issueDal = issueDal;
         _projectDal = projectDal;
         _projectMemberDal = projectMemberDal;
+        _userDal = userDal;
         _mapper = mapper;
         _activityLogService = activityLogService;
     }
@@ -44,7 +47,7 @@ public class IssueManager : IIssueService
                 (!filter.Priority.HasValue || i.Priority == filter.Priority.Value) &&
                 (!filter.Type.HasValue || i.Type == filter.Type.Value) &&
                 (string.IsNullOrEmpty(filter.Search) || i.Title.ToLower().Contains(filter.Search.ToLower()) || i.Key.ToLower().Contains(filter.Search.ToLower())) &&
-                i.Project.Members.Any(m => m.UserId == userId),
+                (i.Project.Members.Any(m => m.UserId == userId) || i.Project.OwnerId == userId),
             page: filter.Page,
             pageSize: filter.PageSize,
             includeProperties: "Project,Sprint,Reporter,Assignee,Comments.User,Attachments.UploadedBy",
@@ -58,7 +61,7 @@ public class IssueManager : IIssueService
     public async Task<IDataResult<IssueDto>> GetIssueByIdAsync(Guid issueId, Guid userId)
     {
         var issue = await _issueDal.GetAsync(
-            i => i.Id == issueId && i.Project.Members.Any(m => m.UserId == userId),
+            i => i.Id == issueId && (i.Project.Members.Any(m => m.UserId == userId) || i.Project.OwnerId == userId),
             includeProperties: "Project,Sprint,Reporter,Assignee,Comments.User,Attachments.UploadedBy");
 
         if (issue == null)
@@ -72,20 +75,39 @@ public class IssueManager : IIssueService
 
     public async Task<IDataResult<IssueDto>> CreateIssueAsync(Guid projectId, Guid userId, IssueCreateDto request)
     {
-        var isMember = await _projectMemberDal.ExistsAsync(pm => pm.ProjectId == projectId && pm.UserId == userId);
-        if (!isMember)
-        {
-            throw new ForbiddenException(Messages.AuthorizationDenied);
-        }
-
         var project = await _projectDal.GetByIdAsync(projectId);
         if (project == null)
         {
             throw new NotFoundException(Messages.ProjectNotFound);
         }
 
-        var issueCount = await _issueDal.CountAsync(i => i.ProjectId == projectId);
-        var issueNumber = issueCount + 1;
+        var isMember = await _projectMemberDal.ExistsAsync(pm => pm.ProjectId == projectId && pm.UserId == userId);
+        if (!isMember && project.OwnerId != userId)
+        {
+            var user = await _userDal.GetByIdAsync(userId);
+            if (user == null || !user.IsSystemAdmin)
+            {
+                throw new ForbiddenException(Messages.AuthorizationDenied);
+            }
+        }
+
+        // Determine highest existing issue key number safely
+        var existingIssues = await _issueDal.GetListAsync(i => i.ProjectId == projectId);
+        int maxNumber = 0;
+        var prefix = $"{project.Key}-";
+        foreach (var exIssue in existingIssues)
+        {
+            if (!string.IsNullOrEmpty(exIssue.Key) && exIssue.Key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                var numPart = exIssue.Key.Substring(prefix.Length);
+                if (int.TryParse(numPart, out int num) && num > maxNumber)
+                {
+                    maxNumber = num;
+                }
+            }
+        }
+
+        var issueNumber = maxNumber + 1;
         var issueKey = $"{project.Key}-{issueNumber}";
 
         var maxOrder = await _issueDal.CountAsync(i => i.ProjectId == projectId && i.Status == request.Status);
@@ -123,7 +145,7 @@ public class IssueManager : IIssueService
     public async Task<IDataResult<IssueDto>> UpdateIssueAsync(Guid issueId, Guid userId, IssueUpdateDto request)
     {
         var issue = await _issueDal.GetAsync(
-            i => i.Id == issueId && i.Project.Members.Any(m => m.UserId == userId),
+            i => i.Id == issueId && (i.Project.Members.Any(m => m.UserId == userId) || i.Project.OwnerId == userId),
             includeProperties: "Project,Sprint,Reporter,Assignee,Comments.User,Attachments.UploadedBy");
 
         if (issue == null)
@@ -154,7 +176,7 @@ public class IssueManager : IIssueService
     public async Task<IDataResult<IssueDto>> UpdateStatusAsync(Guid issueId, Guid userId, UpdateIssueStatusDto request)
     {
         var issue = await _issueDal.GetAsync(
-            i => i.Id == issueId && i.Project.Members.Any(m => m.UserId == userId),
+            i => i.Id == issueId && (i.Project.Members.Any(m => m.UserId == userId) || i.Project.OwnerId == userId),
             includeProperties: "Project,Sprint,Reporter,Assignee,Comments.User,Attachments.UploadedBy");
 
         if (issue == null)
@@ -185,7 +207,7 @@ public class IssueManager : IIssueService
     public async Task<IDataResult<IssueDto>> AssignIssueAsync(Guid issueId, Guid userId, AssignIssueDto request)
     {
         var issue = await _issueDal.GetAsync(
-            i => i.Id == issueId && i.Project.Members.Any(m => m.UserId == userId),
+            i => i.Id == issueId && (i.Project.Members.Any(m => m.UserId == userId) || i.Project.OwnerId == userId),
             includeProperties: "Project,Sprint,Reporter,Assignee,Comments.User,Attachments.UploadedBy");
 
         if (issue == null)
@@ -211,7 +233,7 @@ public class IssueManager : IIssueService
     public async Task<IResult> DeleteIssueAsync(Guid issueId, Guid userId)
     {
         var issue = await _issueDal.GetAsync(
-            i => i.Id == issueId && i.Project.Members.Any(m => m.UserId == userId));
+            i => i.Id == issueId && (i.Project.Members.Any(m => m.UserId == userId) || i.Project.OwnerId == userId));
 
         if (issue == null)
         {

@@ -2,9 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Bell, Check, CheckCheck } from 'lucide-react';
 import { notificationsApi } from '../../api/notificationsApi';
 import { Notification } from '../../types';
+import { useLanguage } from '../../context/LanguageContext';
 import { formatDistanceToNow } from 'date-fns';
+import { tr as trLocale, enUS } from 'date-fns/locale';
 
 export const NotificationDropdown: React.FC = () => {
+  const { t, isTurkish } = useLanguage();
+  const dateLocale = isTurkish ? trLocale : enUS;
+
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -63,7 +68,7 @@ export const NotificationDropdown: React.FC = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors focus:outline-none"
-        title="Notifications"
+        title={t('notifications.title', 'Notifications')}
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
@@ -77,10 +82,12 @@ export const NotificationDropdown: React.FC = () => {
         <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 z-50 border border-slate-200/80 animate-scale-in">
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
             <div className="flex items-center gap-2">
-              <h4 className="font-semibold text-slate-800 text-sm">Notifications</h4>
+              <h4 className="font-semibold text-slate-800 text-sm">
+                {t('notifications.title', 'Notifications')}
+              </h4>
               {unreadCount > 0 && (
                 <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-600">
-                  {unreadCount} new
+                  {unreadCount} {t('notifications.new', 'new')}
                 </span>
               )}
             </div>
@@ -90,7 +97,7 @@ export const NotificationDropdown: React.FC = () => {
                 className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium"
               >
                 <CheckCheck className="h-3.5 w-3.5" />
-                Mark all read
+                {t('notifications.markAllRead', 'Mark all read')}
               </button>
             )}
           </div>
@@ -98,7 +105,7 @@ export const NotificationDropdown: React.FC = () => {
           <div className="max-h-96 overflow-y-auto divide-y divide-slate-50">
             {notifications.length === 0 ? (
               <div className="py-12 text-center text-xs text-slate-400">
-                No notifications right now.
+                {t('notifications.empty', 'No notifications right now.')}
               </div>
             ) : (
               notifications.map((n) => (
@@ -114,14 +121,14 @@ export const NotificationDropdown: React.FC = () => {
                     </p>
                     <p className="text-xs text-slate-500 mt-0.5 break-words line-clamp-2">{n.message}</p>
                     <p className="text-[10px] text-slate-400 mt-1">
-                      {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
+                      {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true, locale: dateLocale })}
                     </p>
                   </div>
                   {!n.isRead && (
                     <button
                       onClick={() => handleMarkAsRead(n.id)}
                       className="rounded-full p-1 text-slate-400 hover:bg-indigo-100 hover:text-indigo-600 transition-colors"
-                      title="Mark as read"
+                      title={t('notifications.markAsRead', 'Mark as read')}
                     >
                       <Check className="h-3.5 w-3.5" />
                     </button>

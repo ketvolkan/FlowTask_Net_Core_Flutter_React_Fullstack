@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import { Modal } from '../common/Modal';
 import { Input } from '../common/Input';
 import { Button } from '../common/Button';
@@ -15,6 +16,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   onClose,
   onProjectCreated,
 }) => {
+  const { t } = useLanguage();
   const [name, setName] = useState('');
   const [key, setKey] = useState('');
   const [description, setDescription] = useState('');
@@ -37,7 +39,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !key.trim()) {
-      setError('Project name and key are required');
+      setError(t('createProject.name', 'Proje Adı') + ' & ' + t('createProject.key', 'Proje Anahtarı') + ' zorunludur');
       return;
     }
 
@@ -67,8 +69,8 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Create New Project"
-      description="Create a project to organize issues, sprints, and team members."
+      title={t('createProject.title', 'Yeni Proje Oluştur')}
+      description={t('createProject.description', 'Takımınız ve görevleriniz için yeni bir çalışma alanı başlatın.')}
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
@@ -78,16 +80,16 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
         )}
 
         <Input
-          label="Project Name"
-          placeholder="e.g. Platform Engineering"
+          label={t('createProject.name', 'Proje Adı')}
+          placeholder={t('createProject.namePlaceholder', 'Örn: Mobil Uygulama Yenileme')}
           value={name}
           onChange={handleNameChange}
           required
         />
 
         <Input
-          label="Project Key (2-10 characters)"
-          placeholder="e.g. PLAT"
+          label={t('createProject.key', 'Proje Anahtarı (Key)')}
+          placeholder={t('createProject.keyPlaceholder', 'Örn: MOB')}
           value={key}
           onChange={(e) => setKey(e.target.value.toUpperCase())}
           maxLength={10}
@@ -96,12 +98,12 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
         <div>
           <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-            Description
+            {t('createProject.descriptionLabel', 'Açıklama')}
           </label>
           <textarea
             rows={3}
             className="block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            placeholder="Brief description of the project goal..."
+            placeholder={t('createProject.descriptionPlaceholder', 'Bu projenin amacı nedir?')}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
@@ -109,10 +111,10 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
         <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
           <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
-            Cancel
+            {t('common.cancel', 'İptal')}
           </Button>
           <Button type="submit" isLoading={isLoading}>
-            Create Project
+            {t('createProject.submit', 'Proje Oluştur')}
           </Button>
         </div>
       </form>

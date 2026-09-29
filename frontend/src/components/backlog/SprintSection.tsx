@@ -5,6 +5,7 @@ import { Button } from '../common/Button';
 import { UserAvatar } from '../common/UserAvatar';
 import { Play, CheckCircle2, Plus, Calendar, Target } from 'lucide-react';
 import { format } from 'date-fns';
+import { useLanguage } from '../../context/LanguageContext';
 
 interface SprintSectionProps {
   sprint?: Sprint;
@@ -25,6 +26,7 @@ export const SprintSection: React.FC<SprintSectionProps> = ({
   onStartSprint,
   onCompleteSprint,
 }) => {
+  const { t } = useLanguage();
   const totalPoints = issues.reduce((acc, i) => acc + (i.storyPoints || 0), 0);
 
   return (
@@ -33,11 +35,11 @@ export const SprintSection: React.FC<SprintSectionProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/60 px-5 py-3.5">
         <div className="flex items-center gap-3">
           <h3 className="text-sm font-bold text-slate-900">
-            {isBacklog ? 'Product Backlog' : sprint?.name}
+            {isBacklog ? t('backlog.backlogSection', 'Backlog (Bekleyen Görevler)') : sprint?.name}
           </h3>
           {sprint && <SprintStatusBadge status={sprint.status} />}
           <span className="text-xs text-slate-400">
-            ({issues.length} {issues.length === 1 ? 'issue' : 'issues'} • {totalPoints} pts)
+            ({issues.length} {t('dashboard.issuesCount', 'görev')} • {totalPoints} {t('backlog.storyPoints', 'puan')})
           </span>
         </div>
 
@@ -58,7 +60,7 @@ export const SprintSection: React.FC<SprintSectionProps> = ({
               onClick={() => onStartSprint(sprint.id)}
               leftIcon={<Play className="h-3.5 w-3.5 text-emerald-600" />}
             >
-              Start Sprint
+              {t('backlog.startSprint', 'Sprinti Başlat')}
             </Button>
           )}
 
@@ -69,7 +71,7 @@ export const SprintSection: React.FC<SprintSectionProps> = ({
               onClick={() => onCompleteSprint(sprint.id)}
               leftIcon={<CheckCircle2 className="h-3.5 w-3.5" />}
             >
-              Complete Sprint
+              {t('backlog.completeSprint', 'Sprinti Tamamla')}
             </Button>
           )}
 
@@ -79,7 +81,7 @@ export const SprintSection: React.FC<SprintSectionProps> = ({
             onClick={() => onQuickAddIssue(sprint?.id)}
             leftIcon={<Plus className="h-3.5 w-3.5" />}
           >
-            Create Issue
+            {t('backlog.createIssue', 'Görev Oluştur')}
           </Button>
         </div>
       </div>
@@ -87,7 +89,7 @@ export const SprintSection: React.FC<SprintSectionProps> = ({
       {sprint?.goal && (
         <div className="flex items-center gap-2 bg-indigo-50/40 px-5 py-2 border-b border-indigo-50 text-xs text-indigo-900">
           <Target className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
-          <span className="font-semibold text-indigo-700">Goal:</span>
+          <span className="font-semibold text-indigo-700">Hedef:</span>
           <span>{sprint.goal}</span>
         </div>
       )}
@@ -96,7 +98,7 @@ export const SprintSection: React.FC<SprintSectionProps> = ({
       <div className="divide-y divide-slate-100">
         {issues.length === 0 ? (
           <div className="py-8 text-center text-xs text-slate-400">
-            No issues in this {isBacklog ? 'backlog' : 'sprint'}. Click &quot;Create Issue&quot; to plan work.
+            {isBacklog ? t('backlog.noIssuesInBacklog', 'Backlog boş. Yeni bir görev oluşturun.') : t('backlog.noIssuesInSprint', 'Bu sprintte henüz görev bulunmuyor.')}
           </div>
         ) : (
           issues.map((issue) => (
@@ -118,13 +120,13 @@ export const SprintSection: React.FC<SprintSectionProps> = ({
               <div className="flex items-center gap-3 shrink-0">
                 {issue.storyPoints !== undefined && issue.storyPoints !== null && (
                   <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600">
-                    {issue.storyPoints} pts
+                    {issue.storyPoints} {t('backlog.storyPoints', 'puan')}
                   </span>
                 )}
                 <PriorityBadge priority={issue.priority} />
                 <StatusBadge status={issue.status} />
                 <UserAvatar
-                  name={issue.assigneeName || 'Unassigned'}
+                  name={issue.assigneeName || t('common.unassigned', 'Atanmamış')}
                   avatarUrl={issue.assigneeAvatarUrl}
                   size="xs"
                 />

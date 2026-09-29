@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import { projectsApi } from '../../api/projectsApi';
 import { Project } from '../../types';
 import { Button } from '../../components/common/Button';
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react';
 
 export const ProjectsPage: React.FC = () => {
+  const { t } = useLanguage();
   const [projects, setProjects] = useState<Project[]>([]);
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -49,9 +51,9 @@ export const ProjectsPage: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Projects</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{t('projects.title', 'Projeler')}</h1>
           <p className="mt-1 text-xs text-slate-500">
-            Select a project to explore its board, sprints, backlog, and team.
+            {t('projects.subtitle', 'Panosunu, sprintlerini ve ekibini incelemek için bir proje seçin.')}
           </p>
         </div>
 
@@ -59,14 +61,14 @@ export const ProjectsPage: React.FC = () => {
           onClick={() => setIsCreateModalOpen(true)}
           leftIcon={<Plus className="h-4 w-4" />}
         >
-          Create Project
+          {t('projects.createProject', 'Proje Oluştur')}
         </Button>
       </div>
 
       {/* Search Bar */}
       <div className="max-w-md">
         <Input
-          placeholder="Search by project name or key..."
+          placeholder={t('projects.searchPlaceholder', 'Proje adı veya anahtarı ile arayın...')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           leftIcon={<Search className="h-4 w-4" />}
@@ -75,20 +77,20 @@ export const ProjectsPage: React.FC = () => {
 
       {/* Projects Grid */}
       {isLoading ? (
-        <div className="py-20 text-center text-xs text-slate-400">Loading projects...</div>
+        <div className="py-20 text-center text-xs text-slate-400">{t('common.loading', 'Yükleniyor...')}</div>
       ) : filteredProjects.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center">
           <FolderKanban className="mx-auto h-12 w-12 text-slate-300" />
-          <h3 className="mt-4 text-sm font-bold text-slate-800">No projects found</h3>
+          <h3 className="mt-4 text-sm font-bold text-slate-800">{t('projects.noProjectsFound', 'Henüz proje bulunamadı')}</h3>
           <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
-            Get started by creating your first project to organize tasks, sprints, and team workflows.
+            {t('projects.noProjectsDesc', 'Görevleri, sprintleri ve ekip iş akışını organize etmek için ilk projenizi oluşturun.')}
           </p>
           <Button
             className="mt-4"
             onClick={() => setIsCreateModalOpen(true)}
             leftIcon={<Plus className="h-4 w-4" />}
           >
-            Create Project
+            {t('projects.createProject', 'Proje Oluştur')}
           </Button>
         </div>
       ) : (
@@ -114,17 +116,17 @@ export const ProjectsPage: React.FC = () => {
                   </h3>
                 </Link>
                 <p className="mt-1 text-xs text-slate-500 line-clamp-2 min-h-[32px]">
-                  {project.description || 'No description provided.'}
+                  {project.description || t('projects.noDescription', 'Açıklama belirtilmemiş.')}
                 </p>
 
                 <div className="mt-4 flex items-center gap-4 text-xs text-slate-500">
                   <span className="flex items-center gap-1.5">
                     <Users className="h-4 w-4 text-slate-400" />
-                    {project.memberCount} members
+                    {project.memberCount} {t('dashboard.membersCount', 'üye')}
                   </span>
                   <span className="flex items-center gap-1.5">
                     <CheckCircle2 className="h-4 w-4 text-slate-400" />
-                    {project.issueCount} issues
+                    {project.issueCount} {t('dashboard.issuesCount', 'görev')}
                   </span>
                 </div>
               </div>
@@ -135,19 +137,19 @@ export const ProjectsPage: React.FC = () => {
                   <Link
                     to={`/board?project=${project.id}`}
                     className="flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-indigo-600"
-                    title="Board"
+                    title={t('projects.openBoard', 'Pano')}
                   >
                     <Kanban className="h-3.5 w-3.5" />
-                    Board
+                    {t('projects.openBoard', 'Pano')}
                   </Link>
                   <span className="text-slate-300">•</span>
                   <Link
                     to={`/backlog?project=${project.id}`}
                     className="flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-indigo-600"
-                    title="Backlog"
+                    title={t('projects.openBacklog', 'Backlog')}
                   >
                     <Layers className="h-3.5 w-3.5" />
-                    Backlog
+                    {t('projects.openBacklog', 'Backlog')}
                   </Link>
                 </div>
 

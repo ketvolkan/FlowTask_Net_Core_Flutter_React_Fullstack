@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import { Modal } from '../common/Modal';
 import { Input } from '../common/Input';
 import { Select } from '../common/Select';
@@ -33,6 +34,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
   onIssueCreated,
   onOpenCreateProject,
 }) => {
+  const { t } = useLanguage();
   const [selectedProjectId, setSelectedProjectId] = useState<string>(initialProjectId || '');
   const [localSprints, setLocalSprints] = useState<Sprint[]>(initialSprints);
   const [localMembers, setLocalMembers] = useState<ProjectMember[]>(initialMembers);
@@ -90,12 +92,12 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProjectId) {
-      setError('Please select a project');
+      setError(t('board.selectProject', 'Lütfen bir proje seçin veya oluşturun.'));
       return;
     }
 
     if (!title.trim()) {
-      setError('Title is required');
+      setError(t('createIssue.issueTitle', 'Başlık') + ' zorunludur');
       return;
     }
 
@@ -105,14 +107,14 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
     try {
       await issuesApi.createIssue(selectedProjectId, {
         title: title.trim(),
-        description: description.trim() || undefined,
+        description: description.trim() ? description.trim() : undefined,
         type,
         priority,
         status,
-        sprintId: sprintId || undefined,
-        assigneeId: assigneeId || undefined,
-        storyPoints: storyPoints ? Number(storyPoints) : undefined,
-        dueDate: dueDate ? new Date(dueDate).toISOString() : undefined,
+        sprintId: sprintId && sprintId.trim() !== '' ? sprintId.trim() : undefined,
+        assigneeId: assigneeId && assigneeId.trim() !== '' ? assigneeId.trim() : undefined,
+        storyPoints: storyPoints !== undefined && storyPoints !== null && !isNaN(Number(storyPoints)) ? Number(storyPoints) : undefined,
+        dueDate: dueDate && dueDate.trim() !== '' ? new Date(dueDate).toISOString() : undefined,
       });
 
       setTitle('');
@@ -138,14 +140,14 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Create New Issue"
-      description="Create a task, bug, story, or epic for this project."
+      title={t('createIssue.title', 'Yeni Görev Oluştur')}
+      description={t('createIssue.description', 'Bu proje için görev, hata, hikaye veya epik oluşturun.')}
       size="lg"
     >
       {!selectedProjectId && projects.length === 0 ? (
         <div className="py-6 text-center space-y-4">
           <p className="text-sm text-slate-600">
-            No projects available. You must create or join a project before creating issues.
+            {t('createIssue.noProjects', 'Kullanılabilir proje bulunamadı. Görev oluşturmadan önce bir proje oluşturmalı veya bir projeye katılmalısınız.')}
           </p>
           {onOpenCreateProject && (
             <Button
@@ -154,7 +156,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
                 onOpenCreateProject();
               }}
             >
-              Create New Project
+              {t('createIssue.createNewProject', 'Yeni Proje Oluştur')}
             </Button>
           )}
         </div>
@@ -169,7 +171,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
           {/* Project Selector if multiple projects */}
           {projects.length > 1 && (
             <Select
-              label="Project"
+              label={t('createIssue.project', 'Proje')}
               value={selectedProjectId}
               onChange={(e) => setSelectedProjectId(e.target.value)}
               required
@@ -183,8 +185,8 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
           )}
 
           <Input
-            label="Title"
-            placeholder="What needs to be done?"
+            label={t('createIssue.issueTitle', 'Başlık')}
+            placeholder={t('createIssue.issueTitlePlaceholder', 'Ne yapılması gerekiyor?')}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
@@ -192,11 +194,11 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-              Description
+              {t('createIssue.issueDescription', 'Açıklama')}
             </label>
             <textarea
               rows={3}
-              placeholder="Add more details, acceptance criteria, or repro steps..."
+              placeholder={t('createIssue.issueDescriptionPlaceholder', 'Detaylar, kabul kriterleri veya adımları ekleyin...')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
@@ -205,46 +207,46 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Select
-              label="Type"
+              label={t('createIssue.type', 'Tip')}
               value={type}
               onChange={(e) => setType(e.target.value as IssueType)}
             >
-              <option value="Task">Task</option>
-              <option value="Bug">Bug</option>
-              <option value="Story">Story</option>
-              <option value="Epic">Epic</option>
+              <option value="Task">{t('type.task', 'Görev')}</option>
+              <option value="Bug">{t('type.bug', 'Hata')}</option>
+              <option value="Story">{t('type.story', 'Hikaye')}</option>
+              <option value="Epic">{t('type.epic', 'Epik')}</option>
             </Select>
 
             <Select
-              label="Priority"
+              label={t('createIssue.priority', 'Öncelik')}
               value={priority}
               onChange={(e) => setPriority(e.target.value as IssuePriority)}
             >
-              <option value="Low">Low</option>
-              <option value="Medium">Medium</option>
-              <option value="High">High</option>
-              <option value="Urgent">Urgent</option>
+              <option value="Low">{t('priority.low', 'Düşük')}</option>
+              <option value="Medium">{t('priority.medium', 'Orta')}</option>
+              <option value="High">{t('priority.high', 'Yüksek')}</option>
+              <option value="Urgent">{t('priority.urgent', 'Acil')}</option>
             </Select>
 
             <Select
-              label="Initial Status"
+              label={t('createIssue.initialStatus', 'Başlangıç Durumu')}
               value={status}
               onChange={(e) => setStatus(e.target.value as IssueStatus)}
             >
-              <option value="Todo">To Do</option>
-              <option value="InProgress">In Progress</option>
-              <option value="InReview">In Review</option>
-              <option value="Done">Done</option>
+              <option value="Todo">{t('status.todo', 'Yapılacak')}</option>
+              <option value="InProgress">{t('status.inProgress', 'Devam Eden')}</option>
+              <option value="InReview">{t('status.inReview', 'İncelemede')}</option>
+              <option value="Done">{t('status.done', 'Tamamlandı')}</option>
             </Select>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Select
-              label="Assignee"
+              label={t('createIssue.assignee', 'Sorumlu Kişi')}
               value={assigneeId}
               onChange={(e) => setAssigneeId(e.target.value)}
             >
-              <option value="">Unassigned</option>
+              <option value="">{t('common.unassigned', 'Atanmamış')}</option>
               {localMembers.map((m) => (
                 <option key={m.userId} value={m.userId}>
                   {m.userFullName}
@@ -253,11 +255,11 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
             </Select>
 
             <Select
-              label="Sprint"
+              label={t('createIssue.sprint', 'Sprint')}
               value={sprintId}
               onChange={(e) => setSprintId(e.target.value)}
             >
-              <option value="">Backlog (No Sprint)</option>
+              <option value="">{t('createIssue.noSprintBacklog', 'Backlog (Sprint Yok)')}</option>
               {localSprints.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name} ({s.status})
@@ -269,7 +271,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
               type="number"
-              label="Story Points"
+              label={t('createIssue.storyPoints', 'Hikaye Puanı (Story Points)')}
               placeholder="e.g. 1, 2, 3, 5, 8"
               min={0}
               max={100}
@@ -279,7 +281,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
 
             <Input
               type="date"
-              label="Due Date"
+              label={t('createIssue.dueDate', 'Bitiş Tarihi')}
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
             />
@@ -287,10 +289,10 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
 
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
             <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
-              Cancel
+              {t('common.cancel', 'İptal')}
             </Button>
             <Button type="submit" isLoading={isLoading}>
-              Create Issue
+              {t('createIssue.submit', 'Görev Oluştur')}
             </Button>
           </div>
         </form>

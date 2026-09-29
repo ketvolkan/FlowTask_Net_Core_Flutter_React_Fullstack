@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
 import { projectsApi } from '../../api/projectsApi';
 import { issuesApi } from '../../api/issuesApi';
 import { sprintsApi } from '../../api/sprintsApi';
@@ -12,6 +13,7 @@ import { Button } from '../../components/common/Button';
 import { Plus } from 'lucide-react';
 
 export const BacklogPage: React.FC = () => {
+  const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedProjectIdParam = searchParams.get('project');
 
@@ -84,7 +86,7 @@ export const BacklogPage: React.FC = () => {
   };
 
   const handleCompleteSprint = async (sprintId: string) => {
-    if (!window.confirm('Complete this sprint? Open issues will remain in project backlog.')) return;
+    if (!window.confirm(t('backlog.completeSprintConfirm', 'Bu sprint tamamlansın mı? Açık kalan görevler proje backlog listesine aktarılacaktır.'))) return;
     try {
       await sprintsApi.completeSprint(sprintId);
       fetchBacklogData();
@@ -130,7 +132,7 @@ export const BacklogPage: React.FC = () => {
             onClick={() => setIsCreateSprintOpen(true)}
             leftIcon={<Plus className="h-4 w-4" />}
           >
-            Create Sprint
+            {t('backlog.createSprint', 'Sprint Oluştur')}
           </Button>
 
           <Button
@@ -138,15 +140,15 @@ export const BacklogPage: React.FC = () => {
             onClick={() => handleQuickAddIssue(undefined)}
             leftIcon={<Plus className="h-4 w-4" />}
           >
-            Create Issue
+            {t('backlog.createIssue', 'Görev Oluştur')}
           </Button>
         </div>
       </div>
 
       {isLoading ? (
-        <div className="py-24 text-center text-xs text-slate-400">Loading backlog & sprints...</div>
+        <div className="py-24 text-center text-xs text-slate-400">{t('backlog.loading', 'Backlog ve sprintler yükleniyor...')}</div>
       ) : !selectedProjectId ? (
-        <div className="py-24 text-center text-xs text-slate-400">Please select or create a project.</div>
+        <div className="py-24 text-center text-xs text-slate-400">{t('board.selectProject', 'Lütfen bir proje seçin veya oluşturun.')}</div>
       ) : (
         <div>
           {/* Active & Planned Sprints */}

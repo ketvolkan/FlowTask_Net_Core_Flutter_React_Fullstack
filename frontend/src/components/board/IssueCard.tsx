@@ -3,8 +3,10 @@ import { Draggable } from '@hello-pangea/dnd';
 import { Issue } from '../../types';
 import { PriorityBadge, TypeBadge } from '../common/Badge';
 import { UserAvatar } from '../common/UserAvatar';
-import { MessageSquare, Paperclip, Calendar, CheckSquare } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
+import { MessageSquare, Paperclip, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
+import { tr as trLocale, enUS } from 'date-fns/locale';
 
 interface IssueCardProps {
   issue: Issue;
@@ -13,6 +15,9 @@ interface IssueCardProps {
 }
 
 export const IssueCard: React.FC<IssueCardProps> = ({ issue, index, onClick }) => {
+  const { t, isTurkish } = useLanguage();
+  const dateLocale = isTurkish ? trLocale : enUS;
+
   return (
     <Draggable draggableId={issue.id} index={index}>
       {(provided, snapshot) => (
@@ -48,14 +53,14 @@ export const IssueCard: React.FC<IssueCardProps> = ({ issue, index, onClick }) =
             <div className="flex items-center gap-2.5">
               {issue.storyPoints !== undefined && issue.storyPoints !== null && (
                 <span className="flex items-center gap-0.5 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-700">
-                  {issue.storyPoints} pts
+                  {issue.storyPoints} {t('backlog.storyPoints', 'pts')}
                 </span>
               )}
 
               {issue.dueDate && (
                 <span className="flex items-center gap-1 text-[10px] text-slate-400">
                   <Calendar className="h-3 w-3" />
-                  {format(new Date(issue.dueDate), 'MMM d')}
+                  {format(new Date(issue.dueDate), 'd MMM', { locale: dateLocale })}
                 </span>
               )}
 
@@ -75,7 +80,7 @@ export const IssueCard: React.FC<IssueCardProps> = ({ issue, index, onClick }) =
             </div>
 
             <UserAvatar
-              name={issue.assigneeName || 'Unassigned'}
+              name={issue.assigneeName || t('common.unassigned', 'Unassigned')}
               avatarUrl={issue.assigneeAvatarUrl}
               size="xs"
             />

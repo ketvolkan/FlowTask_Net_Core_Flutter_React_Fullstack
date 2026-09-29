@@ -6,10 +6,15 @@ import { Input } from '../../components/common/Input';
 import { Modal } from '../../components/common/Modal';
 import { UserAvatar } from '../../components/common/UserAvatar';
 import { Badge } from '../../components/common/Badge';
+import { useLanguage } from '../../context/LanguageContext';
 import { UserPlus, Search, Trash2, Edit, Shield, Check, X } from 'lucide-react';
 import { format } from 'date-fns';
+import { tr as trLocale, enUS } from 'date-fns/locale';
 
 export const AdminUsersPage: React.FC = () => {
+  const { t, isTurkish } = useLanguage();
+  const dateLocale = isTurkish ? trLocale : enUS;
+
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -56,7 +61,7 @@ export const AdminUsersPage: React.FC = () => {
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!createFullName.trim() || !createEmail.trim() || !createPassword) {
-      setCreateError('Please fill in required fields');
+      setCreateError(t('admin.fillRequired', 'Please fill in required fields'));
       return;
     }
 
@@ -84,7 +89,7 @@ export const AdminUsersPage: React.FC = () => {
       fetchUsers();
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };
-      setCreateError(e.response?.data?.message || 'Failed to create user');
+      setCreateError(e.response?.data?.message || t('admin.createFailed', 'Failed to create user'));
     } finally {
       setIsCreating(false);
     }
@@ -119,20 +124,20 @@ export const AdminUsersPage: React.FC = () => {
       fetchUsers();
     } catch (err) {
       console.error('Failed to update user', err);
-      alert('Failed to update user');
+      alert(t('admin.updateFailed', 'Failed to update user'));
     } finally {
       setIsUpdating(false);
     }
   };
 
   const handleDeleteUser = async (userId: string, name: string) => {
-    if (!window.confirm(`Are you sure you want to delete user ${name}?`)) return;
+    if (!window.confirm(`${name} ${t('admin.deleteUserConfirm', 'adlı kullanıcıyı silmek istediğinize emin misiniz?')}`)) return;
     try {
       await adminApi.deleteUser(userId);
       fetchUsers();
     } catch (err) {
       console.error('Delete user failed', err);
-      alert('Failed to delete user');
+      alert(t('admin.deleteFailed', 'Failed to delete user'));
     }
   };
 
@@ -148,9 +153,11 @@ export const AdminUsersPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">User Management</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            {t('admin.userManagement', 'User Management')}
+          </h1>
           <p className="mt-1 text-xs text-slate-500">
-            Create, inspect, and configure system roles and accounts.
+            {t('admin.usersSubtitle', 'Create, inspect, and configure system roles and accounts.')}
           </p>
         </div>
 
@@ -158,14 +165,14 @@ export const AdminUsersPage: React.FC = () => {
           onClick={() => setIsCreateModalOpen(true)}
           leftIcon={<UserPlus className="h-4 w-4" />}
         >
-          Add New User
+          {t('admin.addNewUser', 'Add New User')}
         </Button>
       </div>
 
       {/* Search Bar */}
       <div className="max-w-md">
         <Input
-          placeholder="Search by name, email, or title..."
+          placeholder={t('admin.searchUsersPlaceholder', 'Search by name, email, or title...')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           leftIcon={<Search className="h-4 w-4" />}
@@ -178,25 +185,25 @@ export const AdminUsersPage: React.FC = () => {
           <table className="w-full text-left text-xs">
             <thead className="border-b border-slate-100 bg-slate-50/80 text-[11px] font-bold uppercase tracking-wider text-slate-500">
               <tr>
-                <th className="px-6 py-3.5">User</th>
-                <th className="px-6 py-3.5">Job Title / Dept</th>
-                <th className="px-6 py-3.5">System Roles</th>
-                <th className="px-6 py-3.5">Status</th>
-                <th className="px-6 py-3.5">Joined</th>
-                <th className="px-6 py-3.5 text-right">Actions</th>
+                <th className="px-6 py-3.5">{t('admin.tableUser', 'User')}</th>
+                <th className="px-6 py-3.5">{t('admin.tableJobDept', 'Job Title / Dept')}</th>
+                <th className="px-6 py-3.5">{t('admin.tableRoles', 'System Roles')}</th>
+                <th className="px-6 py-3.5">{t('admin.tableStatus', 'Status')}</th>
+                <th className="px-6 py-3.5">{t('admin.tableJoined', 'Joined')}</th>
+                <th className="px-6 py-3.5 text-right">{t('admin.tableActions', 'Actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-400">
-                    Loading users...
+                    {t('admin.loadingUsers', 'Loading users...')}
                   </td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-400">
-                    No users matched your query.
+                    {t('admin.noUsersMatch', 'No users matched your query.')}
                   </td>
                 </tr>
               ) : (
@@ -238,17 +245,17 @@ export const AdminUsersPage: React.FC = () => {
                     <td className="px-6 py-4">
                       {u.isActive ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                          <Check className="h-3 w-3" /> Active
+                          <Check className="h-3 w-3" /> {t('admin.active', 'Active')}
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-700">
-                          <X className="h-3 w-3" /> Inactive
+                          <X className="h-3 w-3" /> {t('admin.inactive', 'Inactive')}
                         </span>
                       )}
                     </td>
 
                     <td className="px-6 py-4 text-slate-500">
-                      {format(new Date(u.createdAt), 'MMM d, yyyy')}
+                      {format(new Date(u.createdAt), 'd MMM yyyy', { locale: dateLocale })}
                     </td>
 
                     <td className="px-6 py-4 text-right">
@@ -256,14 +263,14 @@ export const AdminUsersPage: React.FC = () => {
                         <button
                           onClick={() => handleOpenEdit(u)}
                           className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
-                          title="Edit user"
+                          title={t('admin.editUser', 'Edit user')}
                         >
                           <Edit className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteUser(u.id, u.fullName)}
                           className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
-                          title="Delete user"
+                          title={t('admin.deleteUser', 'Delete user')}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -281,8 +288,8 @@ export const AdminUsersPage: React.FC = () => {
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        title="Add New User"
-        description="Create a new account with specified roles."
+        title={t('admin.addNewUser', 'Add New User')}
+        description={t('admin.addUserDesc', 'Create a new account with specified roles.')}
       >
         <form onSubmit={handleCreateUser} className="space-y-4">
           {createError && (
@@ -292,7 +299,7 @@ export const AdminUsersPage: React.FC = () => {
           )}
 
           <Input
-            label="Full Name"
+            label={t('admin.fullName', 'Full Name')}
             placeholder="Jane Smith"
             value={createFullName}
             onChange={(e) => setCreateFullName(e.target.value)}
@@ -300,7 +307,7 @@ export const AdminUsersPage: React.FC = () => {
           />
 
           <Input
-            label="Email Address"
+            label={t('admin.email', 'Email Address')}
             type="email"
             placeholder="jane@company.com"
             value={createEmail}
@@ -309,7 +316,7 @@ export const AdminUsersPage: React.FC = () => {
           />
 
           <Input
-            label="Password"
+            label={t('admin.password', 'Password')}
             type="password"
             placeholder="••••••••"
             value={createPassword}
@@ -319,14 +326,14 @@ export const AdminUsersPage: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Input
-              label="Job Title"
+              label={t('admin.jobTitle', 'Job Title')}
               placeholder="e.g. Senior Architect"
               value={createJobTitle}
               onChange={(e) => setCreateJobTitle(e.target.value)}
             />
 
             <Input
-              label="Department"
+              label={t('admin.department', 'Department')}
               placeholder="e.g. Engineering"
               value={createDepartment}
               onChange={(e) => setCreateDepartment(e.target.value)}
@@ -342,7 +349,7 @@ export const AdminUsersPage: React.FC = () => {
               className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
             />
             <label htmlFor="createIsAdmin" className="text-xs font-semibold text-slate-800">
-              Grant System Administrator Privileges
+              {t('admin.grantAdmin', 'Grant System Administrator Privileges')}
             </label>
           </div>
 
@@ -353,10 +360,10 @@ export const AdminUsersPage: React.FC = () => {
               onClick={() => setIsCreateModalOpen(false)}
               disabled={isCreating}
             >
-              Cancel
+              {t('common.cancel', 'Cancel')}
             </Button>
             <Button type="submit" isLoading={isCreating}>
-              Create User
+              {t('admin.createUserBtn', 'Create User')}
             </Button>
           </div>
         </form>
@@ -367,12 +374,12 @@ export const AdminUsersPage: React.FC = () => {
         <Modal
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
-          title={`Edit User: ${selectedUser.fullName}`}
-          description="Update account profile and system permissions."
+          title={`${t('admin.editUser', 'Edit User')}: ${selectedUser.fullName}`}
+          description={t('admin.editUserDesc', 'Update account profile and system permissions.')}
         >
           <form onSubmit={handleUpdateUser} className="space-y-4">
             <Input
-              label="Full Name"
+              label={t('admin.fullName', 'Full Name')}
               value={editFullName}
               onChange={(e) => setEditFullName(e.target.value)}
               required
@@ -380,13 +387,13 @@ export const AdminUsersPage: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input
-                label="Job Title"
+                label={t('admin.jobTitle', 'Job Title')}
                 value={editJobTitle}
                 onChange={(e) => setEditJobTitle(e.target.value)}
               />
 
               <Input
-                label="Department"
+                label={t('admin.department', 'Department')}
                 value={editDepartment}
                 onChange={(e) => setEditDepartment(e.target.value)}
               />
@@ -402,7 +409,7 @@ export const AdminUsersPage: React.FC = () => {
                   className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                 />
                 <label htmlFor="editIsActive" className="text-xs font-semibold text-slate-800">
-                  Account is Active
+                  {t('admin.accountIsActive', 'Account is Active')}
                 </label>
               </div>
 
@@ -415,7 +422,7 @@ export const AdminUsersPage: React.FC = () => {
                   className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                 />
                 <label htmlFor="editIsAdmin" className="text-xs font-semibold text-slate-800">
-                  Grant System Administrator Role
+                  {t('admin.grantAdmin', 'Grant System Administrator Role')}
                 </label>
               </div>
             </div>
@@ -427,10 +434,10 @@ export const AdminUsersPage: React.FC = () => {
                 onClick={() => setIsEditModalOpen(false)}
                 disabled={isUpdating}
               >
-                Cancel
+                {t('common.cancel', 'Cancel')}
               </Button>
               <Button type="submit" isLoading={isUpdating}>
-                Save Changes
+                {t('admin.saveChangesBtn', 'Save Changes')}
               </Button>
             </div>
           </form>

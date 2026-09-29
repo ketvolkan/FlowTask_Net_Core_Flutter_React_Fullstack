@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { UserAvatar } from '../common/UserAvatar';
@@ -20,6 +21,7 @@ export const ProjectMembersModal: React.FC<ProjectMembersModalProps> = ({
   projectId,
 }) => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [email, setEmail] = useState('');
@@ -81,7 +83,7 @@ export const ProjectMembersModal: React.FC<ProjectMembersModalProps> = ({
   };
 
   const handleRemoveMember = async (memberUserId: string) => {
-    if (!window.confirm('Are you sure you want to remove this member from the project?')) {
+    if (!window.confirm(t('membersModal.removeConfirm', 'Bu üyeyi projeden çıkarmak istediğinize emin misiniz?'))) {
       return;
     }
 
@@ -98,8 +100,8 @@ export const ProjectMembersModal: React.FC<ProjectMembersModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Project Members"
-      description="Manage access and roles for this project."
+      title={t('membersModal.title', 'Proje Üyeleri')}
+      description={t('membersModal.description', 'Bu proje için ekip erişimini ve rollerini yönetin.')}
       size="lg"
     >
       <div className="space-y-6">
@@ -113,11 +115,11 @@ export const ProjectMembersModal: React.FC<ProjectMembersModalProps> = ({
         <form onSubmit={handleAddMember} className="flex items-end gap-3 rounded-xl bg-slate-50 p-4 border border-slate-200/80">
           <div className="flex-1">
             <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-              User Email
+              {t('membersModal.userEmail', 'Kullanıcı E-Posta Adresi')}
             </label>
             <input
               type="email"
-              placeholder="e.g. member@flowtask.com"
+              placeholder={t('membersModal.emailPlaceholder', 'Örn: uye@flowtask.com')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
@@ -127,30 +129,30 @@ export const ProjectMembersModal: React.FC<ProjectMembersModalProps> = ({
 
           <div className="w-36">
             <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-              Role
+              {t('membersModal.role', 'Rol')}
             </label>
             <select
               value={newRole}
               onChange={(e) => setNewRole(e.target.value as ProjectRole)}
               className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             >
-              <option value="Member">Member</option>
-              <option value="Admin">Admin</option>
-              <option value="Viewer">Viewer</option>
+              <option value="Member">{t('role.member', 'Üye')}</option>
+              <option value="Admin">{t('role.admin', 'Yönetici')}</option>
+              <option value="Viewer">{t('role.viewer', 'Gözlemci')}</option>
             </select>
           </div>
 
           <Button type="submit" size="sm" isLoading={isAdding} leftIcon={<UserPlus className="h-4 w-4" />}>
-            Add Member
+            {t('membersModal.addMember', 'Üye Ekle')}
           </Button>
         </form>
 
         {/* Members List */}
         <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto pr-1">
           {isLoading ? (
-            <div className="py-8 text-center text-xs text-slate-400">Loading members...</div>
+            <div className="py-8 text-center text-xs text-slate-400">{t('membersModal.loading', 'Üyeler yükleniyor...')}</div>
           ) : members.length === 0 ? (
-            <div className="py-8 text-center text-xs text-slate-400">No members found.</div>
+            <div className="py-8 text-center text-xs text-slate-400">{t('membersModal.noMembers', 'Üye bulunamadı.')}</div>
           ) : (
             members.map((m) => (
               <div key={m.id} className="flex items-center justify-between py-3">
@@ -161,7 +163,7 @@ export const ProjectMembersModal: React.FC<ProjectMembersModalProps> = ({
                       <p className="text-xs font-semibold text-slate-900">{m.userFullName}</p>
                       {m.userId === user?.id && (
                         <span className="text-[10px] font-medium text-slate-400 bg-slate-100 px-1.5 py-0.2 rounded">
-                          You
+                          {t('common.you', 'Sen')}
                         </span>
                       )}
                     </div>
@@ -178,9 +180,9 @@ export const ProjectMembersModal: React.FC<ProjectMembersModalProps> = ({
                       onChange={(e) => handleRoleChange(m.userId, e.target.value as ProjectRole)}
                       className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-700 font-medium focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     >
-                      <option value="Admin">Admin</option>
-                      <option value="Member">Member</option>
-                      <option value="Viewer">Viewer</option>
+                      <option value="Admin">{t('role.admin', 'Yönetici')}</option>
+                      <option value="Member">{t('role.member', 'Üye')}</option>
+                      <option value="Viewer">{t('role.viewer', 'Gözlemci')}</option>
                     </select>
                   )}
 
@@ -188,7 +190,7 @@ export const ProjectMembersModal: React.FC<ProjectMembersModalProps> = ({
                     <button
                       onClick={() => handleRemoveMember(m.userId)}
                       className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
-                      title="Remove member"
+                      title={t('common.delete', 'Sil')}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
