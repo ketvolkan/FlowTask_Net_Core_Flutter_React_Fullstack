@@ -15,6 +15,13 @@ import { AdminUsersPage } from '../pages/admin/AdminUsersPage';
 import { AdminProjectsPage } from '../pages/admin/AdminProjectsPage';
 import { AdminLogsPage } from '../pages/admin/AdminLogsPage';
 import { ProfileSettingsPage } from '../pages/settings/ProfileSettingsPage';
+import { TeamPage } from '../pages/team/TeamPage';
+import { useAuth } from '../context/AuthContext';
+
+const IndexRedirect: React.FC = () => {
+  const { user } = useAuth();
+  return <Navigate to={user?.isSystemAdmin ? '/admin' : '/dashboard'} replace />;
+};
 
 export const AppRoutes: React.FC = () => {
   return (
@@ -32,12 +39,13 @@ export const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Navigate to="/dashboard" replace />} />
+        <Route index element={<IndexRedirect />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="projects/:id" element={<ProjectDetailPage />} />
         <Route path="board" element={<BoardPage />} />
         <Route path="backlog" element={<BacklogPage />} />
+        <Route path="team" element={<TeamPage />} />
         <Route path="settings/profile" element={<ProfileSettingsPage />} />
 
         {/* Admin Routes */}

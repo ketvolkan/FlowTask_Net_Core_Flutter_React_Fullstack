@@ -4,8 +4,9 @@ import { useLanguage } from '../../context/LanguageContext';
 import { projectsApi } from '../../api/projectsApi';
 import { issuesApi } from '../../api/issuesApi';
 import { adminApi } from '../../api/adminApi';
-import { Project, Issue, ActivityLog } from '../../types';
-import { StatusBadge, PriorityBadge, TypeBadge } from '../../components/common/Badge';
+import { Project, Issue, ActivityLog, ProjectMember } from '../../types';
+import { StatusBadge, PriorityBadge, TypeBadge, ProjectRoleBadge } from '../../components/common/Badge';
+import { UserAvatar } from '../../components/common/UserAvatar';
 import { Button } from '../../components/common/Button';
 import { IssueDetailModal } from '../../components/issues/IssueDetailModal';
 import { Link } from 'react-router-dom';
@@ -16,15 +17,36 @@ import {
   ArrowRight,
   Activity,
   Layers,
+  Users,
+  ChevronRight,
+  Sparkles,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { tr as dateFnsTr, enUS as dateFnsEn } from 'date-fns/locale';
+
+interface MemberWorkloadSummary {
+  userId: string;
+  name: string;
+  email: string;
+  avatarUrl?: string;
+  jobTitle?: string;
+  role: string;
+  projectName: string;
+  totalIssues: number;
+  doneIssues: number;
+  inProgressIssues: number;
+  todoIssues: number;
+  completionRate: number;
+  activeIssues: Issue[];
+}
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const { t, language } = useLanguage();
   const [projects, setProjects] = useState<Project[]>([]);
   const [myIssues, setMyIssues] = useState<Issue[]>([]);
+  const [teamWorkloads, setTeamWorkloads] = useState<MemberWorkloadSummary[]>([]);
+  const [totalTeamMembers, setTotalTeamMembers] = useState(0);
   const [recentLogs, setRecentLogs] = useState<ActivityLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
@@ -33,12 +55,60 @@ export const DashboardPage: React.FC = () => {
     try {
       setIsLoading(true);
       const [projData, issuesData] = await Promise.all([
-        projectsApi.getProjects(1, 6),
+        projectsApi.getProjects(1, 10),
         issuesApi.getIssues({ assigneeId: user?.id, pageSize: 8 }),
       ]);
 
-      setProjects(projData?.items || []);
+      const projectList = projData?.items || [];
+      setProjects(projectList);
       setMyIssues(issuesData?.items || []);
+
+      // If we have projects, load team members and project issues to compute team workload overview
+      if (projectList.length > 0) {
+        const primaryProject = projectList[0];
+        try {
+          const [membersData, allProjectIssues] = await Promise.all([
+            projectsApi.getMembers(primaryProject.id),
+            issuesApi.getIssues({ projectId: primaryProject.id, pageSize: 150 }),
+          ]);
+
+          const members: ProjectMember[] = Array.isArray(membersData) ? membersData : [];
+          const projectIssues: Issue[] = allProjectIssues?.items || [];
+          setTotalTeamMembers(members.length);
+
+          const workloads: MemberWorkloadSummary[] = members.map((m) => {
+            const userAssigned = projectIssues.filter((i) => i.assigneeId === m.userId);
+            const done = userAssigned.filter((i) => i.status === 'Done').length;
+            const inProgress = userAssigned.filter((i) => i.status === 'InProgress').length;
+            const todo = userAssigned.filter((i) => i.status === 'Todo').length;
+            const inReview = userAssigned.filter((i) => i.status === 'InReview').length;
+            const total = userAssigned.length;
+            const rate = total > 0 ? Math.round((done / total) * 100) : 0;
+
+            const name = m.userFullName || m.fullName || m.userEmail || m.email || 'İsimsiz Üye';
+
+            return {
+              userId: m.userId,
+              name,
+              email: m.userEmail || m.email || '',
+              avatarUrl: m.userAvatarUrl || m.avatarUrl,
+              jobTitle: m.jobTitle,
+              role: String(m.role),
+              projectName: primaryProject.name,
+              totalIssues: total,
+              doneIssues: done,
+              inProgressIssues: inProgress + inReview,
+              todoIssues: todo,
+              completionRate: rate,
+              activeIssues: userAssigned.filter((i) => i.status !== 'Done').slice(0, 3),
+            };
+          });
+
+          setTeamWorkloads(workloads);
+        } catch (e) {
+          console.error('Failed to load project team data', e);
+        }
+      }
 
       if (user?.isSystemAdmin) {
         const logsData = await adminApi.getActivityLogs(undefined, 1, 8);
@@ -58,7 +128,6 @@ export const DashboardPage: React.FC = () => {
   const issuesList = myIssues || [];
   const completedCount = issuesList.filter((i) => i.status === 'Done').length;
   const inProgressCount = issuesList.filter((i) => i.status === 'InProgress').length;
-  const todoCount = issuesList.filter((i) => i.status === 'Todo').length;
 
   const dateLocale = language === 'tr' ? dateFnsTr : dateFnsEn;
 
@@ -75,11 +144,16 @@ export const DashboardPage: React.FC = () => {
               {t('dashboard.welcome', 'Tekrar hoş geldin')}, {user?.fullName}!
             </h1>
             <p className="mt-1 text-xs sm:text-sm text-indigo-200/80">
-              {t('dashboard.subtitle', 'Bugün projeleriniz ve görevlerinizdeki son durum burada.')}
+              {t('dashboard.subtitle', 'Bugün projeleriniz, ekip iş yükü ve görevlerinizdeki son durum burada.')}
             </p>
           </div>
 
           <div className="flex items-center gap-3">
+            <Link to="/team">
+              <Button variant="outline" size="sm" className="bg-white/10 text-white border-white/20 hover:bg-white/20" leftIcon={<Users className="h-4 w-4" />}>
+                {t('dashboard.teamBoard', 'Ekip Panosu')}
+              </Button>
+            </Link>
             <Link to="/projects">
               <Button variant="secondary" size="sm" rightIcon={<ArrowRight className="h-4 w-4" />}>
                 {t('dashboard.viewProjects', 'Projeleri Görüntüle')}
@@ -89,8 +163,8 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 5 Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="rounded-2xl bg-white p-5 border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
@@ -133,6 +207,19 @@ export const DashboardPage: React.FC = () => {
         <div className="rounded-2xl bg-white p-5 border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              {t('dashboard.teamMembersCount', 'Ekip Üyeleri')}
+            </span>
+            <div className="rounded-xl bg-amber-50 p-2.5 text-amber-600">
+              <Users className="h-5 w-5" />
+            </div>
+          </div>
+          <p className="mt-3 text-2xl font-bold text-slate-900">{totalTeamMembers || projects.reduce((acc, p) => acc + p.memberCount, 0)}</p>
+          <p className="mt-1 text-xs text-slate-400">{t('dashboard.activeTeamUsers', 'Aktif ekip kullanıcısı')}</p>
+        </div>
+
+        <div className="rounded-2xl bg-white p-5 border border-slate-200/80 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
               {t('dashboard.myProjects', 'Projelerim')}
             </span>
             <div className="rounded-xl bg-purple-50 p-2.5 text-purple-600">
@@ -142,6 +229,105 @@ export const DashboardPage: React.FC = () => {
           <p className="mt-3 text-2xl font-bold text-slate-900">{projects.length}</p>
           <p className="mt-1 text-xs text-slate-400">{t('dashboard.workspaces', 'Dahil olunan projeler')}</p>
         </div>
+      </div>
+
+      {/* Team Workload & Completion Overview Section */}
+      <div className="rounded-2xl bg-white p-6 border border-slate-200/80 shadow-xs">
+        <div className="flex flex-wrap items-center justify-between border-b border-slate-100 pb-4 mb-5 gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-indigo-600" />
+              <h3 className="text-sm font-bold text-slate-900">
+                {t('dashboard.teamWorkload', 'Ekip Performansı & Görev Durumu')}
+              </h3>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {t('dashboard.teamWorkloadSubtitle', 'Ekipteki kullanıcıların görev tamamlama oranları ve ellerindeki aktif işler')}
+            </p>
+          </div>
+          <Link to="/team" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+            <span>{t('dashboard.viewFullTeamBoard', 'Detaylı Ekip Panosuna Git')}</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
+        {isLoading ? (
+          <div className="py-12 text-center text-xs text-slate-400">{t('common.loading', 'Yükleniyor...')}</div>
+        ) : teamWorkloads.length === 0 ? (
+          <div className="py-8 text-center text-xs text-slate-400">
+            {t('dashboard.noTeamData', 'Henüz ekip üyesi veya görev verisi bulunmuyor.')}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {teamWorkloads.map((member) => (
+              <div
+                key={member.userId}
+                className="rounded-xl border border-slate-100 bg-slate-50/70 p-4 hover:border-indigo-200 hover:bg-slate-50 transition-all"
+              >
+                {/* User Info Header */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <UserAvatar name={member.name} avatarUrl={member.avatarUrl} size="sm" />
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-900 truncate">{member.name}</p>
+                      <p className="text-[11px] text-slate-400 truncate">{member.jobTitle || member.email}</p>
+                    </div>
+                  </div>
+                  <ProjectRoleBadge role={member.role} />
+                </div>
+
+                {/* Progress & Stat line */}
+                <div className="mt-3.5">
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="text-[11px] font-semibold text-slate-600">
+                      {member.doneIssues}/{member.totalIssues} {t('dashboard.completedTasks', 'tamamlandı')}
+                    </span>
+                    <span className="text-[11px] font-bold text-indigo-700">%{member.completionRate}</span>
+                  </div>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                    <div
+                      className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                      style={{ width: `${member.completionRate}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Active Tasks Held by User */}
+                <div className="mt-3 pt-3 border-t border-slate-200/60">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
+                    {t('dashboard.currentTasks', 'Ellerindeki Görevler')}:
+                  </span>
+
+                  {member.activeIssues.length === 0 ? (
+                    <p className="text-[11px] text-slate-400 italic">
+                      {member.totalIssues === 0 ? t('dashboard.noTasksAssigned', 'Görev atanmamış') : t('dashboard.allTasksDone', 'Tüm görevleri tamamlandı ✓')}
+                    </p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {member.activeIssues.map((issue) => (
+                        <div
+                          key={issue.id}
+                          onClick={() => setSelectedIssueId(issue.id)}
+                          className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-slate-200/80 hover:border-indigo-300 transition-colors cursor-pointer group text-xs"
+                        >
+                          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                            <span className="font-mono text-[10px] font-bold text-indigo-600">
+                              {issue.key}
+                            </span>
+                            <span className="truncate text-[11px] text-slate-800 font-medium group-hover:text-indigo-600">
+                              {issue.title}
+                            </span>
+                          </div>
+                          <StatusBadge status={issue.status} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Main Grid: My Issues & Projects */}

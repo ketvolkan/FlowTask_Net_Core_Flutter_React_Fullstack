@@ -66,12 +66,13 @@ public static class DatabaseSeeder
         // 3. Seed Users
         var usersToSeed = new List<(string Email, string Name, string Title, string Dept, bool IsAdmin, string Password)>
         {
-            ("admin@flowtask.com", "System Administrator", "Platform SuperAdmin", "Engineering", true, "Admin123*"),
-            ("demo@flowtask.com", "Demo Project Manager", "Lead Project Manager", "Product Management", false, "Demo123*"),
-            ("ayse.yilmaz@flowtask.com", "Ayşe Yılmaz", "Senior Frontend Architect", "Frontend Engineering", false, "User123*"),
-            ("mehmet.kaya@flowtask.com", "Mehmet Kaya", "Principal Backend Engineer", "Core Backend", false, "User123*"),
-            ("zeynep.ozkan@flowtask.com", "Zeynep Özkan", "Senior UI/UX Designer", "Product Design", false, "User123*"),
-            ("caner.erdogan@flowtask.com", "Caner Erdoğan", "DevOps & Cloud Specialist", "Infrastructure", false, "User123*")
+            ("admin@flowtask.com", "Sistem Yöneticisi", "Platform SuperAdmin", "Sistem Yönetimi", true, "Admin123*"),
+            ("manager@flowtask.com", "Ahmet Tekin", "Şirket Yöneticisi & CTO", "Yönetim & Teknoloji", false, "Manager123*"),
+            ("demo@flowtask.com", "Demo Project Manager", "Kıdemli Proje Yöneticisi", "Ürün Yönetimi", false, "Demo123*"),
+            ("ayse.yilmaz@flowtask.com", "Ayşe Yılmaz", "Senior Frontend Architect", "Frontend Ekibi", false, "User123*"),
+            ("mehmet.kaya@flowtask.com", "Mehmet Kaya", "Principal Backend Engineer", "Backend Ekibi", false, "User123*"),
+            ("zeynep.ozkan@flowtask.com", "Zeynep Özkan", "Senior UI/UX Designer", "Tasarım Ekibi", false, "User123*"),
+            ("caner.erdogan@flowtask.com", "Caner Erdoğan", "DevOps & Cloud Specialist", "Altyapı Ekibi", false, "User123*")
         };
 
         var userMap = new Dictionary<string, User>();
@@ -110,6 +111,7 @@ public static class DatabaseSeeder
         }
 
         var adminUser = userMap["admin@flowtask.com"];
+        var managerUser = userMap["manager@flowtask.com"];
         var demoUser = userMap["demo@flowtask.com"];
         var ayseUser = userMap["ayse.yilmaz@flowtask.com"];
         var mehmetUser = userMap["mehmet.kaya@flowtask.com"];
