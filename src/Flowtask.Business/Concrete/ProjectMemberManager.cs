@@ -50,24 +50,41 @@ public class ProjectMemberManager : IProjectMemberService
             throw new ForbiddenException(Messages.AuthorizationDenied);
         }
 
+        User? user = null;
+        if (!string.IsNullOrWhiteSpace(request.Email))
+        {
+            var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+            user = await _userDal.GetAsync(u => u.Email.ToLower() == normalizedEmail);
+            if (user == null)
+            {
+                throw new NotFoundException($"User with email '{request.Email.Trim()}' was not found.");
+            }
+        }
+        else if (request.UserId.HasValue && request.UserId.Value != Guid.Empty)
+        {
+            user = await _userDal.GetByIdAsync(request.UserId.Value);
+            if (user == null)
+            {
+                throw new NotFoundException(Messages.UserNotFound);
+            }
+        }
+        else
+        {
+            throw new ValidationException("User email is required to add member.");
+        }
+
         var existingMember = await _projectMemberDal.GetAsync(
-            pm => pm.ProjectId == projectId && pm.UserId == request.UserId);
+            pm => pm.ProjectId == projectId && pm.UserId == user.Id);
 
         if (existingMember != null)
         {
             throw new ConflictException(Messages.MemberAlreadyExists);
         }
 
-        var user = await _userDal.GetByIdAsync(request.UserId);
-        if (user == null)
-        {
-            throw new NotFoundException(Messages.UserNotFound);
-        }
-
         var projectMember = new ProjectMember
         {
             ProjectId = projectId,
-            UserId = request.UserId,
+            UserId = user.Id,
             Role = request.Role
         };
 

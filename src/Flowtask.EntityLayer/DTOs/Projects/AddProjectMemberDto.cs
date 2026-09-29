@@ -5,6 +5,7 @@ namespace Flowtask.EntityLayer.DTOs.Projects;
 
 public class AddProjectMemberDto : IDto
 {
-    public Guid UserId { get; set; }
+    public string? Email { get; set; }
+    public Guid? UserId { get; set; }
     public ProjectRoleType Role { get; set; } = ProjectRoleType.Member;
 }

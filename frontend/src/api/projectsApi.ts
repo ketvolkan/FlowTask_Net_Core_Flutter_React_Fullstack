@@ -51,7 +51,7 @@ export const projectsApi = {
 
   addMember: async (
     projectId: string,
-    memberData: { userId: string; role: ProjectRole }
+    memberData: { email?: string; userId?: string; role: ProjectRole }
   ): Promise<ProjectMember> => {
     const { data } = await axiosClient.post<ApiResponse<ProjectMember>>(`/projects/${projectId}/members`, memberData);
     return data.data;

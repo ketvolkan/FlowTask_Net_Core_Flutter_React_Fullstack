@@ -136,13 +136,13 @@ public static class DatabaseSeeder
             {
                 ProjectId = starterProject.Id,
                 UserId = adminUser.Id,
-                Role = ProjectMemberRole.Owner
+                Role = ProjectRoleType.Owner
             });
             await context.ProjectMembers.AddAsync(new ProjectMember
             {
                 ProjectId = starterProject.Id,
                 UserId = demoUser.Id,
-                Role = ProjectMemberRole.Admin
+                Role = ProjectRoleType.Admin
             });
             await context.SaveChangesAsync();
 

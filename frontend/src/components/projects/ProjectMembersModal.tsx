@@ -22,7 +22,7 @@ export const ProjectMembersModal: React.FC<ProjectMembersModalProps> = ({
   const { user } = useAuth();
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [newUserId, setNewUserId] = useState('');
+  const [email, setEmail] = useState('');
   const [newRole, setNewRole] = useState<ProjectRole>('Member');
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,17 +48,17 @@ export const ProjectMembersModal: React.FC<ProjectMembersModalProps> = ({
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newUserId.trim()) return;
+    if (!email.trim()) return;
 
     setIsAdding(true);
     setError(null);
 
     try {
       await projectsApi.addMember(projectId, {
-        userId: newUserId.trim(),
+        email: email.trim(),
         role: newRole,
       });
-      setNewUserId('');
+      setEmail('');
       fetchMembers();
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } };
@@ -113,13 +113,13 @@ export const ProjectMembersModal: React.FC<ProjectMembersModalProps> = ({
         <form onSubmit={handleAddMember} className="flex items-end gap-3 rounded-xl bg-slate-50 p-4 border border-slate-200/80">
           <div className="flex-1">
             <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-              User ID (Guid)
+              User Email
             </label>
             <input
-              type="text"
-              placeholder="e.g. 00000000-0000-0000-0000-000000000000"
-              value={newUserId}
-              onChange={(e) => setNewUserId(e.target.value)}
+              type="email"
+              placeholder="e.g. member@flowtask.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               required
             />
@@ -141,7 +141,7 @@ export const ProjectMembersModal: React.FC<ProjectMembersModalProps> = ({
           </div>
 
           <Button type="submit" size="sm" isLoading={isAdding} leftIcon={<UserPlus className="h-4 w-4" />}>
-            Add
+            Add Member
           </Button>
         </form>
 
