@@ -68,11 +68,11 @@ export const Modal: React.FC<ModalProps> = ({
           }}
         >
           <div
-            className={`w-full ${sizeStyles[size]} overflow-hidden rounded-2xl bg-white text-left align-middle shadow-2xl border border-slate-200 transition-all`}
+            className={`w-full ${sizeStyles[size]} rounded-2xl bg-white text-left align-middle shadow-2xl border border-slate-200 transition-all relative`}
             onClick={(e) => e.stopPropagation()}
           >
             {title && (
-              <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+              <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 rounded-t-2xl">
                 <div>
                   <h3 id="modal-title" className="text-lg font-semibold text-slate-900">{title}</h3>
                   {description && <p className="mt-0.5 text-xs text-slate-500">{description}</p>}

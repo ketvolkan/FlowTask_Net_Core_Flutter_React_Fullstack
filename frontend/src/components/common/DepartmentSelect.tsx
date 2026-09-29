@@ -63,7 +63,7 @@ export const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
   );
 
   return (
-    <div className={`space-y-1 ${className}`} ref={dropdownRef}>
+    <div className={`space-y-1 relative ${isOpen ? 'z-50' : 'z-20'} ${className}`} ref={dropdownRef}>
       {label && (
         <div className="flex items-center justify-between">
           <label className="block text-xs font-semibold text-slate-700">
@@ -77,7 +77,7 @@ export const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
         </div>
       )}
 
-      <div className="relative">
+      <div className={`relative ${isOpen ? 'z-50' : ''}`}>
         <button
           type="button"
           disabled={disabled}
@@ -114,7 +114,7 @@ export const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
         )}
 
         {!disabled && isOpen && (
-          <div className="absolute left-0 mt-1.5 w-full min-w-[260px] rounded-2xl bg-white shadow-xl ring-1 ring-black/5 z-50 border border-slate-200 py-1.5 animate-scale-in flex flex-col max-h-72">
+          <div className="absolute left-0 mt-1.5 w-full min-w-[260px] rounded-2xl bg-white shadow-2xl ring-1 ring-black/10 z-[100] border border-slate-200 py-1.5 animate-scale-in flex flex-col max-h-72">
             {/* Search Input */}
             <div className="p-2 border-b border-slate-100">
               <div className="relative">
