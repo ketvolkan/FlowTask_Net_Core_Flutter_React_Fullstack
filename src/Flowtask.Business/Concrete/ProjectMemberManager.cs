@@ -54,10 +54,18 @@ public class ProjectMemberManager : IProjectMemberService
 
     public async Task<IDataResult<ProjectMemberDto>> AddMemberAsync(Guid projectId, Guid currentUserId, AddProjectMemberDto request)
     {
+        var currentUser = await _userDal.GetByIdAsync(currentUserId);
+        var isSystemAdmin = currentUser?.IsSystemAdmin ?? false;
+
         var currentMember = await _projectMemberDal.GetAsync(
             pm => pm.ProjectId == projectId && pm.UserId == currentUserId);
 
-        if (currentMember == null || (currentMember.Role != ProjectRoleType.Owner && currentMember.Role != ProjectRoleType.Admin))
+        var project = await _projectDal.GetByIdAsync(projectId);
+        var isProjectOwner = project?.OwnerId == currentUserId;
+
+        bool isAuthorized = isSystemAdmin || isProjectOwner || (currentMember != null && (currentMember.Role == ProjectRoleType.Owner || currentMember.Role == ProjectRoleType.Admin));
+
+        if (!isAuthorized)
         {
             throw new ForbiddenException(Messages.AuthorizationDenied);
         }
@@ -109,10 +117,18 @@ public class ProjectMemberManager : IProjectMemberService
 
     public async Task<IDataResult<ProjectMemberDto>> UpdateMemberRoleAsync(Guid projectId, Guid targetUserId, Guid currentUserId, UpdateMemberRoleDto request)
     {
+        var currentUser = await _userDal.GetByIdAsync(currentUserId);
+        var isSystemAdmin = currentUser?.IsSystemAdmin ?? false;
+
         var currentMember = await _projectMemberDal.GetAsync(
             pm => pm.ProjectId == projectId && pm.UserId == currentUserId);
 
-        if (currentMember == null || (currentMember.Role != ProjectRoleType.Owner && currentMember.Role != ProjectRoleType.Admin))
+        var project = await _projectDal.GetByIdAsync(projectId);
+        var isProjectOwner = project?.OwnerId == currentUserId;
+
+        bool isAuthorized = isSystemAdmin || isProjectOwner || (currentMember != null && (currentMember.Role == ProjectRoleType.Owner || currentMember.Role == ProjectRoleType.Admin));
+
+        if (!isAuthorized)
         {
             throw new ForbiddenException(Messages.AuthorizationDenied);
         }
@@ -135,10 +151,18 @@ public class ProjectMemberManager : IProjectMemberService
 
     public async Task<IResult> RemoveMemberAsync(Guid projectId, Guid targetUserId, Guid currentUserId)
     {
+        var currentUser = await _userDal.GetByIdAsync(currentUserId);
+        var isSystemAdmin = currentUser?.IsSystemAdmin ?? false;
+
         var currentMember = await _projectMemberDal.GetAsync(
             pm => pm.ProjectId == projectId && pm.UserId == currentUserId);
 
-        if (currentMember == null || (currentMember.Role != ProjectRoleType.Owner && currentMember.Role != ProjectRoleType.Admin))
+        var project = await _projectDal.GetByIdAsync(projectId);
+        var isProjectOwner = project?.OwnerId == currentUserId;
+
+        bool isAuthorized = isSystemAdmin || isProjectOwner || (currentMember != null && (currentMember.Role == ProjectRoleType.Owner || currentMember.Role == ProjectRoleType.Admin));
+
+        if (!isAuthorized)
         {
             throw new ForbiddenException(Messages.AuthorizationDenied);
         }

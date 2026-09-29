@@ -52,6 +52,10 @@ export const GlobalAddMemberModal: React.FC<GlobalAddMemberModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canCreateDept) {
+      setError(t('membersModal.unauthorized', 'Üye ekleme yetkiniz bulunmamaktadır.'));
+      return;
+    }
     if (!selectedProjectId) {
       setError(t('membersModal.selectProject', 'Lütfen bir proje seçiniz.'));
       return;

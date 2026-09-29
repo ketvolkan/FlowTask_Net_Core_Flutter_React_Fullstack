@@ -6,6 +6,7 @@ import { UserAvatar } from '../common/UserAvatar';
 import { ProjectRoleBadge } from '../common/Badge';
 import { projectsApi } from '../../api/projectsApi';
 import { ProjectMember, ProjectRole } from '../../types';
+import { isAuthorizedUser } from '../../utils/permissionUtils';
 import { UserPlus, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -28,6 +29,10 @@ export const ProjectMembersModal: React.FC<ProjectMembersModalProps> = ({
   const [newRole, setNewRole] = useState<ProjectRole>('Member');
   const [isAdding, setIsAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const canManageMembers =
+    isAuthorizedUser(user) ||
+    members.some((m) => m.userId === user?.id && (m.role === 'Owner' || m.role === 'Admin'));
 
   const fetchMembers = useCallback(async () => {
     try {
@@ -111,41 +116,43 @@ export const ProjectMembersModal: React.FC<ProjectMembersModalProps> = ({
           </div>
         )}
 
-        {/* Add Member Form */}
-        <form onSubmit={handleAddMember} className="flex items-end gap-3 rounded-xl bg-slate-50 p-4 border border-slate-200/80">
-          <div className="flex-1">
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-              {t('membersModal.userEmail', 'Kullanıcı E-Posta Adresi')}
-            </label>
-            <input
-              type="email"
-              placeholder={t('membersModal.emailPlaceholder', 'Örn: uye@flowtask.com')}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              required
-            />
-          </div>
+        {/* Add Member Form - Only for authorized managers / project admins */}
+        {canManageMembers && (
+          <form onSubmit={handleAddMember} className="flex items-end gap-3 rounded-xl bg-slate-50 p-4 border border-slate-200/80">
+            <div className="flex-1">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                {t('membersModal.userEmail', 'Kullanıcı E-Posta Adresi')}
+              </label>
+              <input
+                type="email"
+                placeholder={t('membersModal.emailPlaceholder', 'Örn: uye@flowtask.com')}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="block w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                required
+              />
+            </div>
 
-          <div className="w-36">
-            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-              {t('membersModal.role', 'Rol')}
-            </label>
-            <select
-              value={newRole}
-              onChange={(e) => setNewRole(e.target.value as ProjectRole)}
-              className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            >
-              <option value="Member">{t('role.member', 'Üye')}</option>
-              <option value="Admin">{t('role.admin', 'Yönetici')}</option>
-              <option value="Viewer">{t('role.viewer', 'Gözlemci')}</option>
-            </select>
-          </div>
+            <div className="w-36">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                {t('membersModal.role', 'Rol')}
+              </label>
+              <select
+                value={newRole}
+                onChange={(e) => setNewRole(e.target.value as ProjectRole)}
+                className="block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              >
+                <option value="Member">{t('role.member', 'Üye')}</option>
+                <option value="Admin">{t('role.admin', 'Yönetici')}</option>
+                <option value="Viewer">{t('role.viewer', 'Gözlemci')}</option>
+              </select>
+            </div>
 
-          <Button type="submit" size="sm" isLoading={isAdding} leftIcon={<UserPlus className="h-4 w-4" />}>
-            {t('membersModal.addMember', 'Üye Ekle')}
-          </Button>
-        </form>
+            <Button type="submit" size="sm" isLoading={isAdding} leftIcon={<UserPlus className="h-4 w-4" />}>
+              {t('membersModal.addMember', 'Üye Ekle')}
+            </Button>
+          </form>
+        )}
 
         {/* Members List */}
         <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto pr-1">
@@ -178,7 +185,7 @@ export const ProjectMembersModal: React.FC<ProjectMembersModalProps> = ({
                   </div>
 
                   <div className="flex items-center gap-3">
-                    {isOwner ? (
+                    {isOwner || !canManageMembers ? (
                       <ProjectRoleBadge role={m.role} />
                     ) : (
                       <select
@@ -192,10 +199,10 @@ export const ProjectMembersModal: React.FC<ProjectMembersModalProps> = ({
                       </select>
                     )}
 
-                    {!isOwner && m.userId !== user?.id && (
+                    {canManageMembers && !isOwner && m.userId !== user?.id && (
                       <button
                         onClick={() => handleRemoveMember(m.userId)}
-                        className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                        className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors cursor-pointer"
                         title={t('common.delete', 'Sil')}
                       >
                         <Trash2 className="h-4 w-4" />

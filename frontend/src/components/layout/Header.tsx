@@ -21,6 +21,7 @@ import {
   Globe,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { isAuthorizedUser } from '../../utils/permissionUtils';
 
 interface HeaderProps {
   onToggleSidebar?: () => void;
@@ -55,6 +56,7 @@ export const Header: React.FC<HeaderProps> = ({
   const navigate = useNavigate();
 
   const isSysAdmin = !!user?.isSystemAdmin;
+  const isAuthorized = isAuthorizedUser(user);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -178,21 +180,25 @@ export const Header: React.FC<HeaderProps> = ({
                 <span>{t('header.newIssue', 'Görev Oluştur')}</span>
               </button>
 
-              <button
-                onClick={onOpenCreateProject}
-                className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-slate-800 transition-colors cursor-pointer"
-              >
-                <FolderPlus className="h-3.5 w-3.5 text-indigo-400" />
-                <span>{t('header.newProject', 'Yeni Proje')}</span>
-              </button>
+              {isAuthorized && (
+                <>
+                  <button
+                    onClick={onOpenCreateProject}
+                    className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-slate-800 transition-colors cursor-pointer"
+                  >
+                    <FolderPlus className="h-3.5 w-3.5 text-indigo-400" />
+                    <span>{t('header.newProject', 'Yeni Proje')}</span>
+                  </button>
 
-              <button
-                onClick={onOpenAddMember}
-                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors cursor-pointer"
-              >
-                <UserPlus className="h-3.5 w-3.5 text-slate-500" />
-                <span>{t('header.addMember', 'Üye Ekle')}</span>
-              </button>
+                  <button
+                    onClick={onOpenAddMember}
+                    className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors cursor-pointer"
+                  >
+                    <UserPlus className="h-3.5 w-3.5 text-slate-500" />
+                    <span>{t('header.addMember', 'Üye Ekle')}</span>
+                  </button>
+                </>
+              )}
             </div>
 
             {/* Mobile / Compact Quick Action Dropdown */}
@@ -219,27 +225,31 @@ export const Header: React.FC<HeaderProps> = ({
                     <span>{t('header.newIssue', 'Görev Oluştur')}</span>
                   </button>
 
-                  <button
-                    onClick={() => {
-                      setIsQuickActionsOpen(false);
-                      onOpenCreateProject?.();
-                    }}
-                    className="flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50 transition-colors text-left"
-                  >
-                    <FolderPlus className="h-4 w-4 text-slate-600" />
-                    <span>{t('header.newProject', 'Yeni Proje')}</span>
-                  </button>
+                  {isAuthorized && (
+                    <>
+                      <button
+                        onClick={() => {
+                          setIsQuickActionsOpen(false);
+                          onOpenCreateProject?.();
+                        }}
+                        className="flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50 transition-colors text-left"
+                      >
+                        <FolderPlus className="h-4 w-4 text-slate-600" />
+                        <span>{t('header.newProject', 'Yeni Proje')}</span>
+                      </button>
 
-                  <button
-                    onClick={() => {
-                      setIsQuickActionsOpen(false);
-                      onOpenAddMember?.();
-                    }}
-                    className="flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors text-left"
-                  >
-                    <UserPlus className="h-4 w-4 text-slate-500" />
-                    <span>{t('header.addMember', 'Üye Ekle')}</span>
-                  </button>
+                      <button
+                        onClick={() => {
+                          setIsQuickActionsOpen(false);
+                          onOpenAddMember?.();
+                        }}
+                        className="flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors text-left"
+                      >
+                        <UserPlus className="h-4 w-4 text-slate-500" />
+                        <span>{t('header.addMember', 'Üye Ekle')}</span>
+                      </button>
+                    </>
+                  )}
                 </div>
               )}
             </div>
