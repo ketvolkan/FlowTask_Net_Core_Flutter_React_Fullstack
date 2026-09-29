@@ -130,12 +130,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
           })}
         </div>
 
-        {/* Footer Language Switcher & App Info */}
-        <div className={`border-t border-slate-100 p-3 space-y-2.5 ${isCollapsed ? 'flex flex-col items-center' : ''}`}>
-          <LanguageSwitcher />
+        {/* Footer Language Switcher, App Info & Collapse Toggle */}
+        <div className={`border-t border-slate-100 p-2.5 space-y-2 ${isCollapsed ? 'flex flex-col items-center' : ''}`}>
+          <LanguageSwitcher compact={isCollapsed} />
+
+          {/* Desktop Collapse / Expand Toggle Button */}
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className={`hidden lg:flex items-center rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors cursor-pointer w-full ${
+              isCollapsed ? 'justify-center' : 'justify-between px-3 text-xs font-medium text-slate-500'
+            }`}
+            title={isCollapsed ? t('common.expandSidebar', 'Menüyü Genişlet') : t('common.collapseSidebar', 'Menüyü Daralt')}
+          >
+            {!isCollapsed && <span>{t('common.collapseSidebar', 'Menüyü Daralt')}</span>}
+            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </button>
 
           {!isCollapsed && (
-            <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100 text-center">
+            <div className="rounded-xl bg-slate-50 p-2 border border-slate-100 text-center">
               <p className="text-[11px] font-semibold text-slate-700">Flowtask v1.0.0</p>
               <p className="text-[10px] text-slate-400">{t('nav.enterprise', 'Kurumsal Proje Yönetimi')}</p>
             </div>
