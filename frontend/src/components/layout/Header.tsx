@@ -27,6 +27,7 @@ interface HeaderProps {
   onOpenCreateProject?: () => void;
   onOpenCreateIssue?: () => void;
   onOpenAddMember?: () => void;
+  onOpenSearch?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -34,6 +35,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenCreateProject,
   onOpenCreateIssue,
   onOpenAddMember,
+  onOpenSearch,
 }) => {
   const { user, logout } = useAuth();
   const {
@@ -47,11 +49,9 @@ export const Header: React.FC<HeaderProps> = ({
   const { t } = useLanguage();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
-  const [globalSearch, setGlobalSearch] = useState('');
 
   const menuRef = useRef<HTMLDivElement>(null);
   const quickActionsRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   const isSysAdmin = !!user?.isSystemAdmin;
@@ -69,23 +69,17 @@ export const Header: React.FC<HeaderProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Global hotkey Ctrl+K / ⌘K to focus search
+  // Global hotkey Ctrl+K / ⌘K to open search modal
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
-        searchInputRef.current?.focus();
+        onOpenSearch?.();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!globalSearch.trim()) return;
-    navigate(`/board?search=${encodeURIComponent(globalSearch.trim())}`);
-  };
+  }, [onOpenSearch]);
 
   const handleLogout = async () => {
     await logout();
@@ -98,7 +92,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
         <button
           onClick={onToggleSidebar}
-          className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors focus:outline-none shrink-0"
+          className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors focus:outline-none shrink-0 cursor-pointer"
           title={t('common.toggleSidebar', 'Menüyü Aç/Kapat')}
         >
           <Menu className="h-5 w-5" />
@@ -144,25 +138,33 @@ export const Header: React.FC<HeaderProps> = ({
           )
         )}
 
-        {/* Global Search Input with Shortcut */}
-        <form onSubmit={handleSearchSubmit} className="relative w-full hidden lg:block max-w-xs ml-2">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-          <input
-            ref={searchInputRef}
-            type="text"
-            placeholder={t('header.searchPlaceholder', 'Görevlerde, projelerde ara...')}
-            value={globalSearch}
-            onChange={(e) => setGlobalSearch(e.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50/80 pl-9 pr-14 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
-          />
-          <span className="absolute right-2.5 top-2 rounded bg-white px-1.5 py-0.5 text-[10px] font-bold text-slate-400 border border-slate-200 shadow-2xs pointer-events-none">
+        {/* Global Interactive Search Input Trigger with Shortcut */}
+        <button
+          type="button"
+          onClick={onOpenSearch}
+          className="relative w-full hidden md:flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-1.5 text-xs text-slate-400 hover:bg-white hover:border-slate-300 hover:text-slate-600 transition-all max-w-xs ml-2 cursor-pointer text-left shadow-2xs group"
+        >
+          <div className="flex items-center gap-2 truncate">
+            <Search className="h-4 w-4 text-slate-400 group-hover:text-indigo-600 transition-colors shrink-0" />
+            <span className="truncate">{t('header.searchPlaceholder', 'Görevlerde, projelerde ara...')}</span>
+          </div>
+          <span className="rounded bg-white px-1.5 py-0.5 text-[10px] font-bold text-slate-400 border border-slate-200 shadow-2xs pointer-events-none group-hover:border-indigo-200 group-hover:text-indigo-600 transition-colors">
             ⌘K
           </span>
-        </form>
+        </button>
       </div>
 
       {/* Right: Quick Action Buttons, Notifications & User Avatar */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Mobile Search Button */}
+        <button
+          onClick={onOpenSearch}
+          className="p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800 rounded-xl md:hidden focus:outline-none cursor-pointer"
+          title="Arama Yap (Ctrl+K)"
+        >
+          <Search className="h-5 w-5" />
+        </button>
+
         {/* Quick Actions for Company / Normal Users */}
         {!isSysAdmin && (
           <div className="flex items-center gap-2">

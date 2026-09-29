@@ -37,6 +37,9 @@ public class IssueManager : IIssueService
 
     public async Task<IDataResult<PagedDataResult<IssueDto>>> GetIssuesAsync(Guid userId, IssueFilterParams filter)
     {
+        var user = await _userDal.GetByIdAsync(userId);
+        var isSysAdmin = user?.IsSystemAdmin ?? false;
+
         var (issues, totalCount) = await _issueDal.GetPagedAsync(
             filter: i =>
                 (!filter.ProjectId.HasValue || i.ProjectId == filter.ProjectId.Value) &&
@@ -46,8 +49,8 @@ public class IssueManager : IIssueService
                 (!filter.Status.HasValue || i.Status == filter.Status.Value) &&
                 (!filter.Priority.HasValue || i.Priority == filter.Priority.Value) &&
                 (!filter.Type.HasValue || i.Type == filter.Type.Value) &&
-                (string.IsNullOrEmpty(filter.Search) || i.Title.ToLower().Contains(filter.Search.ToLower()) || i.Key.ToLower().Contains(filter.Search.ToLower())) &&
-                (i.Project.Members.Any(m => m.UserId == userId) || i.Project.OwnerId == userId),
+                (string.IsNullOrEmpty(filter.Search) || i.Title.ToLower().Contains(filter.Search.ToLower()) || i.Key.ToLower().Contains(filter.Search.ToLower()) || (i.Description != null && i.Description.ToLower().Contains(filter.Search.ToLower()))) &&
+                (isSysAdmin || i.Project.Members.Any(m => m.UserId == userId) || i.Project.OwnerId == userId),
             page: filter.Page,
             pageSize: filter.PageSize,
             includeProperties: "Project,Sprint,Reporter,Assignee,Comments.User,Attachments.UploadedBy",
@@ -60,8 +63,11 @@ public class IssueManager : IIssueService
 
     public async Task<IDataResult<IssueDto>> GetIssueByIdAsync(Guid issueId, Guid userId)
     {
+        var user = await _userDal.GetByIdAsync(userId);
+        var isSysAdmin = user?.IsSystemAdmin ?? false;
+
         var issue = await _issueDal.GetAsync(
-            i => i.Id == issueId && (i.Project.Members.Any(m => m.UserId == userId) || i.Project.OwnerId == userId),
+            i => i.Id == issueId && (isSysAdmin || i.Project.Members.Any(m => m.UserId == userId) || i.Project.OwnerId == userId),
             includeProperties: "Project,Sprint,Reporter,Assignee,Comments.User,Attachments.UploadedBy");
 
         if (issue == null)

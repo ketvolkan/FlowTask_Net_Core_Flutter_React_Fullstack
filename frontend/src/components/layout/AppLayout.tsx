@@ -5,6 +5,8 @@ import { Header } from './Header';
 import { CreateProjectModal } from '../projects/CreateProjectModal';
 import { CreateIssueModal } from '../issues/CreateIssueModal';
 import { GlobalAddMemberModal } from '../projects/GlobalAddMemberModal';
+import { GlobalSearchModal } from '../search/GlobalSearchModal';
+import { IssueDetailModal } from '../issues/IssueDetailModal';
 
 export const AppLayout: React.FC = () => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -16,6 +18,8 @@ export const AppLayout: React.FC = () => {
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
   const [isCreateIssueOpen, setIsCreateIssueOpen] = useState(false);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [selectedSearchIssueId, setSelectedSearchIssueId] = useState<string | null>(null);
 
   const toggleSidebarCollapse = () => {
     setIsSidebarCollapsed((prev) => {
@@ -50,6 +54,7 @@ export const AppLayout: React.FC = () => {
           onOpenCreateProject={() => setIsCreateProjectOpen(true)}
           onOpenCreateIssue={() => setIsCreateIssueOpen(true)}
           onOpenAddMember={() => setIsAddMemberOpen(true)}
+          onOpenSearch={() => setIsSearchModalOpen(true)}
         />
 
         <main className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-5 bg-slate-50">
@@ -58,6 +63,30 @@ export const AppLayout: React.FC = () => {
           </div>
         </main>
       </div>
+
+      {/* Global Command Palette / Search Modal */}
+      <GlobalSearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        onSelectIssue={(issueId) => {
+          setSelectedSearchIssueId(issueId);
+        }}
+      />
+
+      {/* Direct Task Detail Modal from Search */}
+      {selectedSearchIssueId && (
+        <IssueDetailModal
+          isOpen={!!selectedSearchIssueId}
+          onClose={() => setSelectedSearchIssueId(null)}
+          issueId={selectedSearchIssueId}
+          onIssueUpdated={() => {
+            // Optional callback on issue update
+          }}
+          onIssueDeleted={() => {
+            setSelectedSearchIssueId(null);
+          }}
+        />
+      )}
 
       {/* Global Create Project Modal */}
       <CreateProjectModal
