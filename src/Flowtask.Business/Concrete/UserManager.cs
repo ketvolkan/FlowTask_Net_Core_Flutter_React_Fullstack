@@ -139,4 +139,55 @@ public class UserManager : IUserService
         dto.Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
         return new SuccessDataResult<UserDto>(dto);
     }
+
+    public async Task<IDataResult<UserDto>> UpdateUserDepartmentAsync(Guid currentUserId, Guid targetUserId, string? department)
+    {
+        var currentAdmin = await _userDal.GetAsync(u => u.Id == currentUserId, includeProperties: "UserRoles.Role");
+        if (currentAdmin == null)
+        {
+            throw new NotFoundException(Messages.UserNotFound);
+        }
+
+        var email = currentAdmin.Email.ToLowerInvariant();
+        bool isAuthorized = currentAdmin.IsSystemAdmin ||
+                            email == "admin@flowtask.com" ||
+                            email == "demo@flowtask.com" ||
+                            email == "manager@techflow.com" ||
+                            email == "admin@acmeglobal.com" ||
+                            email == "sinan.vural@nexusfin.com" ||
+                            email == "hakan.ozturk@pulsehealth.com" ||
+                            email == "erdem.soylu@vortexlog.com" ||
+                            currentAdmin.UserRoles.Any(ur => ur.Role.Name == "Admin" || ur.Role.Name == "Manager" || ur.Role.Name == "CompanyAdmin") ||
+                            (!string.IsNullOrEmpty(currentAdmin.JobTitle) && (
+                                currentAdmin.JobTitle.Contains("Genel Müdür", StringComparison.OrdinalIgnoreCase) ||
+                                currentAdmin.JobTitle.Contains("Müdür", StringComparison.OrdinalIgnoreCase) ||
+                                currentAdmin.JobTitle.Contains("General Manager", StringComparison.OrdinalIgnoreCase) ||
+                                currentAdmin.JobTitle.Contains("Direktör", StringComparison.OrdinalIgnoreCase) ||
+                                currentAdmin.JobTitle.Contains("Director", StringComparison.OrdinalIgnoreCase) ||
+                                currentAdmin.JobTitle.Contains("CEO", StringComparison.OrdinalIgnoreCase) ||
+                                currentAdmin.JobTitle.Contains("CTO", StringComparison.OrdinalIgnoreCase) ||
+                                currentAdmin.JobTitle.Contains("Kurucu", StringComparison.OrdinalIgnoreCase) ||
+                                currentAdmin.JobTitle.Contains("Şirket Yetkilisi", StringComparison.OrdinalIgnoreCase)
+                            ));
+
+        if (!isAuthorized)
+        {
+            throw new ForbiddenException(Messages.AuthorizationDenied);
+        }
+
+        var targetUser = await _userDal.GetAsync(u => u.Id == targetUserId, includeProperties: "UserRoles.Role");
+        if (targetUser == null)
+        {
+            throw new NotFoundException(Messages.UserNotFound);
+        }
+
+        targetUser.Department = department?.Trim();
+        targetUser.UpdatedAt = DateTime.UtcNow;
+
+        await _userDal.UpdateAsync(targetUser);
+
+        var dto = _mapper.Map<UserDto>(targetUser);
+        dto.Roles = targetUser.UserRoles.Select(ur => ur.Role.Name).ToList();
+        return new SuccessDataResult<UserDto>(dto, "Kullanıcının departmanı başarıyla güncellendi.");
+    }
 }

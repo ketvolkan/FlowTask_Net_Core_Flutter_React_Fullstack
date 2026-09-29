@@ -43,4 +43,11 @@ public class UsersController : BaseApiController
         var result = await _userService.ChangePasswordAsync(CurrentUserId, request);
         return HandleResult(result);
     }
+
+    [HttpPut("{id:guid}/department")]
+    public async Task<IActionResult> UpdateDepartment(Guid id, [FromBody] UpdateDepartmentDto request)
+    {
+        var result = await _userService.UpdateUserDepartmentAsync(CurrentUserId, id, request.Department);
+        return HandleDataResult(result);
+    }
 }

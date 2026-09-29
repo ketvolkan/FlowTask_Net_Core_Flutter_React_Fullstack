@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useCompany } from '../../context/CompanyContext';
+import { isAuthorizedUser } from '../../utils/permissionUtils';
 import { projectsApi } from '../../api/projectsApi';
 import { issuesApi } from '../../api/issuesApi';
+import { usersApi } from '../../api/usersApi';
 import { Project, ProjectMember, Issue, IssueStatus } from '../../types';
 import { UserAvatar } from '../../components/common/UserAvatar';
+import { DepartmentSelect } from '../../components/common/DepartmentSelect';
 import { ProjectRoleBadge, StatusBadge, PriorityBadge, TypeBadge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
 import { Modal } from '../../components/common/Modal';
@@ -23,6 +27,9 @@ import {
   Layers,
   Sparkles,
   UserCheck,
+  Building2,
+  Lock,
+  Save,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { tr as trLocale, enUS } from 'date-fns/locale';
@@ -53,11 +60,62 @@ export const TeamPage: React.FC = () => {
 
   const displayedProjects = filterProjectsByCompany(projects);
 
+  const { user } = useAuth();
+  const canManageDept = isAuthorizedUser(user);
+
   // Filters & Views
   const [viewMode, setViewMode] = useState<'board' | 'grid'>('board');
   const [search, setSearch] = useState('');
   const [selectedMemberForDetail, setSelectedMemberForDetail] = useState<MemberWorkload | null>(null);
   const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
+
+  // Member department state inside detail modal
+  const [memberDept, setMemberDept] = useState('');
+  const [isSavingDept, setIsSavingDept] = useState(false);
+  const [deptSaveSuccess, setDeptSaveSuccess] = useState<string | null>(null);
+  const [deptSaveError, setDeptSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (selectedMemberForDetail?.member.userId) {
+      setDeptSaveSuccess(null);
+      setDeptSaveError(null);
+      usersApi
+        .getUserById(selectedMemberForDetail.member.userId)
+        .then((u) => {
+          setMemberDept(u?.department || '');
+        })
+        .catch(() => {
+          setMemberDept('');
+        });
+    }
+  }, [selectedMemberForDetail]);
+
+  const handleSaveMemberDepartment = async () => {
+    if (!selectedMemberForDetail?.member.userId) return;
+    setIsSavingDept(true);
+    setDeptSaveSuccess(null);
+    setDeptSaveError(null);
+    try {
+      const updated = await usersApi.updateDepartment(
+        selectedMemberForDetail.member.userId,
+        memberDept
+      );
+      setDeptSaveSuccess(t('team.deptUpdated', 'Departman başarıyla güncellendi.'));
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.userId === selectedMemberForDetail.member.userId
+            ? { ...m, department: updated.department }
+            : m
+        )
+      );
+      setTimeout(() => setDeptSaveSuccess(null), 3500);
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      setDeptSaveError(e.response?.data?.message || 'Departman güncellenemedi.');
+    } finally {
+      setIsSavingDept(false);
+    }
+  };
 
   // Load Projects
   useEffect(() => {
@@ -675,6 +733,63 @@ export const TeamPage: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <ProjectRoleBadge role={mw.member.role} />
                   </div>
+                </div>
+
+                {/* Department & Organization Management */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4 text-indigo-600" />
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                        {t('department.title', 'Departman & Organizasyon')}
+                      </h4>
+                    </div>
+                    {!canManageDept && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-400 bg-white px-2 py-0.5 rounded border border-slate-200">
+                        <Lock className="h-2.5 w-2.5" /> {t('department.locked', 'Salt Okunur')}
+                      </span>
+                    )}
+                  </div>
+
+                  {deptSaveSuccess && (
+                    <div className="flex items-center gap-2 rounded-xl bg-emerald-50 p-2.5 text-xs font-semibold text-emerald-800 border border-emerald-200">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      <span>{deptSaveSuccess}</span>
+                    </div>
+                  )}
+
+                  {deptSaveError && (
+                    <div className="rounded-xl bg-rose-50 p-2.5 text-xs font-medium text-rose-700 border border-rose-200">
+                      {deptSaveError}
+                    </div>
+                  )}
+
+                  {canManageDept ? (
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2.5">
+                      <div className="flex-1">
+                        <DepartmentSelect
+                          label={t('department.userDept', 'Kullanıcı Departmanı')}
+                          value={memberDept}
+                          onChange={setMemberDept}
+                          allowCreate={true}
+                          placeholder={t('department.selectOrNew', 'Departman seçin veya yeni oluşturun...')}
+                        />
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={handleSaveMemberDepartment}
+                        isLoading={isSavingDept}
+                        leftIcon={<Save className="h-3.5 w-3.5" />}
+                      >
+                        {t('department.updateDept', 'Departmanı Güncelle')}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-white p-2.5 rounded-xl border border-slate-200">
+                      <Building2 className="h-4 w-4 text-slate-400" />
+                      <span>{memberDept || t('department.notSpecified', 'Departman belirtilmemiş')}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Stats Breakdown */}

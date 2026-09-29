@@ -14,4 +14,11 @@ export const usersApi = {
     const { data } = await axiosClient.get<ApiResponse<User>>(`/users/${id}`);
     return data.data;
   },
+
+  updateDepartment: async (userId: string, department: string): Promise<User> => {
+    const { data } = await axiosClient.put<ApiResponse<User>>(`/users/${userId}/department`, {
+      department: department.trim() || undefined,
+    });
+    return data.data;
+  },
 };
