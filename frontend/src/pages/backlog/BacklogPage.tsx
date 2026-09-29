@@ -32,9 +32,10 @@ export const BacklogPage: React.FC = () => {
     const loadProjects = async () => {
       try {
         const data = await projectsApi.getProjects(1, 100);
-        setProjects(data.items);
-        if (data.items.length > 0 && !selectedProjectId) {
-          const initialId = selectedProjectIdParam || data.items[0].id;
+        const projectList = data?.items || [];
+        setProjects(projectList);
+        if (projectList.length > 0 && !selectedProjectId) {
+          const initialId = selectedProjectIdParam || projectList[0].id;
           setSelectedProjectId(initialId);
         }
       } catch (e) {
@@ -58,9 +59,9 @@ export const BacklogPage: React.FC = () => {
         issuesApi.getIssues({ projectId: selectedProjectId, pageSize: 200 }),
       ]);
 
-      setSprints(sprintsData);
-      setMembers(membersData);
-      setIssues(issuesData.items);
+      setSprints(Array.isArray(sprintsData) ? sprintsData : []);
+      setMembers(Array.isArray(membersData) ? membersData : []);
+      setIssues(issuesData?.items || []);
     } catch (e) {
       console.error('Failed to load backlog data', e);
     } finally {

@@ -18,12 +18,21 @@ builder.Host.UseSerilog((context, config) =>
 });
 
 // Configure Database
-var connectionString = builder.Configuration.GetConnectionString("PostgreSql")
-    ?? "Host=localhost;Port=5432;Database=flowtask_db;Username=postgres;Password=postgres";
+var dbProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "Sqlite";
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    options.UseNpgsql(connectionString, b => b.MigrationsAssembly("Flowtask.DataAccess"));
+    if (dbProvider.Equals("PostgreSql", StringComparison.OrdinalIgnoreCase))
+    {
+        var connectionString = builder.Configuration.GetConnectionString("PostgreSql")
+            ?? "Host=localhost;Port=5432;Database=flowtask_db;Username=postgres;Password=postgres";
+        options.UseNpgsql(connectionString, b => b.MigrationsAssembly("Flowtask.DataAccess"));
+    }
+    else
+    {
+        var connectionString = builder.Configuration.GetConnectionString("Sqlite") ?? "Data Source=flowtask.db";
+        options.UseSqlite(connectionString, b => b.MigrationsAssembly("Flowtask.DataAccess"));
+    }
 });
 
 // Register Business & DataAccess Layers
@@ -64,7 +73,7 @@ using (var scope = app.Services.CreateScope())
         var context = services.GetRequiredService<ApplicationDbContext>();
         var passwordHasher = services.GetRequiredService<IPasswordHasher>();
 
-        if (context.Database.IsRelational())
+        if (context.Database.IsNpgsql())
         {
             await context.Database.MigrateAsync();
         }
@@ -78,7 +87,7 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogWarning(ex, "Could not automatically migrate or seed database on startup (DB server might be offline or using in-memory).");
+        logger.LogWarning(ex, "Could not automatically migrate or seed database on startup: {Message}", ex.Message);
     }
 }
 

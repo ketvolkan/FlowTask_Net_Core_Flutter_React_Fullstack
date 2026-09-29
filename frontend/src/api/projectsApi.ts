@@ -1,12 +1,13 @@
 import { axiosClient } from './axiosClient';
 import { ApiResponse, PagedResponse, Project, ProjectDetail, ProjectMember, ProjectRole } from '../types';
+import { normalizePagedResponse } from './apiHelpers';
 
 export const projectsApi = {
   getProjects: async (page = 1, pageSize = 20): Promise<PagedResponse<Project>> => {
-    const { data } = await axiosClient.get<ApiResponse<PagedResponse<Project>>>('/projects', {
+    const { data } = await axiosClient.get<ApiResponse<any>>('/projects', {
       params: { page, pageSize },
     });
-    return data.data;
+    return normalizePagedResponse<Project>(data.data ?? data);
   },
 
   getProjectById: async (projectId: string): Promise<ProjectDetail> => {
@@ -43,8 +44,9 @@ export const projectsApi = {
   },
 
   getMembers: async (projectId: string): Promise<ProjectMember[]> => {
-    const { data } = await axiosClient.get<ApiResponse<ProjectMember[]>>(`/projects/${projectId}/members`);
-    return data.data;
+    const { data } = await axiosClient.get<ApiResponse<any>>(`/projects/${projectId}/members`);
+    const raw = data.data ?? data;
+    return Array.isArray(raw) ? raw : (raw.items ?? []);
   },
 
   addMember: async (

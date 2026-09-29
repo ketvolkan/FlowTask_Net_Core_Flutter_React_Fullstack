@@ -1,5 +1,6 @@
 import { axiosClient } from './axiosClient';
 import { ApiResponse, Issue, IssuePriority, IssueStatus, IssueType, PagedResponse } from '../types';
+import { normalizePagedResponse } from './apiHelpers';
 
 export interface IssueFilterParams {
   projectId?: string;
@@ -16,10 +17,10 @@ export interface IssueFilterParams {
 
 export const issuesApi = {
   getIssues: async (params: IssueFilterParams): Promise<PagedResponse<Issue>> => {
-    const { data } = await axiosClient.get<ApiResponse<PagedResponse<Issue>>>('/issues', {
+    const { data } = await axiosClient.get<ApiResponse<any>>('/issues', {
       params,
     });
-    return data.data;
+    return normalizePagedResponse<Issue>(data.data ?? data);
   },
 
   getIssueById: async (issueId: string): Promise<Issue> => {
@@ -41,7 +42,7 @@ export const issuesApi = {
       assigneeId?: string;
     }
   ): Promise<Issue> => {
-    const { data } = await axiosClient.post<ApiResponse<Issue>>(`/projects/${projectId}/issues`, issueData);
+    const { data } = await axiosClient.post<ApiResponse<Issue>>(`/issues/project/${projectId}`, issueData);
     return data.data;
   },
 

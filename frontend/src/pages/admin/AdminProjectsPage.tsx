@@ -15,7 +15,7 @@ export const AdminProjectsPage: React.FC = () => {
     try {
       setIsLoading(true);
       const data = await adminApi.getAllProjects(1, 100);
-      setProjects(data.items);
+      setProjects(data?.items || []);
     } catch (e) {
       console.error('Failed to load projects', e);
     } finally {

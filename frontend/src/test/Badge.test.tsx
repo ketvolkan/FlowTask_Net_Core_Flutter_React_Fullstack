@@ -4,7 +4,7 @@ import { Badge } from '../components/common/Badge'
 
 describe('Badge Component', () => {
   it('renders badge with children text', () => {
-    render(<Badge variant="primary">High Priority</Badge>)
+    render(<Badge variant="info">High Priority</Badge>)
     expect(screen.getByText('High Priority')).toBeInTheDocument()
   })
 

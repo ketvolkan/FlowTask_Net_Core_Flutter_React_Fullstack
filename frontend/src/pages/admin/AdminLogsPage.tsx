@@ -13,7 +13,7 @@ export const AdminLogsPage: React.FC = () => {
     try {
       setIsLoading(true);
       const data = await adminApi.getActivityLogs(undefined, 1, 100);
-      setLogs(data.items);
+      setLogs(data?.items || []);
     } catch (e) {
       console.error('Failed to load audit logs', e);
     } finally {

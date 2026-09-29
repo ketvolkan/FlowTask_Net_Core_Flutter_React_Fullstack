@@ -1,5 +1,6 @@
 import { axiosClient } from './axiosClient';
 import { ActivityLog, ApiResponse, PagedResponse, Project, SystemStatistics, User } from '../types';
+import { normalizePagedResponse } from './apiHelpers';
 
 export const adminApi = {
   getStatistics: async (): Promise<SystemStatistics> => {
@@ -8,10 +9,10 @@ export const adminApi = {
   },
 
   getAllUsers: async (page = 1, pageSize = 20): Promise<PagedResponse<User>> => {
-    const { data } = await axiosClient.get<ApiResponse<PagedResponse<User>>>('/admin/users', {
+    const { data } = await axiosClient.get<ApiResponse<any>>('/admin/users', {
       params: { page, pageSize },
     });
-    return data.data;
+    return normalizePagedResponse<User>(data.data ?? data);
   },
 
   createUser: async (userData: {
@@ -46,10 +47,10 @@ export const adminApi = {
   },
 
   getAllProjects: async (page = 1, pageSize = 20): Promise<PagedResponse<Project>> => {
-    const { data } = await axiosClient.get<ApiResponse<PagedResponse<Project>>>('/admin/projects', {
+    const { data } = await axiosClient.get<ApiResponse<any>>('/admin/projects', {
       params: { page, pageSize },
     });
-    return data.data;
+    return normalizePagedResponse<Project>(data.data ?? data);
   },
 
   deleteProject: async (projectId: string): Promise<void> => {
@@ -57,9 +58,9 @@ export const adminApi = {
   },
 
   getActivityLogs: async (projectId?: string, page = 1, pageSize = 50): Promise<PagedResponse<ActivityLog>> => {
-    const { data } = await axiosClient.get<ApiResponse<PagedResponse<ActivityLog>>>('/admin/activity-logs', {
+    const { data } = await axiosClient.get<ApiResponse<any>>('/admin/activity-logs', {
       params: { projectId, page, pageSize },
     });
-    return data.data;
+    return normalizePagedResponse<ActivityLog>(data.data ?? data);
   },
 };

@@ -3,8 +3,9 @@ import { ApiResponse, Sprint, SprintDetail, SprintStatus } from '../types';
 
 export const sprintsApi = {
   getProjectSprints: async (projectId: string): Promise<Sprint[]> => {
-    const { data } = await axiosClient.get<ApiResponse<Sprint[]>>(`/projects/${projectId}/sprints`);
-    return data.data;
+    const { data } = await axiosClient.get<ApiResponse<any>>(`/sprints/project/${projectId}`);
+    const raw = data.data ?? data;
+    return Array.isArray(raw) ? raw : (raw.items ?? []);
   },
 
   getSprintById: async (sprintId: string): Promise<SprintDetail> => {
@@ -21,7 +22,7 @@ export const sprintsApi = {
       endDate?: string;
     }
   ): Promise<Sprint> => {
-    const { data } = await axiosClient.post<ApiResponse<Sprint>>(`/projects/${projectId}/sprints`, sprintData);
+    const { data } = await axiosClient.post<ApiResponse<Sprint>>(`/sprints/project/${projectId}`, sprintData);
     return data.data;
   },
 
@@ -40,12 +41,12 @@ export const sprintsApi = {
   },
 
   startSprint: async (sprintId: string): Promise<Sprint> => {
-    const { data } = await axiosClient.post<ApiResponse<Sprint>>(`/sprints/${sprintId}/start`);
+    const { data } = await axiosClient.patch<ApiResponse<Sprint>>(`/sprints/${sprintId}/start`);
     return data.data;
   },
 
   completeSprint: async (sprintId: string): Promise<Sprint> => {
-    const { data } = await axiosClient.post<ApiResponse<Sprint>>(`/sprints/${sprintId}/complete`);
+    const { data } = await axiosClient.patch<ApiResponse<Sprint>>(`/sprints/${sprintId}/complete`);
     return data.data;
   },
 

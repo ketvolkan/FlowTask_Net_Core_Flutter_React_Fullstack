@@ -26,7 +26,7 @@ export const ProjectsPage: React.FC = () => {
     try {
       setIsLoading(true);
       const data = await projectsApi.getProjects(1, 100);
-      setProjects(data.items);
+      setProjects(data?.items || []);
     } catch (e) {
       console.error('Failed to load projects', e);
     } finally {
@@ -38,7 +38,7 @@ export const ProjectsPage: React.FC = () => {
     fetchProjects();
   }, []);
 
-  const filteredProjects = projects.filter(
+  const filteredProjects = (projects || []).filter(
     (p) =>
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.key.toLowerCase().includes(search.toLowerCase())

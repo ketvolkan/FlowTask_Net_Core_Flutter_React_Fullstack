@@ -34,12 +34,12 @@ export const DashboardPage: React.FC = () => {
         issuesApi.getIssues({ assigneeId: user?.id, pageSize: 8 }),
       ]);
 
-      setProjects(projData.items);
-      setMyIssues(issuesData.items);
+      setProjects(projData?.items || []);
+      setMyIssues(issuesData?.items || []);
 
       if (user?.isSystemAdmin) {
         const logsData = await adminApi.getActivityLogs(undefined, 1, 8);
-        setRecentLogs(logsData.items);
+        setRecentLogs(logsData?.items || []);
       }
     } catch (e) {
       console.error('Failed to load dashboard data', e);
@@ -52,9 +52,10 @@ export const DashboardPage: React.FC = () => {
     fetchDashboardData();
   }, [user]);
 
-  const completedCount = myIssues.filter((i) => i.status === 'Done').length;
-  const inProgressCount = myIssues.filter((i) => i.status === 'InProgress').length;
-  const todoCount = myIssues.filter((i) => i.status === 'Todo').length;
+  const issuesList = myIssues || [];
+  const completedCount = issuesList.filter((i) => i.status === 'Done').length;
+  const inProgressCount = issuesList.filter((i) => i.status === 'InProgress').length;
+  const todoCount = issuesList.filter((i) => i.status === 'Todo').length;
 
   return (
     <div className="space-y-6">
