@@ -216,18 +216,17 @@ export const BoardPage: React.FC = () => {
       )}
 
       {/* Create Issue Modal */}
-      {selectedProjectId && (
-        <CreateIssueModal
-          isOpen={isCreateModalOpen}
-          onClose={() => setIsCreateModalOpen(false)}
-          projectId={selectedProjectId}
-          sprints={sprints}
-          members={members}
-          defaultSprintId={selectedSprintId}
-          defaultStatus={createDefaultStatus}
-          onIssueCreated={fetchBoardData}
-        />
-      )}
+      <CreateIssueModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        projectId={selectedProjectId || projects[0]?.id}
+        projects={projects}
+        sprints={sprints}
+        members={members}
+        defaultSprintId={selectedSprintId}
+        defaultStatus={createDefaultStatus}
+        onIssueCreated={fetchBoardData}
+      />
 
       {/* Issue Detail Modal */}
       {selectedIssueId && (

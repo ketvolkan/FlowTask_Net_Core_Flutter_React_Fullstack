@@ -112,6 +112,118 @@ public static class DatabaseSeeder
             });
             await context.SaveChangesAsync();
         }
+
+        // 5. Seed Starter Project
+        var starterProject = await context.Projects.FirstOrDefaultAsync(p => p.Key == "FLOW");
+        if (starterProject == null)
+        {
+            var adminUser = await context.Users.FirstAsync(u => u.Email == adminEmail);
+            var demoUser = await context.Users.FirstAsync(u => u.Email == demoEmail);
+
+            starterProject = new Project
+            {
+                Name = "Flowtask Core Platform",
+                Key = "FLOW",
+                Description = "Primary workspace for Flowtask issue tracking and sprint management.",
+                OwnerId = adminUser.Id,
+                IsArchived = false
+            };
+            await context.Projects.AddAsync(starterProject);
+            await context.SaveChangesAsync();
+
+            // Add members
+            await context.ProjectMembers.AddAsync(new ProjectMember
+            {
+                ProjectId = starterProject.Id,
+                UserId = adminUser.Id,
+                Role = ProjectMemberRole.Owner
+            });
+            await context.ProjectMembers.AddAsync(new ProjectMember
+            {
+                ProjectId = starterProject.Id,
+                UserId = demoUser.Id,
+                Role = ProjectMemberRole.Admin
+            });
+            await context.SaveChangesAsync();
+
+            // 6. Seed Sprint
+            var sprint1 = new Sprint
+            {
+                ProjectId = starterProject.Id,
+                Name = "Sprint 1 — Core MVP",
+                Goal = "Deliver Authentication, Kanban Board, and Backlog modules.",
+                Status = SprintStatus.Active,
+                StartDate = DateTime.UtcNow.AddDays(-3),
+                EndDate = DateTime.UtcNow.AddDays(11)
+            };
+            await context.Sprints.AddAsync(sprint1);
+            await context.SaveChangesAsync();
+
+            // 7. Seed Issues
+            var issues = new List<Issue>
+            {
+                new()
+                {
+                    ProjectId = starterProject.Id,
+                    SprintId = sprint1.Id,
+                    ReporterId = adminUser.Id,
+                    AssigneeId = adminUser.Id,
+                    IssueKey = "FLOW-1",
+                    Title = "Implement JWT authentication & refresh token flow",
+                    Description = "Secure API endpoints with JWT tokens and automatic silent refresh.",
+                    Type = IssueType.Story,
+                    Priority = IssuePriority.High,
+                    Status = IssueStatus.Done,
+                    StoryPoints = 5,
+                    OrderIndex = 1
+                },
+                new()
+                {
+                    ProjectId = starterProject.Id,
+                    SprintId = sprint1.Id,
+                    ReporterId = adminUser.Id,
+                    AssigneeId = demoUser.Id,
+                    IssueKey = "FLOW-2",
+                    Title = "Design and build interactive Kanban Board",
+                    Description = "Support drag-and-drop between Todo, InProgress, InReview, and Done columns.",
+                    Type = IssueType.Task,
+                    Priority = IssuePriority.High,
+                    Status = IssueStatus.InProgress,
+                    StoryPoints = 8,
+                    OrderIndex = 2
+                },
+                new()
+                {
+                    ProjectId = starterProject.Id,
+                    SprintId = sprint1.Id,
+                    ReporterId = demoUser.Id,
+                    AssigneeId = adminUser.Id,
+                    IssueKey = "FLOW-3",
+                    Title = "Create Sprint & Backlog planning view",
+                    Description = "Enable creation, starting, and completing sprints with real-time progress.",
+                    Type = IssueType.Story,
+                    Priority = IssuePriority.Medium,
+                    Status = IssueStatus.Todo,
+                    StoryPoints = 5,
+                    OrderIndex = 3
+                },
+                new()
+                {
+                    ProjectId = starterProject.Id,
+                    ReporterId = adminUser.Id,
+                    IssueKey = "FLOW-4",
+                    Title = "Add Flutter Mobile integration with BLoC",
+                    Description = "Connect Flutter Clean Architecture clients to ASP.NET Core API.",
+                    Type = IssueType.Epic,
+                    Priority = IssuePriority.Medium,
+                    Status = IssueStatus.Todo,
+                    StoryPoints = 13,
+                    OrderIndex = 4
+                }
+            };
+            await context.Issues.AddRangeAsync(issues);
+            await context.SaveChangesAsync();
+        }
     }
 
     private static List<Permission> GetPermissions()

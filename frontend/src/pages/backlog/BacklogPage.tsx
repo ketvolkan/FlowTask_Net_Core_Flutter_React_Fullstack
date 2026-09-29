@@ -188,17 +188,16 @@ export const BacklogPage: React.FC = () => {
       )}
 
       {/* Create Issue Modal */}
-      {selectedProjectId && (
-        <CreateIssueModal
-          isOpen={isCreateIssueOpen}
-          onClose={() => setIsCreateIssueOpen(false)}
-          projectId={selectedProjectId}
-          sprints={sprints}
-          members={members}
-          defaultSprintId={createIssueSprintId}
-          onIssueCreated={fetchBacklogData}
-        />
-      )}
+      <CreateIssueModal
+        isOpen={isCreateIssueOpen}
+        onClose={() => setIsCreateIssueOpen(false)}
+        projectId={selectedProjectId || projects[0]?.id}
+        projects={projects}
+        sprints={sprints}
+        members={members}
+        defaultSprintId={createIssueSprintId}
+        onIssueCreated={fetchBacklogData}
+      />
 
       {/* Issue Detail Modal */}
       {selectedIssueId && (
