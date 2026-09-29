@@ -3,7 +3,7 @@ import { ApiResponse, Attachment } from '../types';
 
 export const attachmentsApi = {
   getIssueAttachments: async (issueId: string): Promise<Attachment[]> => {
-    const { data } = await axiosClient.get<ApiResponse<Attachment[]>>(`/issues/${issueId}/attachments`);
+    const { data } = await axiosClient.get<ApiResponse<Attachment[]>>(`/attachments/issue/${issueId}`);
     return data.data;
   },
 
@@ -12,7 +12,7 @@ export const attachmentsApi = {
     formData.append('file', file);
 
     const { data } = await axiosClient.post<ApiResponse<Attachment>>(
-      `/issues/${issueId}/attachments`,
+      `/attachments/issue/${issueId}`,
       formData,
       {
         headers: {

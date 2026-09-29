@@ -3,12 +3,12 @@ import { ApiResponse, Comment } from '../types';
 
 export const commentsApi = {
   getIssueComments: async (issueId: string): Promise<Comment[]> => {
-    const { data } = await axiosClient.get<ApiResponse<Comment[]>>(`/issues/${issueId}/comments`);
+    const { data } = await axiosClient.get<ApiResponse<Comment[]>>(`/comments/issue/${issueId}`);
     return data.data;
   },
 
   addComment: async (issueId: string, content: string): Promise<Comment> => {
-    const { data } = await axiosClient.post<ApiResponse<Comment>>(`/issues/${issueId}/comments`, { content });
+    const { data } = await axiosClient.post<ApiResponse<Comment>>(`/comments/issue/${issueId}`, { content });
     return data.data;
   },
 

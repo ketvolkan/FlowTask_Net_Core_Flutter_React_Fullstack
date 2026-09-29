@@ -27,7 +27,7 @@ public class AttachmentManager : IAttachmentService
     public async Task<IDataResult<List<AttachmentDto>>> GetIssueAttachmentsAsync(Guid issueId, Guid userId)
     {
         var issue = await _issueDal.GetAsync(
-            i => i.Id == issueId && i.Project.Members.Any(m => m.UserId == userId));
+            i => i.Id == issueId && (i.Project.Members.Any(m => m.UserId == userId) || i.Project.OwnerId == userId));
 
         if (issue == null)
         {
@@ -46,7 +46,7 @@ public class AttachmentManager : IAttachmentService
     public async Task<IDataResult<AttachmentDto>> AddAttachmentAsync(Guid issueId, Guid userId, string fileName, string filePath, string contentType, long fileSizeBytes)
     {
         var issue = await _issueDal.GetAsync(
-            i => i.Id == issueId && i.Project.Members.Any(m => m.UserId == userId));
+            i => i.Id == issueId && (i.Project.Members.Any(m => m.UserId == userId) || i.Project.OwnerId == userId));
 
         if (issue == null)
         {
