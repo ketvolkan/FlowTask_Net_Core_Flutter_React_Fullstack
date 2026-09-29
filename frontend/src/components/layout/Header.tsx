@@ -53,13 +53,20 @@ export const Header: React.FC<HeaderProps> = ({
   const { t } = useLanguage();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
+  const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
 
   const menuRef = useRef<HTMLDivElement>(null);
   const quickActionsRef = useRef<HTMLDivElement>(null);
+  const companyDropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   const isSysAdmin = !!user?.isSystemAdmin;
   const isAuthorized = isAuthorizedUser(user);
+
+  // Maximum 3 direct choices, remaining in overflow dropdown
+  const primaryCompanies = availableCompanies.slice(0, 3);
+  const overflowCompanies = availableCompanies.slice(3);
+  const selectedOverflowCompany = overflowCompanies.find((c) => c.id === selectedCompanyId);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -68,6 +75,9 @@ export const Header: React.FC<HeaderProps> = ({
       }
       if (quickActionsRef.current && !quickActionsRef.current.contains(e.target as Node)) {
         setIsQuickActionsOpen(false);
+      }
+      if (companyDropdownRef.current && !companyDropdownRef.current.contains(e.target as Node)) {
+        setIsCompanyDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -93,7 +103,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200/80 bg-white/95 px-3 sm:px-6 backdrop-blur-sm gap-3">
-      {/* Left: Hamburger Toggle & Company Card Selector / Badge */}
+      {/* Left: Hamburger Toggle & Company Selector (Max 3 + Dropdown) */}
       <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
         <button
           onClick={onToggleSidebar}
@@ -103,10 +113,10 @@ export const Header: React.FC<HeaderProps> = ({
           <Menu className="h-5 w-5" />
         </button>
 
-        {/* 3 Interactive Cards for Multi-Company Users (No Dropdown, No Scroll) */}
+        {/* Multi-Company Selector: Max 3 Direct Buttons + Overflow Dropdown */}
         {hasMultipleCompanies ? (
           <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-100/90 border border-slate-200/80 shrink-0">
-            {availableCompanies.map((comp) => {
+            {primaryCompanies.map((comp) => {
               const isSelected = comp.id === selectedCompanyId;
               return (
                 <button
@@ -127,11 +137,91 @@ export const Header: React.FC<HeaderProps> = ({
                   >
                     {comp.id === 'all' ? <Globe className="h-2.5 w-2.5" /> : comp.code.slice(0, 2)}
                   </div>
-                  <span className="truncate max-w-[90px] sm:max-w-[120px]">{comp.shortName}</span>
+                  <span className="truncate max-w-[85px] sm:max-w-[110px]">{comp.shortName}</span>
                   {isSelected && <Check className="h-3 w-3 text-white shrink-0 ml-0.5" />}
                 </button>
               );
             })}
+
+            {/* Overflow Dropdown for remaining companies */}
+            {overflowCompanies.length > 0 && (
+              <div className="relative" ref={companyDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsCompanyDropdownOpen(!isCompanyDropdownOpen)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer select-none ${
+                    selectedOverflowCompany
+                      ? 'bg-indigo-600 text-white shadow-sm ring-1 ring-indigo-600'
+                      : 'text-slate-600 hover:bg-white/80 hover:text-slate-900'
+                  }`}
+                  title={selectedOverflowCompany ? selectedOverflowCompany.description : 'Diğer şirketleri görüntüle'}
+                >
+                  {selectedOverflowCompany ? (
+                    <>
+                      <div className="flex h-4 w-4 items-center justify-center rounded text-[9px] font-bold shrink-0 bg-indigo-700 text-white">
+                        {selectedOverflowCompany.code.slice(0, 2)}
+                      </div>
+                      <span className="truncate max-w-[85px] sm:max-w-[110px]">
+                        {selectedOverflowCompany.shortName}
+                      </span>
+                      <Check className="h-3 w-3 text-white shrink-0 ml-0.5" />
+                    </>
+                  ) : (
+                    <>
+                      <Building2 className="h-3.5 w-3.5 text-slate-500" />
+                      <span>+{overflowCompanies.length} Şirket</span>
+                      <ChevronDown className={`h-3 w-3 transition-transform ${isCompanyDropdownOpen ? 'rotate-180' : ''}`} />
+                    </>
+                  )}
+                </button>
+
+                {/* Dropdown Menu */}
+                {isCompanyDropdownOpen && (
+                  <div className="absolute left-0 mt-2 w-64 rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 z-50 border border-slate-200/80 p-1.5 animate-scale-in">
+                    <div className="px-3 py-2 border-b border-slate-100">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        Diğer Şirketler & Çalışma Alanları
+                      </p>
+                    </div>
+                    <div className="py-1 space-y-0.5">
+                      {overflowCompanies.map((comp) => {
+                        const isSelected = comp.id === selectedCompanyId;
+                        return (
+                          <button
+                            key={comp.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedCompanyId(comp.id);
+                              setIsCompanyDropdownOpen(false);
+                            }}
+                            className={`w-full flex items-center justify-between p-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${
+                              isSelected
+                                ? 'bg-indigo-50 text-indigo-900 font-bold'
+                                : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div
+                                className={`flex h-6 w-6 items-center justify-center rounded-lg text-[10px] font-bold shrink-0 ${
+                                  isSelected ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'
+                                }`}
+                              >
+                                {comp.code.slice(0, 2)}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="truncate font-semibold">{comp.name}</p>
+                                <p className="text-[10px] text-slate-400 truncate">{comp.description}</p>
+                              </div>
+                            </div>
+                            {isSelected && <Check className="h-4 w-4 text-indigo-600 shrink-0 ml-2" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           /* Single Company Users: Simple clean company identity badge */
