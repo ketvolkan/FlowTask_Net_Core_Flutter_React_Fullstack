@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useCompany } from '../../context/CompanyContext';
@@ -62,7 +62,14 @@ export const TeamPage: React.FC = () => {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const displayedProjects = filterProjectsByCompany(projects);
+  const displayedProjects = useMemo(() => {
+    return filterProjectsByCompany(projects);
+  }, [filterProjectsByCompany, projects]);
+
+  const displayedProjectsRef = useRef<Project[]>(displayedProjects);
+  useEffect(() => {
+    displayedProjectsRef.current = displayedProjects;
+  }, [displayedProjects]);
 
   const { user } = useAuth();
   const canManageDept = isAuthorizedUser(user);
@@ -72,6 +79,8 @@ export const TeamPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [selectedMemberForDetail, setSelectedMemberForDetail] = useState<MemberWorkload | null>(null);
   const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
+
+  const activeDetailUserId = selectedMemberForDetail?.member.userId;
 
   // Member department state inside detail modal
   const [memberDept, setMemberDept] = useState('');
@@ -88,12 +97,17 @@ export const TeamPage: React.FC = () => {
   const [projectActionSuccess, setProjectActionSuccess] = useState<string | null>(null);
   const [projectActionError, setProjectActionError] = useState<string | null>(null);
 
-  const fetchUserProjects = useCallback(async (userId: string) => {
-    if (!userId) return;
+  const fetchUserProjects = useCallback(async (userId: string, targetProjects?: Project[]) => {
+    const list = targetProjects || displayedProjectsRef.current;
+    if (!userId || list.length === 0) {
+      setUserAssignedProjects([]);
+      setIsLoadingUserProjects(false);
+      return;
+    }
     setIsLoadingUserProjects(true);
     try {
       const results = await Promise.all(
-        displayedProjects.map(async (p) => {
+        list.map(async (p) => {
           try {
             const pMembers = await projectsApi.getMembers(p.id);
             const m = pMembers.find((x) => x.userId === userId);
@@ -112,29 +126,33 @@ export const TeamPage: React.FC = () => {
     } finally {
       setIsLoadingUserProjects(false);
     }
-  }, [displayedProjects]);
+  }, []);
 
   useEffect(() => {
-    if (selectedMemberForDetail?.member.userId) {
-      setDeptSaveSuccess(null);
-      setDeptSaveError(null);
-      setProjectActionSuccess(null);
-      setProjectActionError(null);
-      setSelectedProjectToAdd('');
-      setSelectedRoleToAdd('Member');
-
-      usersApi
-        .getUserById(selectedMemberForDetail.member.userId)
-        .then((u) => {
-          setMemberDept(u?.department || '');
-        })
-        .catch(() => {
-          setMemberDept('');
-        });
-
-      fetchUserProjects(selectedMemberForDetail.member.userId);
+    if (!activeDetailUserId) {
+      setUserAssignedProjects([]);
+      setIsLoadingUserProjects(false);
+      return;
     }
-  }, [selectedMemberForDetail, fetchUserProjects]);
+
+    setDeptSaveSuccess(null);
+    setDeptSaveError(null);
+    setProjectActionSuccess(null);
+    setProjectActionError(null);
+    setSelectedProjectToAdd('');
+    setSelectedRoleToAdd('Member');
+
+    usersApi
+      .getUserById(activeDetailUserId)
+      .then((u) => {
+        setMemberDept(u?.department || '');
+      })
+      .catch(() => {
+        setMemberDept('');
+      });
+
+    fetchUserProjects(activeDetailUserId, displayedProjectsRef.current);
+  }, [activeDetailUserId, fetchUserProjects]);
 
   const handleSaveMemberDepartment = async () => {
     if (!canManageDept) {

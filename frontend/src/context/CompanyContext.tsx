@@ -317,7 +317,7 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return ALL_COMPANIES.find((c) => c.id === selectedCompanyId) || ALL_COMPANIES[0];
   }, [selectedCompanyId]);
 
-  const filterProjectsByCompany = (projects: Project[]): Project[] => {
+  const filterProjectsByCompany = React.useCallback((projects: Project[]): Project[] => {
     if (!projects || projects.length === 0) return [];
     if (selectedCompanyId === 'all') return projects;
 
@@ -369,20 +369,23 @@ export const CompanyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     return projects;
-  };
+  }, [selectedCompanyId]);
+
+  const contextValue = useMemo(
+    () => ({
+      selectedCompanyId,
+      selectedCompany,
+      availableCompanies: ALL_COMPANIES,
+      hasMultipleCompanies: userEvaluation.hasMultiple,
+      userCompanyName: userEvaluation.companyName,
+      setSelectedCompanyId,
+      filterProjectsByCompany,
+    }),
+    [selectedCompanyId, selectedCompany, userEvaluation, filterProjectsByCompany]
+  );
 
   return (
-    <CompanyContext.Provider
-      value={{
-        selectedCompanyId,
-        selectedCompany,
-        availableCompanies: ALL_COMPANIES,
-        hasMultipleCompanies: userEvaluation.hasMultiple,
-        userCompanyName: userEvaluation.companyName,
-        setSelectedCompanyId,
-        filterProjectsByCompany,
-      }}
-    >
+    <CompanyContext.Provider value={contextValue}>
       {children}
     </CompanyContext.Provider>
   );
