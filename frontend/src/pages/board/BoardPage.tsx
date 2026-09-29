@@ -143,11 +143,14 @@ export const BoardPage: React.FC = () => {
             className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           >
             <option value="">{t('board.allAssignees', 'Tüm Sorumlular')}</option>
-            {members.map((m) => (
-              <option key={m.userId} value={m.userId}>
-                {m.userFullName}
-              </option>
-            ))}
+            {members.map((m) => {
+              const name = m.userFullName || m.fullName || m.userEmail || m.email || 'İsimsiz Üye';
+              return (
+                <option key={m.userId} value={m.userId}>
+                  {name}
+                </option>
+              );
+            })}
           </select>
 
           {/* Priority Filter */}

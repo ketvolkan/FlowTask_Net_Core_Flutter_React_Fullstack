@@ -13,22 +13,34 @@ namespace Flowtask.Business.Concrete;
 public class ProjectMemberManager : IProjectMemberService
 {
     private readonly IProjectMemberDal _projectMemberDal;
+    private readonly IProjectDal _projectDal;
     private readonly IUserDal _userDal;
     private readonly IMapper _mapper;
 
-    public ProjectMemberManager(IProjectMemberDal projectMemberDal, IUserDal userDal, IMapper mapper)
+    public ProjectMemberManager(IProjectMemberDal projectMemberDal, IProjectDal projectDal, IUserDal userDal, IMapper mapper)
     {
         _projectMemberDal = projectMemberDal;
+        _projectDal = projectDal;
         _userDal = userDal;
         _mapper = mapper;
     }
 
     public async Task<IDataResult<List<ProjectMemberDto>>> GetProjectMembersAsync(Guid projectId, Guid userId)
     {
-        var isMember = await _projectMemberDal.ExistsAsync(pm => pm.ProjectId == projectId && pm.UserId == userId);
-        if (!isMember)
+        var project = await _projectDal.GetByIdAsync(projectId);
+        if (project == null)
         {
-            throw new ForbiddenException(Messages.AuthorizationDenied);
+            throw new NotFoundException(Messages.ProjectNotFound);
+        }
+
+        var isMember = await _projectMemberDal.ExistsAsync(pm => pm.ProjectId == projectId && pm.UserId == userId);
+        if (!isMember && project.OwnerId != userId)
+        {
+            var user = await _userDal.GetByIdAsync(userId);
+            if (user == null || !user.IsSystemAdmin)
+            {
+                throw new ForbiddenException(Messages.AuthorizationDenied);
+            }
         }
 
         var members = await _projectMemberDal.GetListAsync(

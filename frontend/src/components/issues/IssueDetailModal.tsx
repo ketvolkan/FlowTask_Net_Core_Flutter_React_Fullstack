@@ -5,6 +5,8 @@ import { Button } from '../common/Button';
 import { UserAvatar } from '../common/UserAvatar';
 import { StatusBadge, PriorityBadge, TypeBadge } from '../common/Badge';
 import { issuesApi } from '../../api/issuesApi';
+import { projectsApi } from '../../api/projectsApi';
+import { sprintsApi } from '../../api/sprintsApi';
 import { Issue, IssuePriority, IssueStatus, IssueType, ProjectMember, Sprint } from '../../types';
 import { CommentList } from './CommentList';
 import { AttachmentList } from './AttachmentList';
@@ -48,6 +50,21 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
   const [storyPoints, setStoryPoints] = useState<number | undefined>(undefined);
   const [dueDate, setDueDate] = useState<string>('');
 
+  const [localMembers, setLocalMembers] = useState<ProjectMember[]>(members);
+  const [localSprints, setLocalSprints] = useState<Sprint[]>(sprints);
+
+  useEffect(() => {
+    if (members && members.length > 0) {
+      setLocalMembers(members);
+    }
+  }, [members]);
+
+  useEffect(() => {
+    if (sprints && sprints.length > 0) {
+      setLocalSprints(sprints);
+    }
+  }, [sprints]);
+
   const fetchIssueDetails = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -62,13 +79,26 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
       setSprintId(data.sprintId || '');
       setStoryPoints(data.storyPoints);
       setDueDate(data.dueDate ? data.dueDate.split('T')[0] : '');
+
+      if (data.projectId) {
+        if (!members || members.length === 0) {
+          projectsApi.getMembers(data.projectId).then((m) => {
+            if (Array.isArray(m)) setLocalMembers(m);
+          }).catch(console.error);
+        }
+        if (!sprints || sprints.length === 0) {
+          sprintsApi.getProjectSprints(data.projectId).then((s) => {
+            if (Array.isArray(s)) setLocalSprints(s);
+          }).catch(console.error);
+        }
+      }
     } catch (err) {
       console.error(err);
       setError(t('issueDetail.notFound', 'Görev bulunamadı.'));
     } finally {
       setIsLoading(false);
     }
-  }, [issueId, t]);
+  }, [issueId, members, sprints, t]);
 
   useEffect(() => {
     if (isOpen && issueId) {
@@ -304,11 +334,14 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                   className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 font-medium focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 >
                   <option value="">{t('common.unassigned', 'Atanmamış')}</option>
-                  {members.map((m) => (
-                    <option key={m.userId} value={m.userId}>
-                      {m.userFullName}
-                    </option>
-                  ))}
+                  {localMembers.map((m) => {
+                    const name = m.userFullName || m.fullName || m.userEmail || m.email || 'İsimsiz Üye';
+                    return (
+                      <option key={m.userId} value={m.userId}>
+                        {name}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
 
@@ -321,7 +354,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
                   className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 font-medium focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 >
                   <option value="">{t('createIssue.noSprintBacklog', 'Backlog (Sprint Yok)')}</option>
-                  {sprints.map((s) => (
+                  {localSprints.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name} ({s.status})
                     </option>

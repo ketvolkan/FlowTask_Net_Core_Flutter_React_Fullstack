@@ -81,7 +81,7 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
   useEffect(() => {
     if (!isOpen || !selectedProjectId) return;
 
-    if (selectedProjectId === initialProjectId && initialSprints.length > 0) {
+    if (selectedProjectId === initialProjectId && initialSprints.length > 0 && initialMembers.length > 0) {
       setLocalSprints(initialSprints);
       setLocalMembers(initialMembers);
       return;
@@ -269,11 +269,14 @@ export const CreateIssueModal: React.FC<CreateIssueModalProps> = ({
               onChange={(e) => setAssigneeId(e.target.value)}
             >
               <option value="">{t('common.unassigned', 'Atanmamış')}</option>
-              {localMembers.map((m) => (
-                <option key={m.userId} value={m.userId}>
-                  {m.userFullName}
-                </option>
-              ))}
+              {localMembers.map((m) => {
+                const name = m.userFullName || m.fullName || m.userEmail || m.email || 'İsimsiz Üye';
+                return (
+                  <option key={m.userId} value={m.userId}>
+                    {name}
+                  </option>
+                );
+              })}
             </Select>
 
             <Select
