@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useCompany, getUserCompany } from '../../context/CompanyContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
@@ -34,6 +35,7 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
   onSent,
 }) => {
   const { user } = useAuth();
+  const { selectedCompanyId, selectedCompany } = useCompany();
   const { t } = useLanguage();
 
   const [title, setTitle] = useState('');
@@ -52,6 +54,7 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const canSend = isAuthorizedUser(user);
+  const isCompanyScoped = selectedCompanyId !== 'all';
 
   useEffect(() => {
     if (isOpen && canSend) {
@@ -76,6 +79,30 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
     }
   }, [isOpen, canSend]);
 
+  // Filter users by company scope
+  const scopedUsers = useMemo(() => {
+    if (!isCompanyScoped) {
+      return allUsers;
+    }
+    return allUsers.filter((u) => {
+      const comp = getUserCompany(u);
+      return (
+        comp.code.toLowerCase() === selectedCompany.code.toLowerCase() ||
+        comp.name.toLowerCase().includes(selectedCompany.shortName.toLowerCase()) ||
+        (u.department && selectedCompany.name.toLowerCase().includes(u.department.toLowerCase()))
+      );
+    });
+  }, [allUsers, isCompanyScoped, selectedCompany]);
+
+  const filteredUsers = useMemo(() => {
+    return scopedUsers.filter(
+      (u) =>
+        u.fullName.toLowerCase().includes(userSearch.toLowerCase()) ||
+        u.email.toLowerCase().includes(userSearch.toLowerCase()) ||
+        (u.department && u.department.toLowerCase().includes(userSearch.toLowerCase()))
+    );
+  }, [scopedUsers, userSearch]);
+
   const toggleUserSelection = (userId: string) => {
     setSelectedUserIds((prev) =>
       prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
@@ -83,19 +110,12 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
   };
 
   const handleSelectAllUsers = () => {
-    setSelectedUserIds(allUsers.map((u) => u.id));
+    setSelectedUserIds(scopedUsers.map((u) => u.id));
   };
 
   const handleClearSelectedUsers = () => {
     setSelectedUserIds([]);
   };
-
-  const filteredUsers = allUsers.filter(
-    (u) =>
-      u.fullName.toLowerCase().includes(userSearch.toLowerCase()) ||
-      u.email.toLowerCase().includes(userSearch.toLowerCase()) ||
-      (u.department && u.department.toLowerCase().includes(userSearch.toLowerCase()))
-  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,13 +143,28 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
     setError(null);
 
     try {
+      let finalTargetUserIds: string[] | undefined = undefined;
+
+      if (targetType === 'SpecificUsers') {
+        finalTargetUserIds = selectedUserIds;
+      } else if (targetType === 'Department') {
+        const deptUsers = scopedUsers.filter(
+          (u) => u.department && u.department.toLowerCase() === selectedDepartment.toLowerCase()
+        );
+        if (deptUsers.length > 0) {
+          finalTargetUserIds = deptUsers.map((u) => u.id);
+        }
+      } else if (targetType === 'All' && isCompanyScoped) {
+        finalTargetUserIds = scopedUsers.map((u) => u.id);
+      }
+
       const res = await notificationsApi.sendNotification({
         title: title.trim(),
         message: message.trim(),
         type: notificationType,
         linkUrl: linkUrl.trim() || undefined,
-        targetType,
-        targetUserIds: targetType === 'SpecificUsers' ? selectedUserIds : undefined,
+        targetType: finalTargetUserIds ? 'SpecificUsers' : targetType,
+        targetUserIds: finalTargetUserIds,
         department: targetType === 'Department' ? selectedDepartment.trim() : undefined,
       });
 
@@ -152,7 +187,11 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={t('notifications.sendTitle', 'Kullanıcılara Bildirim / Duyuru Gönder')}
-      description={t('notifications.sendSubtitle', 'Tüm şirket üyelerine veya belirli kullanıcılara anlık duyuru iletin.')}
+      description={
+        isCompanyScoped
+          ? `${selectedCompany.name} bünyesindeki ekip üyelerine duyuru yayınlayın.`
+          : t('notifications.sendSubtitle', 'Tüm şirket üyelerine veya belirli kullanıcılara anlık duyuru iletin.')
+      }
       size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -191,15 +230,17 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
               >
                 <Globe2 className="h-4 w-4" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p
-                  className={`text-xs font-bold ${
+                  className={`text-xs font-bold truncate ${
                     targetType === 'All' ? 'text-indigo-900' : 'text-slate-800'
                   }`}
                 >
-                  {t('notifications.allUsers', 'Tüm Kullanıcılar')}
+                  {isCompanyScoped ? `${selectedCompany.shortName} Tüm Üyeler` : t('notifications.allUsers', 'Tüm Kullanıcılar')}
                 </p>
-                <p className="text-[10px] text-slate-500">{t('notifications.allDesc', 'Genel şirket duyurusu')}</p>
+                <p className="text-[10px] text-slate-500 truncate">
+                  {isCompanyScoped ? `${scopedUsers.length} şirket üyesi` : t('notifications.allDesc', 'Genel şirket duyurusu')}
+                </p>
               </div>
             </button>
 
@@ -221,18 +262,18 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
               >
                 <Users className="h-4 w-4" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p
-                  className={`text-xs font-bold ${
+                  className={`text-xs font-bold truncate ${
                     targetType === 'SpecificUsers' ? 'text-indigo-900' : 'text-slate-800'
                   }`}
                 >
                   {t('notifications.specificUsers', 'Seçili Kişiler')}
                 </p>
-                <p className="text-[10px] text-slate-500">
+                <p className="text-[10px] text-slate-500 truncate">
                   {selectedUserIds.length > 0
                     ? `${selectedUserIds.length} kişi seçildi`
-                    : 'Listeden kullanıcı seç'}
+                    : `${scopedUsers.length} aday arasından seç`}
                 </p>
               </div>
             </button>
@@ -255,16 +296,16 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
               >
                 <Building2 className="h-4 w-4" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p
-                  className={`text-xs font-bold ${
+                  className={`text-xs font-bold truncate ${
                     targetType === 'Department' ? 'text-indigo-900' : 'text-slate-800'
                   }`}
                 >
                   {t('notifications.byDepartment', 'Departmana Özel')}
                 </p>
-                <p className="text-[10px] text-slate-500">
-                  {selectedDepartment || 'Departman seç'}
+                <p className="text-[10px] text-slate-500 truncate">
+                  {selectedDepartment || (isCompanyScoped ? `${selectedCompany.shortName} departmanı` : 'Departman seç')}
                 </p>
               </div>
             </button>
@@ -275,9 +316,14 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
         {targetType === 'Department' && (
           <div className="rounded-2xl bg-slate-50 p-3.5 border border-slate-200">
             <DepartmentSelect
-              label={t('notifications.selectTargetDept', 'Hedef Departmanı Seçin')}
+              label={
+                isCompanyScoped
+                  ? `${selectedCompany.shortName} - ${t('notifications.selectTargetDept', 'Hedef Departmanı Seçin')}`
+                  : t('notifications.selectTargetDept', 'Hedef Departmanı Seçin')
+              }
               value={selectedDepartment}
               onChange={setSelectedDepartment}
+              companyId={isCompanyScoped ? selectedCompanyId : undefined}
               allowCreate={false}
               required
             />
@@ -289,7 +335,7 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
           <div className="rounded-2xl bg-slate-50 p-3.5 border border-slate-200 space-y-2.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-700">
-                {t('notifications.selectUsersList', 'Kullanıcıları Seçin')} ({selectedUserIds.length} seçili)
+                {t('notifications.selectUsersList', 'Kullanıcıları Seçin')} ({selectedUserIds.length} / {scopedUsers.length} seçili)
               </span>
               <div className="flex items-center gap-2 text-xs">
                 <button
@@ -331,6 +377,8 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
               ) : (
                 filteredUsers.map((u) => {
                   const isChecked = selectedUserIds.includes(u.id);
+                  const userComp = getUserCompany(u);
+
                   return (
                     <label
                       key={u.id}
@@ -352,7 +400,7 @@ export const SendNotificationModal: React.FC<SendNotificationModalProps> = ({
                         <div className="truncate">
                           <p className="font-semibold text-slate-900 truncate">{u.fullName}</p>
                           <p className="text-[10px] text-slate-400 truncate">
-                            {u.email} {u.department ? `• ${u.department}` : ''}
+                            {u.email} {u.department ? `• ${u.department}` : ''} {!isCompanyScoped && `• ${userComp.name}`}
                           </p>
                         </div>
                       </div>

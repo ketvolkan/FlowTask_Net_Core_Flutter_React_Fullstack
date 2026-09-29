@@ -7,6 +7,7 @@ interface DepartmentSelectProps {
   label?: string;
   value: string;
   onChange: (deptName: string) => void;
+  companyId?: string;
   allowCreate?: boolean;
   disabled?: boolean;
   disabledReason?: string;
@@ -19,6 +20,7 @@ export const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
   label = 'Departman',
   value,
   onChange,
+  companyId,
   allowCreate = true,
   disabled = false,
   disabledReason,
@@ -26,7 +28,7 @@ export const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
   className = '',
   placeholder = 'Departman seçiniz...',
 }) => {
-  const { departments, addDepartment } = useDepartments();
+  const { departments, getCompanyDepartments, addDepartment } = useDepartments();
   const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -35,6 +37,8 @@ export const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const createInputRef = useRef<HTMLInputElement>(null);
+
+  const availableDepts = companyId ? getCompanyDepartments(companyId) : departments;
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -51,14 +55,14 @@ export const DepartmentSelect: React.FC<DepartmentSelectProps> = ({
     e.preventDefault();
     if (!newDeptName.trim()) return;
 
-    const created = addDepartment(newDeptName.trim());
+    const created = addDepartment(newDeptName.trim(), companyId);
     onChange(created.name);
     setNewDeptName('');
     setIsCreating(false);
     setIsOpen(false);
   };
 
-  const filteredDepts = departments.filter((d) =>
+  const filteredDepts = availableDepts.filter((d) =>
     d.name.toLowerCase().includes(search.toLowerCase())
   );
 
