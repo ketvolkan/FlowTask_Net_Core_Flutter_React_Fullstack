@@ -75,6 +75,33 @@ public class ProjectManager : IProjectService
 
     public async Task<IDataResult<ProjectDto>> CreateProjectAsync(Guid userId, ProjectCreateDto request)
     {
+        var user = await _userDal.GetAsync(u => u.Id == userId, includeProperties: "UserRoles.Role");
+        if (user == null)
+        {
+            throw new NotFoundException(Messages.UserNotFound);
+        }
+
+        bool isAuthorized = user.IsSystemAdmin ||
+                            user.UserRoles.Any(ur => ur.Role.Name == "Admin" || ur.Role.Name == "Manager" || ur.Role.Name == "CompanyAdmin" || ur.Role.Name == "ProjectManager") ||
+                            (!string.IsNullOrEmpty(user.JobTitle) && (
+                                user.JobTitle.Contains("Manager", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("Yönetici", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("Director", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("Direktör", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("Lead", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("Lider", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("Owner", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("CTO", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("CEO", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("Kurucu", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("PM", StringComparison.OrdinalIgnoreCase)
+                            ));
+
+        if (!isAuthorized)
+        {
+            throw new ForbiddenException(Messages.AuthorizationDenied);
+        }
+
         var existingKey = await _projectDal.GetAsync(p => p.Key.ToUpper() == request.Key.Trim().ToUpper());
         if (existingKey != null)
         {
@@ -98,8 +125,7 @@ public class ProjectManager : IProjectService
 
         await _projectDal.AddAsync(project);
 
-        var user = await _userDal.GetByIdAsync(userId);
-        project.Owner = user!;
+        project.Owner = user;
 
         var dto = _mapper.Map<ProjectDto>(project);
         dto.MemberCount = 1;

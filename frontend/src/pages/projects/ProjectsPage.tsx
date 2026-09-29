@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useCompany } from '../../context/CompanyContext';
 import { projectsApi } from '../../api/projectsApi';
@@ -6,6 +7,7 @@ import { Project } from '../../types';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { CreateProjectModal } from '../../components/projects/CreateProjectModal';
+import { isAuthorizedUser } from '../../utils/permissionUtils';
 import { Link } from 'react-router-dom';
 import {
   FolderKanban,
@@ -19,12 +21,15 @@ import {
 } from 'lucide-react';
 
 export const ProjectsPage: React.FC = () => {
+  const { user } = useAuth();
   const { t } = useLanguage();
   const { selectedCompany, filterProjectsByCompany } = useCompany();
   const [projects, setProjects] = useState<Project[]>([]);
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const canCreateProject = isAuthorizedUser(user);
 
   const fetchProjects = async () => {
     try {
@@ -60,12 +65,14 @@ export const ProjectsPage: React.FC = () => {
           </p>
         </div>
 
-        <Button
-          onClick={() => setIsCreateModalOpen(true)}
-          leftIcon={<Plus className="h-4 w-4" />}
-        >
-          {t('projects.createProject', 'Proje Oluştur')}
-        </Button>
+        {canCreateProject && (
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            leftIcon={<Plus className="h-4 w-4" />}
+          >
+            {t('projects.createProject', 'Proje Oluştur')}
+          </Button>
+        )}
       </div>
 
       {/* Search Bar */}
@@ -88,13 +95,15 @@ export const ProjectsPage: React.FC = () => {
           <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
             {t('projects.noProjectsDesc', 'Görevleri, sprintleri ve ekip iş akışını organize etmek için ilk projenizi oluşturun.')}
           </p>
-          <Button
-            className="mt-4"
-            onClick={() => setIsCreateModalOpen(true)}
-            leftIcon={<Plus className="h-4 w-4" />}
-          >
-            {t('projects.createProject', 'Proje Oluştur')}
-          </Button>
+          {canCreateProject && (
+            <Button
+              className="mt-4"
+              onClick={() => setIsCreateModalOpen(true)}
+              leftIcon={<Plus className="h-4 w-4" />}
+            >
+              {t('projects.createProject', 'Proje Oluştur')}
+            </Button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

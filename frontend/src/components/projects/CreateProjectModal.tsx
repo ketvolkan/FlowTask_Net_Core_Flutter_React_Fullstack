@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { Modal } from '../common/Modal';
 import { Input } from '../common/Input';
 import { Button } from '../common/Button';
 import { projectsApi } from '../../api/projectsApi';
+import { isAuthorizedUser } from '../../utils/permissionUtils';
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -16,6 +18,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
   onClose,
   onProjectCreated,
 }) => {
+  const { user } = useAuth();
   const { t } = useLanguage();
   const [name, setName] = useState('');
   const [key, setKey] = useState('');
@@ -38,6 +41,10 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAuthorizedUser(user)) {
+      setError(t('projects.unauthorizedCreate', 'Proje oluşturma yetkiniz bulunmamaktadır.'));
+      return;
+    }
     if (!name.trim() || !key.trim()) {
       setError(t('createProject.name', 'Proje Adı') + ' & ' + t('createProject.key', 'Proje Anahtarı') + ' zorunludur');
       return;

@@ -150,6 +150,7 @@ export const tr = {
   'projects.title': 'Projeler',
   'projects.subtitle': 'Panosunu, sprintlerini ve ekibini incelemek için bir proje seçin.',
   'projects.createProject': 'Proje Oluştur',
+  'projects.unauthorizedCreate': 'Proje oluşturma yetkiniz bulunmamaktadır.',
   'projects.searchPlaceholder': 'Proje adı veya anahtarı ile arayın...',
   'projects.noProjectsFound': 'Henüz proje bulunamadı',
   'projects.noProjectsDesc': 'Görevleri, sprintleri ve ekip iş akışını organize etmek için ilk projenizi oluşturun.',

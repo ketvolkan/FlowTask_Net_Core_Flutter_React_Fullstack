@@ -150,6 +150,7 @@ export const en: Record<string, string> = {
   'projects.title': 'Projects',
   'projects.subtitle': 'Select a project to explore its workflow, sprints, backlog, and team.',
   'projects.createProject': 'Create Project',
+  'projects.unauthorizedCreate': 'You are not authorized to create new projects.',
   'projects.searchPlaceholder': 'Search by project name or key...',
   'projects.noProjectsFound': 'No projects found',
   'projects.noProjectsDesc': 'Get started by creating your first project to organize tasks, sprints, and team workflows.',
