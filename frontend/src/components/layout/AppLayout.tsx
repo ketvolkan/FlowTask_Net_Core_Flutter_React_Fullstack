@@ -5,6 +5,7 @@ import { Header } from './Header';
 import { CreateProjectModal } from '../projects/CreateProjectModal';
 import { CreateIssueModal } from '../issues/CreateIssueModal';
 import { GlobalAddMemberModal } from '../projects/GlobalAddMemberModal';
+import { SendNotificationModal } from '../notifications/SendNotificationModal';
 import { GlobalSearchModal } from '../search/GlobalSearchModal';
 import { IssueDetailModal } from '../issues/IssueDetailModal';
 
@@ -18,6 +19,7 @@ export const AppLayout: React.FC = () => {
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false);
   const [isCreateIssueOpen, setIsCreateIssueOpen] = useState(false);
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
+  const [isSendNotificationOpen, setIsSendNotificationOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [selectedSearchIssueId, setSelectedSearchIssueId] = useState<string | null>(null);
 
@@ -54,6 +56,7 @@ export const AppLayout: React.FC = () => {
           onOpenCreateProject={() => setIsCreateProjectOpen(true)}
           onOpenCreateIssue={() => setIsCreateIssueOpen(true)}
           onOpenAddMember={() => setIsAddMemberOpen(true)}
+          onOpenSendNotification={() => setIsSendNotificationOpen(true)}
           onOpenSearch={() => setIsSearchModalOpen(true)}
         />
 
@@ -110,6 +113,12 @@ export const AppLayout: React.FC = () => {
       <GlobalAddMemberModal
         isOpen={isAddMemberOpen}
         onClose={() => setIsAddMemberOpen(false)}
+      />
+
+      {/* Global Send Notification Modal */}
+      <SendNotificationModal
+        isOpen={isSendNotificationOpen}
+        onClose={() => setIsSendNotificationOpen(false)}
       />
     </div>
   );

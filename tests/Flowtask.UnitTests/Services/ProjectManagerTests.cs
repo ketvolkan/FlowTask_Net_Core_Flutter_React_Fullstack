@@ -60,8 +60,23 @@ public class ProjectManagerTests
         _projectDalMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Project, bool>>>(), It.IsAny<string?>(), It.IsAny<bool>(), default))
             .ReturnsAsync((Project?)null);
 
+        var adminUser = new User
+        {
+            Id = userId,
+            FullName = "Admin User",
+            Email = "admin@flowtask.com",
+            IsSystemAdmin = true,
+            UserRoles = new List<UserRole>
+            {
+                new UserRole { Role = new Role { Name = "Admin" } }
+            }
+        };
+
+        _userDalMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<User, bool>>>(), It.IsAny<string?>(), It.IsAny<bool>(), default))
+            .ReturnsAsync(adminUser);
+
         _userDalMock.Setup(r => r.GetByIdAsync(userId, It.IsAny<string?>(), It.IsAny<bool>(), default))
-            .ReturnsAsync(new User { Id = userId, FullName = "Admin User", Email = "admin@flowtask.com" });
+            .ReturnsAsync(adminUser);
 
         // Act
         var result = await _projectManager.CreateProjectAsync(userId, request);
@@ -81,6 +96,21 @@ public class ProjectManagerTests
         // Arrange
         var userId = Guid.NewGuid();
         var request = new ProjectCreateDto { Name = "Core Platform", Key = "CP" };
+
+        var adminUser = new User
+        {
+            Id = userId,
+            FullName = "Admin User",
+            Email = "admin@flowtask.com",
+            IsSystemAdmin = true,
+            UserRoles = new List<UserRole>
+            {
+                new UserRole { Role = new Role { Name = "Admin" } }
+            }
+        };
+
+        _userDalMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<User, bool>>>(), It.IsAny<string?>(), It.IsAny<bool>(), default))
+            .ReturnsAsync(adminUser);
 
         _projectDalMock.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Project, bool>>>(), It.IsAny<string?>(), It.IsAny<bool>(), default))
             .ReturnsAsync(new Project { Id = Guid.NewGuid(), Key = "CP", Name = "Existing" });

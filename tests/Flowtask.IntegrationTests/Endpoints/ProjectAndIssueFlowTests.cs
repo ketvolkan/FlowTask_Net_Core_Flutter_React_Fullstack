@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Flowtask.Core.Results;
 using Flowtask.EntityLayer.DTOs.Auth;
 using Flowtask.EntityLayer.DTOs.Comments;
@@ -16,6 +18,11 @@ namespace Flowtask.IntegrationTests.Endpoints;
 public class ProjectAndIssueFlowTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly HttpClient _client;
+    private static readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
+    };
 
     public ProjectAndIssueFlowTests(CustomWebApplicationFactory factory)
     {
@@ -30,7 +37,7 @@ public class ProjectAndIssueFlowTests : IClassFixture<CustomWebApplicationFactor
             Password = password
         });
 
-        var result = await response.Content.ReadFromJsonAsync<DataResult<TokenDto>>();
+        var result = await response.Content.ReadFromJsonAsync<DataResult<TokenDto>>(_jsonOptions);
         return result!.Data!.AccessToken;
     }
 
@@ -50,7 +57,7 @@ public class ProjectAndIssueFlowTests : IClassFixture<CustomWebApplicationFactor
             Description = "Automated test project"
         });
         createProjectResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        var projectResult = await createProjectResponse.Content.ReadFromJsonAsync<DataResult<ProjectDto>>();
+        var projectResult = await createProjectResponse.Content.ReadFromJsonAsync<DataResult<ProjectDto>>(_jsonOptions);
         var projectId = projectResult!.Data!.Id;
 
         // 3. Create Issue 1
@@ -63,7 +70,7 @@ public class ProjectAndIssueFlowTests : IClassFixture<CustomWebApplicationFactor
             Status = IssueStatus.Todo
         });
         createIssue1Response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var issue1Result = await createIssue1Response.Content.ReadFromJsonAsync<DataResult<IssueDto>>();
+        var issue1Result = await createIssue1Response.Content.ReadFromJsonAsync<DataResult<IssueDto>>(_jsonOptions);
         var issue1Id = issue1Result!.Data!.Id;
         issue1Result.Data.Key.Should().Be($"{key}-1");
 
@@ -75,7 +82,7 @@ public class ProjectAndIssueFlowTests : IClassFixture<CustomWebApplicationFactor
             Priority = IssuePriority.Highest
         });
         createIssue2Response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var issue2Result = await createIssue2Response.Content.ReadFromJsonAsync<DataResult<IssueDto>>();
+        var issue2Result = await createIssue2Response.Content.ReadFromJsonAsync<DataResult<IssueDto>>(_jsonOptions);
         issue2Result!.Data!.Key.Should().Be($"{key}-2");
 
         // 5. Update Status of Issue 1 to InProgress
@@ -84,7 +91,7 @@ public class ProjectAndIssueFlowTests : IClassFixture<CustomWebApplicationFactor
             Status = IssueStatus.InProgress
         });
         updateStatusResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        var updatedStatusResult = await updateStatusResponse.Content.ReadFromJsonAsync<DataResult<IssueDto>>();
+        var updatedStatusResult = await updateStatusResponse.Content.ReadFromJsonAsync<DataResult<IssueDto>>(_jsonOptions);
         updatedStatusResult!.Data!.Status.Should().Be(IssueStatus.InProgress);
 
         // 6. Add Comment to Issue 1
@@ -93,7 +100,7 @@ public class ProjectAndIssueFlowTests : IClassFixture<CustomWebApplicationFactor
             Content = "Starting work on this task."
         });
         commentResponse.StatusCode.Should().Be(HttpStatusCode.OK);
-        var commentResult = await commentResponse.Content.ReadFromJsonAsync<DataResult<CommentDto>>();
+        var commentResult = await commentResponse.Content.ReadFromJsonAsync<DataResult<CommentDto>>(_jsonOptions);
         commentResult!.Data!.Content.Should().Be("Starting work on this task.");
 
         // 7. Isolation check: Accessing nonexistent issue should fail with NotFound

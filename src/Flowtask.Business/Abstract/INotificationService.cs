@@ -8,4 +8,5 @@ public interface INotificationService
     Task<IDataResult<List<NotificationDto>>> GetUserNotificationsAsync(Guid userId);
     Task<IResult> MarkAsReadAsync(Guid notificationId, Guid userId);
     Task<IResult> MarkAllAsReadAsync(Guid userId);
+    Task<IResult> SendNotificationAsync(Guid senderUserId, SendNotificationDto request);
 }

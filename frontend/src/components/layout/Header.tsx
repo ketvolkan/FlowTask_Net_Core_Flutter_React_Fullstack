@@ -19,6 +19,7 @@ import {
   Building2,
   Check,
   Globe,
+  Megaphone,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { isAuthorizedUser } from '../../utils/permissionUtils';
@@ -28,6 +29,7 @@ interface HeaderProps {
   onOpenCreateProject?: () => void;
   onOpenCreateIssue?: () => void;
   onOpenAddMember?: () => void;
+  onOpenSendNotification?: () => void;
   onOpenSearch?: () => void;
 }
 
@@ -36,6 +38,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenCreateProject,
   onOpenCreateIssue,
   onOpenAddMember,
+  onOpenSendNotification,
   onOpenSearch,
 }) => {
   const { user, logout } = useAuth();
@@ -197,6 +200,14 @@ export const Header: React.FC<HeaderProps> = ({
                     <UserPlus className="h-3.5 w-3.5 text-slate-500" />
                     <span>{t('header.addMember', 'Üye Ekle')}</span>
                   </button>
+
+                  <button
+                    onClick={onOpenSendNotification}
+                    className="flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50/70 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 hover:border-indigo-300 transition-colors cursor-pointer"
+                  >
+                    <Megaphone className="h-3.5 w-3.5 text-indigo-600" />
+                    <span>{t('notifications.sendBtnShort', 'Duyuru Gönder')}</span>
+                  </button>
                 </>
               )}
             </div>
@@ -247,6 +258,17 @@ export const Header: React.FC<HeaderProps> = ({
                       >
                         <UserPlus className="h-4 w-4 text-slate-500" />
                         <span>{t('header.addMember', 'Üye Ekle')}</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setIsQuickActionsOpen(false);
+                          onOpenSendNotification?.();
+                        }}
+                        className="flex w-full items-center gap-2.5 px-3.5 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 transition-colors text-left"
+                      >
+                        <Megaphone className="h-4 w-4 text-indigo-600" />
+                        <span>{t('notifications.sendBtnShort', 'Duyuru Gönder')}</span>
                       </button>
                     </>
                   )}

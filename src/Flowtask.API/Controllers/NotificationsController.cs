@@ -34,4 +34,11 @@ public class NotificationsController : BaseApiController
         var result = await _notificationService.MarkAllAsReadAsync(CurrentUserId);
         return HandleResult(result);
     }
+
+    [HttpPost("send")]
+    public async Task<IActionResult> SendNotification([FromBody] Flowtask.EntityLayer.DTOs.Notifications.SendNotificationDto request)
+    {
+        var result = await _notificationService.SendNotificationAsync(CurrentUserId, request);
+        return HandleResult(result);
+    }
 }
