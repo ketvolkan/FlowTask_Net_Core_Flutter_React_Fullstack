@@ -2,7 +2,7 @@ export const tr = {
   // Navigation
   'nav.dashboard': 'Kontrol Paneli',
   'nav.projects': 'Projeler',
-  'nav.board': 'Kanban Panosu',
+  'nav.board': 'İş Akışı',
   'nav.backlog': 'Sprintler & Backlog',
   'nav.team': 'Ekip & Aktif Kullanıcılar',
   'nav.settings': 'Profil Ayarları',

@@ -47,7 +47,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     : [
         { name: t('nav.dashboard', 'Kontrol Paneli'), path: '/dashboard', icon: LayoutDashboard },
         { name: t('nav.projects', 'Projeler'), path: '/projects', icon: FolderKanban },
-        { name: t('nav.board', 'Kanban Panosu'), path: '/board', icon: Kanban },
+        { name: t('nav.board', 'İş Akışı'), path: '/board', icon: Kanban },
         { name: t('nav.backlog', 'Sprintler & Backlog'), path: '/backlog', icon: Layers },
         { name: t('nav.team', 'Ekip & Aktif Kullanıcılar'), path: '/team', icon: Users },
         { name: t('nav.settings', 'Profil Ayarları'), path: '/settings/profile', icon: Settings },
