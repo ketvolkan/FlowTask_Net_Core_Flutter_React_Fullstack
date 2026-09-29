@@ -1,8 +1,19 @@
 import { AuthUser, User } from '../types';
 
+const AUTHORIZED_MANAGER_EMAILS = [
+  'admin@flowtask.com',
+  'demo@flowtask.com',
+  'manager@techflow.com',
+  'admin@acmeglobal.com',
+  'sinan.vural@nexusfin.com',
+  'hakan.ozturk@pulsehealth.com',
+  'erdem.soylu@vortexlog.com',
+];
+
 /**
- * Checks if a user is authorized (System Admin, Company Admin, Project Manager, Lead, Director, CEO/CTO, etc.)
- * Authorized users have permissions to create new departments and modify department assignments.
+ * Checks if a user is a Company Authorized Person / Manager / Admin (Şirket Yetkilisi).
+ * Only authorized managers can manage departments, send company announcements, and create projects.
+ * Regular employees (including designers, developers, QA, team leads) cannot change departments.
  */
 export const isAuthorizedUser = (user: AuthUser | User | null | undefined): boolean => {
   if (!user) return false;
@@ -10,33 +21,32 @@ export const isAuthorizedUser = (user: AuthUser | User | null | undefined): bool
   // System Administrator
   if (user.isSystemAdmin) return true;
 
-  // Role-based check
+  const email = (user.email || '').toLowerCase().trim();
+  if (AUTHORIZED_MANAGER_EMAILS.includes(email)) return true;
+
+  // Role-based check (Only Admin, CompanyAdmin, Manager roles)
   if (
     user.roles?.some((r) =>
-      ['Admin', 'CompanyAdmin', 'Manager', 'ProjectManager', 'Owner', 'Yönetici'].includes(r)
+      ['Admin', 'CompanyAdmin', 'Manager', 'Owner', 'Yönetici'].includes(r)
     )
   ) {
     return true;
   }
 
-  // Job title & department keywords
+  // Job title keywords (Strictly Company Executives & General Managers only)
   const title = (user.jobTitle || '').toLowerCase();
-  const dept = (user.department || '').toLowerCase();
 
   return (
-    title.includes('manager') ||
-    title.includes('yönetici') ||
+    title.includes('genel müdür') ||
+    title.includes('operasyon müdürü') ||
+    title.includes('general manager') ||
+    title.includes('müdür') ||
     title.includes('direktör') ||
     title.includes('director') ||
-    title.includes('lead') ||
-    title.includes('lider') ||
-    title.includes('owner') ||
-    title.includes('cto') ||
     title.includes('ceo') ||
+    title.includes('cto') ||
     title.includes('kurucu') ||
-    title.includes('pm') ||
-    title.includes('admin') ||
-    dept.includes('yönetim') ||
-    dept.includes('management')
+    title.includes('şirket yetkilisi') ||
+    title.includes('company admin')
   );
 };

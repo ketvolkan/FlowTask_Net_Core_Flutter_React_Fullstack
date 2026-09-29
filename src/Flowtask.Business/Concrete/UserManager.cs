@@ -51,21 +51,27 @@ public class UserManager : IUserService
         user.AvatarUrl = request.AvatarUrl;
         user.JobTitle = request.JobTitle?.Trim();
 
-        // Only authorized users (SystemAdmin, Admin, Manager, Lead/Director titles) can update their department
+        // Only authorized company managers and system admins can update department
+        var email = user.Email.ToLowerInvariant();
         bool isAuthorized = user.IsSystemAdmin ||
-                            user.UserRoles.Any(ur => ur.Role.Name == "Admin" || ur.Role.Name == "Manager" || ur.Role.Name == "CompanyAdmin" || ur.Role.Name == "ProjectManager") ||
+                            email == "admin@flowtask.com" ||
+                            email == "demo@flowtask.com" ||
+                            email == "manager@techflow.com" ||
+                            email == "admin@acmeglobal.com" ||
+                            email == "sinan.vural@nexusfin.com" ||
+                            email == "hakan.ozturk@pulsehealth.com" ||
+                            email == "erdem.soylu@vortexlog.com" ||
+                            user.UserRoles.Any(ur => ur.Role.Name == "Admin" || ur.Role.Name == "Manager" || ur.Role.Name == "CompanyAdmin") ||
                             (!string.IsNullOrEmpty(user.JobTitle) && (
-                                user.JobTitle.Contains("Manager", StringComparison.OrdinalIgnoreCase) ||
-                                user.JobTitle.Contains("Yönetici", StringComparison.OrdinalIgnoreCase) ||
-                                user.JobTitle.Contains("Director", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("Genel Müdür", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("Müdür", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("General Manager", StringComparison.OrdinalIgnoreCase) ||
                                 user.JobTitle.Contains("Direktör", StringComparison.OrdinalIgnoreCase) ||
-                                user.JobTitle.Contains("Lead", StringComparison.OrdinalIgnoreCase) ||
-                                user.JobTitle.Contains("Lider", StringComparison.OrdinalIgnoreCase) ||
-                                user.JobTitle.Contains("Owner", StringComparison.OrdinalIgnoreCase) ||
-                                user.JobTitle.Contains("CTO", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("Director", StringComparison.OrdinalIgnoreCase) ||
                                 user.JobTitle.Contains("CEO", StringComparison.OrdinalIgnoreCase) ||
+                                user.JobTitle.Contains("CTO", StringComparison.OrdinalIgnoreCase) ||
                                 user.JobTitle.Contains("Kurucu", StringComparison.OrdinalIgnoreCase) ||
-                                user.JobTitle.Contains("PM", StringComparison.OrdinalIgnoreCase)
+                                user.JobTitle.Contains("Şirket Yetkilisi", StringComparison.OrdinalIgnoreCase)
                             ));
 
         if (isAuthorized)

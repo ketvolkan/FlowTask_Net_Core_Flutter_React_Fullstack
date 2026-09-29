@@ -96,7 +96,7 @@ public static class DatabaseSeeder
 
             // 4. Pulse HealthTech AI
             ("hakan.ozturk@pulsehealth.com", "Dr. Hakan Öztürk", "Medikal Yapay Zeka Direktörü", "Klinik Yapay Zeka & NLP", false, "Manager123*"),
-            ("zeynep.ozkan@flowtask.com", "Zeynep Özkan", "Senior UI/UX Designer & HealthTech Lead", "Tele-Tıp & Tasarım", false, "User123*"),
+            ("zeynep.ozkan@flowtask.com", "Zeynep Özkan", "Senior UI/UX Designer", "Tele-Tıp & Tasarım", false, "User123*"),
             ("tolga.sahin@pulsehealth.com", "Tolga Şahin", "e-Reçete & HL7/FHIR Uzmanı", "e-Sağlık & Reçete Sistemleri", false, "User123*"),
             ("asli.kara@pulsehealth.com", "Aslı Kara", "Radyoloji Görüntüleme AI Mühendisi", "Biyomedikal Görüntü İşleme", false, "User123*"),
             ("cem.akbulut@pulsehealth.com", "Cem Akbulut", "Hasta Veri Güvenliği Sorumlusu", "Hasta Veri Güvenliği (KVKK)", false, "User123*"),
