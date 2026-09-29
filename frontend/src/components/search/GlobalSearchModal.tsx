@@ -252,9 +252,11 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
                     {displayedIssues.map((issue) => (
                       <div
                         key={issue.id}
-                        onClick={() => {
-                          onClose();
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
                           onSelectIssue(issue.id);
+                          onClose();
                         }}
                         className="p-3 rounded-xl border border-slate-100 bg-white hover:border-indigo-300 hover:bg-indigo-50/40 transition-all cursor-pointer group flex items-start justify-between gap-3 shadow-2xs"
                       >

@@ -24,12 +24,15 @@ interface IssueDetailModalProps {
   onIssueDeleted: () => void;
 }
 
+const EMPTY_MEMBERS: ProjectMember[] = [];
+const EMPTY_SPRINTS: Sprint[] = [];
+
 export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
   isOpen,
   onClose,
   issueId,
-  members = [],
-  sprints = [],
+  members = EMPTY_MEMBERS,
+  sprints = EMPTY_SPRINTS,
   onIssueUpdated,
   onIssueDeleted,
 }) => {
@@ -66,15 +69,16 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
   }, [sprints]);
 
   const fetchIssueDetails = useCallback(async () => {
+    if (!issueId) return;
     try {
       setIsLoading(true);
       const data = await issuesApi.getIssueById(issueId);
       setIssue(data);
-      setTitle(data.title);
+      setTitle(data.title || '');
       setDescription(data.description || '');
-      setStatus(data.status);
-      setPriority(data.priority);
-      setType(data.type);
+      setStatus(data.status || 'Todo');
+      setPriority(data.priority || 'Medium');
+      setType(data.type || 'Task');
       setAssigneeId(data.assigneeId || '');
       setSprintId(data.sprintId || '');
       setStoryPoints(data.storyPoints);
@@ -98,7 +102,7 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [issueId, members, sprints, t]);
+  }, [issueId, t]);
 
   useEffect(() => {
     if (isOpen && issueId) {
