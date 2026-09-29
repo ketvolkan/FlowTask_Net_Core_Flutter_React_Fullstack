@@ -8,7 +8,7 @@ import { issuesApi } from '../../api/issuesApi';
 import { Issue, IssuePriority, IssueStatus, IssueType, ProjectMember, Sprint } from '../../types';
 import { CommentList } from './CommentList';
 import { AttachmentList } from './AttachmentList';
-import { Trash2, Save } from 'lucide-react';
+import { Trash2, Save, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { tr as dateFnsTr, enUS as dateFnsEn } from 'date-fns/locale';
 
@@ -127,9 +127,27 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
       size="2xl"
     >
       {isLoading ? (
-        <div className="py-16 text-center text-xs text-slate-400">{t('issueDetail.loading', 'Görev detayları yükleniyor...')}</div>
+        <div className="relative py-16 text-center text-xs text-slate-400">
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-0 right-0 rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          {t('issueDetail.loading', 'Görev detayları yükleniyor...')}
+        </div>
       ) : !issue ? (
-        <div className="py-16 text-center text-xs text-rose-500">{t('issueDetail.notFound', 'Görev bulunamadı.')}</div>
+        <div className="relative py-16 text-center text-xs text-rose-500">
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-0 right-0 rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          {t('issueDetail.notFound', 'Görev bulunamadı.')}
+        </div>
       ) : (
         <div className="space-y-6">
           {error && (
@@ -167,6 +185,14 @@ export const IssueDetailModal: React.FC<IssueDetailModalProps> = ({
               >
                 {t('common.save', 'Kaydet')}
               </Button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="ml-1 rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                title={t('common.close', 'Kapat')}
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
           </div>
 

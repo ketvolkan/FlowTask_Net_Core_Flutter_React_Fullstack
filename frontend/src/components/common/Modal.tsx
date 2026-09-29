@@ -51,8 +51,22 @@ export const Modal: React.FC<ModalProps> = ({
       />
 
       {/* Modal Positioner and Content */}
-      <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-        <div className="flex min-h-full items-center justify-center p-4 sm:p-6 text-center">
+      <div
+        className="fixed inset-0 z-10 w-screen overflow-y-auto"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+      >
+        <div
+          className="flex min-h-full items-center justify-center p-4 sm:p-6 text-center"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              onClose();
+            }
+          }}
+        >
           <div
             className={`w-full ${sizeStyles[size]} overflow-hidden rounded-2xl bg-white text-left align-middle shadow-2xl border border-slate-200 transition-all`}
             onClick={(e) => e.stopPropagation()}
