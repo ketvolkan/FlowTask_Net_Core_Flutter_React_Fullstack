@@ -38,6 +38,53 @@ export const ALL_COMPANIES: Company[] = [
   },
 ];
 
+export interface UserCompanyInfo {
+  name: string;
+  code: string;
+  color: 'indigo' | 'blue' | 'emerald' | 'purple' | 'slate';
+}
+
+export const getUserCompany = (u: {
+  email?: string;
+  department?: string;
+  jobTitle?: string;
+  isSystemAdmin?: boolean;
+}): UserCompanyInfo => {
+  if (u.isSystemAdmin || u.email === 'admin@flowtask.com') {
+    return { name: 'Flowtask Core (Sistem)', code: 'SYS', color: 'purple' };
+  }
+  const email = (u.email || '').toLowerCase();
+  const dept = (u.department || '').toLowerCase();
+  const title = (u.jobTitle || '').toLowerCase();
+
+  if (
+    email.includes('techflow') ||
+    email === 'manager@techflow.com' ||
+    email === 'mehmet.kaya@flowtask.com' ||
+    email === 'caner.erdogan@flowtask.com' ||
+    dept.includes('techflow') ||
+    title.includes('techflow')
+  ) {
+    return { name: 'TechFlow Solutions', code: 'FLOW', color: 'blue' };
+  }
+
+  if (
+    email.includes('acme') ||
+    email === 'admin@acmeglobal.com' ||
+    email === 'zeynep.ozkan@flowtask.com' ||
+    dept.includes('acme') ||
+    title.includes('acme')
+  ) {
+    return { name: 'Acme Global Corp', code: 'ACME', color: 'emerald' };
+  }
+
+  if (u.department) {
+    return { name: u.department, code: u.department.slice(0, 4).toUpperCase(), color: 'indigo' };
+  }
+
+  return { name: 'Genel Şirket', code: 'GEN', color: 'slate' };
+};
+
 interface CompanyContextType {
   selectedCompanyId: string;
   selectedCompany: Company;

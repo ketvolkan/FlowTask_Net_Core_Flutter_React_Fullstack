@@ -29,6 +29,8 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { tr as dateFnsTr, enUS as dateFnsEn } from 'date-fns/locale';
 
+import { SystemAdminDashboardView } from '../../components/admin/SystemAdminDashboardView';
+
 interface MemberWorkloadSummary {
   userId: string;
   name: string;
@@ -47,6 +49,12 @@ interface MemberWorkloadSummary {
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
+
+  // If the user is a system admin, render the dedicated System Admin Dashboard with registered users and companies
+  if (user?.isSystemAdmin) {
+    return <SystemAdminDashboardView />;
+  }
+
   const { selectedCompany, filterProjectsByCompany } = useCompany();
   const { t, language } = useLanguage();
   const [projects, setProjects] = useState<Project[]>([]);
@@ -57,10 +65,9 @@ export const DashboardPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
 
-  // Check if current user is PM, Manager, Admin, or Owner
+  // Check if current user is PM, Manager, Admin, or Owner (excluding system admin)
   const isManagerOrPm = useMemo(() => {
-    if (!user) return false;
-    if (user.isSystemAdmin) return true;
+    if (!user || user.isSystemAdmin) return false;
     const title = (user.jobTitle || '').toLowerCase();
     const dept = (user.department || '').toLowerCase();
     return (
