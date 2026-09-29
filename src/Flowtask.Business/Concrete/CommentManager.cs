@@ -26,8 +26,11 @@ public class CommentManager : ICommentService
 
     public async Task<IDataResult<List<CommentDto>>> GetIssueCommentsAsync(Guid issueId, Guid userId)
     {
+        var user = await _userDal.GetByIdAsync(userId);
+        var isSysAdmin = user?.IsSystemAdmin ?? false;
+
         var issue = await _issueDal.GetAsync(
-            i => i.Id == issueId && i.Project.Members.Any(m => m.UserId == userId));
+            i => i.Id == issueId && (isSysAdmin || i.Project.Members.Any(m => m.UserId == userId) || i.Project.OwnerId == userId));
 
         if (issue == null)
         {
@@ -45,8 +48,11 @@ public class CommentManager : ICommentService
 
     public async Task<IDataResult<CommentDto>> AddCommentAsync(Guid issueId, Guid userId, CommentCreateDto request)
     {
+        var user = await _userDal.GetByIdAsync(userId);
+        var isSysAdmin = user?.IsSystemAdmin ?? false;
+
         var issue = await _issueDal.GetAsync(
-            i => i.Id == issueId && i.Project.Members.Any(m => m.UserId == userId));
+            i => i.Id == issueId && (isSysAdmin || i.Project.Members.Any(m => m.UserId == userId) || i.Project.OwnerId == userId));
 
         if (issue == null)
         {
@@ -61,8 +67,6 @@ public class CommentManager : ICommentService
         };
 
         await _commentDal.AddAsync(comment);
-
-        var user = await _userDal.GetByIdAsync(userId);
         comment.User = user!;
 
         var dto = _mapper.Map<CommentDto>(comment);

@@ -100,34 +100,51 @@ export const CommentList: React.FC<CommentListProps> = ({
             {t('issueDetail.noComments', 'Henüz yorum yapılmamış.')}
           </p>
         ) : (
-          comments.map((comment) => (
-            <div
-              key={comment.id}
-              className="group rounded-xl bg-slate-50 p-3.5 border border-slate-100 flex items-start gap-3"
-            >
-              <UserAvatar name={comment.userFullName} avatarUrl={comment.userAvatarUrl} size="sm" />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-slate-900">{comment.userFullName}</span>
-                    <span className="text-[10px] text-slate-400">
-                      {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true, locale: dateLocale })}
-                    </span>
+          comments.map((comment) => {
+            const authorName =
+              comment.userFullName ||
+              comment.userName ||
+              (comment.userId === user?.id ? user?.fullName : 'Kullanıcı');
+            const authorAvatar =
+              comment.userAvatarUrl ||
+              (comment.userId === user?.id ? user?.avatarUrl : undefined);
+
+            return (
+              <div
+                key={comment.id}
+                className="group rounded-xl bg-slate-50 p-3.5 border border-slate-100 flex items-start gap-3"
+              >
+                <UserAvatar name={authorName} avatarUrl={authorAvatar} size="sm" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-slate-900">{authorName}</span>
+                      <span className="text-[10px] text-slate-400">
+                        {comment.createdAt ? (
+                          formatDistanceToNow(new Date(comment.createdAt), {
+                            addSuffix: true,
+                            locale: dateLocale,
+                          })
+                        ) : (
+                          'Az önce'
+                        )}
+                      </span>
+                    </div>
+                    {comment.userId === user?.id && (
+                      <button
+                        onClick={() => handleDeleteComment(comment.id)}
+                        className="opacity-0 group-hover:opacity-100 rounded p-1 text-slate-400 hover:text-rose-600 transition-opacity cursor-pointer"
+                        title={t('common.delete', 'Sil')}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                   </div>
-                  {comment.userId === user?.id && (
-                    <button
-                      onClick={() => handleDeleteComment(comment.id)}
-                      className="opacity-0 group-hover:opacity-100 rounded p-1 text-slate-400 hover:text-rose-600 transition-opacity"
-                      title={t('common.delete', 'Sil')}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  )}
+                  <p className="mt-1 text-xs text-slate-700 whitespace-pre-wrap">{comment.content}</p>
                 </div>
-                <p className="mt-1 text-xs text-slate-700 whitespace-pre-wrap">{comment.content}</p>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

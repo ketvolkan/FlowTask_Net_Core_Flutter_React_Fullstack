@@ -125,7 +125,8 @@ export interface Comment {
   id: string;
   issueId: string;
   userId: string;
-  userFullName: string;
+  userFullName?: string;
+  userName?: string;
   userAvatarUrl?: string;
   content: string;
   createdAt: string;
