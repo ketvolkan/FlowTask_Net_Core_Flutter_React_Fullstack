@@ -53,13 +53,22 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
     }
   };
 
+  const normalizeStatus = (status: any): IssueStatus => {
+    if (status === 1 || status === 'Backlog') return 'Todo'; // Treat Backlog as Todo if on board
+    if (status === 2 || status === 'Todo') return 'Todo';
+    if (status === 3 || status === 'InProgress') return 'InProgress';
+    if (status === 4 || status === 'InReview') return 'InReview';
+    if (status === 5 || status === 'Done') return 'Done';
+    return status as IssueStatus;
+  };
+
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <div className="flex gap-4 overflow-x-auto pb-4 pt-1 items-start h-[calc(100vh-210px)]">
         {columns.map((col) => {
           const colIssues = issues
-            .filter((i) => i.status === col.status)
-            .sort((a, b) => a.order - b.order);
+            .filter((i) => normalizeStatus(i.status) === col.status)
+            .sort((a, b) => (a.order || 0) - (b.order || 0));
 
           return (
             <KanbanColumn
