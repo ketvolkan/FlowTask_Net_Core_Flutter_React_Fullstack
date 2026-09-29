@@ -84,6 +84,9 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {attachments.map((att) => {
           const isImage = att.contentType.startsWith('image/');
+          const serverBaseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api$/, '');
+          const fileUrl = att.filePath.startsWith('http') ? att.filePath : `${serverBaseUrl}${att.filePath}`;
+
           return (
             <div
               key={att.id}
@@ -98,25 +101,26 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
                     {att.fileName}
                   </p>
                   <p className="text-[10px] text-slate-400">
-                    {formatFileSize(att.fileSize)} • by {att.uploadedByName}
+                    {formatFileSize(att.fileSize)} • by {att.uploadedByName || 'Kullanıcı'}
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-1">
                 <a
-                  href={`http://localhost:5000${att.filePath}`}
+                  href={fileUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="rounded p-1 text-slate-400 hover:text-indigo-600 transition-colors"
-                  title="Download"
+                  download={att.fileName}
+                  className="rounded p-1 text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer"
+                  title="İndir / Görüntüle"
                 >
                   <Download className="h-3.5 w-3.5" />
                 </a>
                 {att.uploadedById === user?.id && (
                   <button
                     onClick={() => handleDeleteAttachment(att.id)}
-                    className="rounded p-1 text-slate-400 hover:text-rose-600 transition-colors"
+                    className="rounded p-1 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
                     title={t('common.delete', 'Sil')}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
