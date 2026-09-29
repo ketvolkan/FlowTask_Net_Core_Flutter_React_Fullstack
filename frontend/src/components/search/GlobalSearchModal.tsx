@@ -91,20 +91,34 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
   }, [search, isOpen]);
 
   // Company filtering
-  const displayedProjects = filterProjectsByCompany(projects).filter((p) =>
+  const companyProjects = filterProjectsByCompany(projects);
+  const validProjectIds = new Set(companyProjects.map((p) => p.id));
+  const validProjectKeys = new Set(companyProjects.map((p) => p.key.toUpperCase()));
+
+  const displayedProjects = companyProjects.filter((p) =>
     search.trim()
       ? p.name.toLowerCase().includes(search.toLowerCase()) ||
         p.key.toLowerCase().includes(search.toLowerCase())
       : true
   );
 
-  const displayedIssues = issues.filter((i) => {
+  const displayedIssues = issues.filter((issue) => {
+    // 1. Strict Company / Accessible Project Filter:
+    // Only show issues belonging to the active/accessible company's projects
+    const keyPrefix = issue.key ? issue.key.split('-')[0].toUpperCase() : '';
+    const belongsToCompany =
+      (issue.projectId && validProjectIds.has(issue.projectId)) ||
+      (keyPrefix && validProjectKeys.has(keyPrefix));
+
+    if (!belongsToCompany) return false;
+
+    // 2. Search query filter
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     return (
-      i.title.toLowerCase().includes(q) ||
-      i.key.toLowerCase().includes(q) ||
-      (i.description && i.description.toLowerCase().includes(q))
+      issue.title.toLowerCase().includes(q) ||
+      issue.key.toLowerCase().includes(q) ||
+      (issue.description && issue.description.toLowerCase().includes(q))
     );
   });
 
