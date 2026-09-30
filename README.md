@@ -1,7 +1,7 @@
 # FlowTask — Multi-Tenant Enterprise Task & Workflow Management Platform
 
 <p align="center">
-  <img src="docs/screenshots/web/Screenshot%202026-09-29%20185734.png" width="850" alt="FlowTask Hero Banner" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);" />
+  <img src="docs/screenshots/web/Screenshot%202026-09-29%20185813.png" width="850" alt="FlowTask Hero Banner" style="border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);" />
 </p>
 
 <p align="center">
@@ -60,25 +60,25 @@
 
 ### Web Uygulaması (React 18 + TypeScript)
 
-| **Sürükle-Bırak Kanban Pano** | **Dashboard & Analitik Raporlar** |
+| **Sürükle-Bırak Kanban Pano** | **Dashboard & Yönetici Kontrol Paneli** |
 |:---:|:---:|
-| <img src="docs/screenshots/web/Screenshot%202026-09-29%20185734.png" width="450" alt="Kanban Board" /> | <img src="docs/screenshots/web/Screenshot%202026-09-29%20185804.png" width="450" alt="Dashboard" /> |
-| *Gerçek zamanlı SignalR destekli Kanban akışı* | *Tamamlanma oranları ve öncelik dağılımı* |
+| <img src="docs/screenshots/web/Screenshot%202026-09-29%20185813.png" width="450" alt="Kanban Board" /> | <img src="docs/screenshots/web/Screenshot%202026-09-29%20185858.png" width="450" alt="Dashboard" /> |
+| *Gerçek zamanlı SignalR destekli 4 sütunlu Kanban akışı* | *Genel proje metrikleri, ekip performansı ve durum dağılımı* |
 
-| **Proje & Sprint Yönetimi** | **Detaylı Görev & Aktivite Modalı** |
+| **Sprint & Backlog Filtreleme** | **Ekip & Aktif Kullanıcılar Panosu** |
 |:---:|:---:|
-| <img src="docs/screenshots/web/Screenshot%202026-09-29%20185813.png" width="450" alt="Sprint Management" /> | <img src="docs/screenshots/web/Screenshot%202026-09-29%20185840.png" width="450" alt="Task Modal" /> |
-| *Sprint planlama ve görev atama matrisi* | *Yorumlar, hikaye puanı ve durum geçmişi* |
+| <img src="docs/screenshots/web/Screenshot%202026-09-29%20185840.png" width="450" alt="Sprint Selection" /> | <img src="docs/screenshots/web/Screenshot%202026-09-29%20185804.png" width="450" alt="Team Board" /> |
+| *Sprint bazlı anlık tahta filtreleme ve durum takibi* | *Ekip üyelerinin görev yükü dağılımı ve başarı oranı* |
 
-| **Şirket & Departman İzolasyonu** | **Yeni Görev Oluşturma Formu** |
+| **Detaylı Görev & Aktivite Modalı** | **Yeni Görev Oluşturma Formu** |
 |:---:|:---:|
-| <img src="docs/screenshots/web/Screenshot%202026-09-29%20185858.png" width="450" alt="Company Switcher" /> | <img src="docs/screenshots/web/Screenshot%202026-09-29%20185931.png" width="450" alt="Create Task" /> |
-| *Multi-tenant şirket geçişi ve departman rolleri* | *Tip, öncelik ve bitiş tarihi tanımlamaları* |
+| <img src="docs/screenshots/web/Screenshot%202026-09-29%20190006.png" width="450" alt="Task Modal" /> | <img src="docs/screenshots/web/Screenshot%202026-09-29%20190047.png" width="450" alt="Create Task" /> |
+| *Yorumlar, dosya ekleri, hikaye puanı ve durum geçmişi* | *Proje, tip, öncelik ve bitiş tarihi tanımlamaları* |
 
-| **Backlog & Görev Listesi** | **Gelişmiş Filtreleme & Arama** |
+| **Global Arama & Command Palette** | **Önemli Sistem Bildirimi / Acil Uyarı** |
 |:---:|:---:|
-| <img src="docs/screenshots/web/Screenshot%202026-09-29%20185947.png" width="450" alt="Backlog" /> | <img src="docs/screenshots/web/Screenshot%202026-09-29%20190006.png" width="450" alt="Filters" /> |
-| *Hiyerarşik backlog ve görev önceliklendirme* | *Atanan kişi, durum ve metin araması* |
+| <img src="docs/screenshots/web/Screenshot%202026-09-29%20185947.png" width="450" alt="Search" /> | <img src="docs/screenshots/web/Screenshot%202026-09-29%20185734.png" width="450" alt="Notification Modal" /> |
+| *Görevler ve projeler arası hızlı kısayol araması* | *Şirket geneli kritik bildirimler ve aksiyon pencereleri* |
 
 ---
 
