@@ -47,12 +47,12 @@
 
 ## 🎯 Proje Hakkında
 
-**FlowTask**, Jira ve Linear gibi modern proje yönetim araçlarının hızını ve kullanıcı deneyimini, kurumsal multi-tenancy (şirket izolasyonu) ve rol bazlı erişim denetimi (RBAC) ile birleştiren tam kapsamlı bir platformdur.
+**FlowTask**, ekiplerin projelerini, görevlerini ve iş akışlarını kolayca takip edebilmesi için geliştirilmiş bir proje yönetim platformudur.
 
-* **Çok Kiracılı (Multi-Tenant) İzolasyon:** Her şirket (`TechFlow`, `InnoSoft`, `DataCorp`, `NextGen Soft`) tamamen izole çalışma alanına, üyelere ve departmanlara sahiptir.
-* **Eşzamanlı Dinamik Görev Anahtarları (Keying Engine):** `FLOW-1`, `FLOW-2`, `INNO-12` gibi benzersiz görev kodları eşzamanlı çakışma korumalı dinamik sayaç motoruyla üretilir.
-* **Gerçek Zamanlı Senkronizasyon (Live Sync):** Görev durumu değişiklikleri, yeni yorumlar ve sürükle-bırak güncellemeleri SignalR hub üzerinden tüm bağlı istemcilere anında yansıtılır.
-* **Katı Açık Tema (Strict Light Mode) Tasarım Sistemi:** Yüksek kontrastlı, profesyonel slate & indigo renk paleti ve tipografi standartları.
+* **Şirket ve Departman Yönetimi:** Her şirket kendi projelerini, ekiplerini ve departmanlarını ayrı alanlarda yönetir.
+* **Otomatik Görev Kodları:** Her göreve projesine özel benzersiz bir kod atanır (`FLOW-1`, `FLOW-2`, `INNO-5`).
+* **Canlı Durum Güncellemesi:** Panodaki sürükle-bırak hareketleri, durum değişiklikleri ve yorumlar anında ekrana yansır.
+* **Modern Açık Tema:** Gözü yormayan, sade ve net bir arayüz deneyimi sunar.
 
 ---
 
@@ -63,22 +63,22 @@
 | **Sürükle-Bırak Kanban Pano** | **Dashboard & Yönetici Kontrol Paneli** |
 |:---:|:---:|
 | <img src="docs/screenshots/web/Screenshot%202026-09-29%20185813.png" width="450" alt="Kanban Board" /> | <img src="docs/screenshots/web/Screenshot%202026-09-29%20185858.png" width="450" alt="Dashboard" /> |
-| *Gerçek zamanlı SignalR destekli 4 sütunlu Kanban akışı* | *Genel proje metrikleri, ekip performansı ve durum dağılımı* |
+| *4 sütunlu sürükle-bırak görev akış panosu* | *Proje durumları, ekip performansı ve görev dağılımı* |
 
 | **Sprint & Backlog Filtreleme** | **Ekip & Aktif Kullanıcılar Panosu** |
 |:---:|:---:|
 | <img src="docs/screenshots/web/Screenshot%202026-09-29%20185840.png" width="450" alt="Sprint Selection" /> | <img src="docs/screenshots/web/Screenshot%202026-09-29%20185804.png" width="450" alt="Team Board" /> |
-| *Sprint bazlı anlık tahta filtreleme ve durum takibi* | *Ekip üyelerinin görev yükü dağılımı ve başarı oranı* |
+| *Sprint ve backlog bazlı anlık tahta filtreleme* | *Kullanıcı bazlı iş yükü ve görev dağılımı* |
 
 | **Detaylı Görev & Aktivite Modalı** | **Yeni Görev Oluşturma Formu** |
 |:---:|:---:|
 | <img src="docs/screenshots/web/Screenshot%202026-09-29%20190006.png" width="450" alt="Task Modal" /> | <img src="docs/screenshots/web/Screenshot%202026-09-29%20190047.png" width="450" alt="Create Task" /> |
-| *Yorumlar, dosya ekleri, hikaye puanı ve durum geçmişi* | *Proje, tip, öncelik ve bitiş tarihi tanımlamaları* |
+| *Yorumlar, dosya ekleri ve görev detayları* | *Görev tipi, öncelik ve atanan kişi seçimi* |
 
 | **Global Arama & Command Palette** | **Önemli Sistem Bildirimi / Acil Uyarı** |
 |:---:|:---:|
 | <img src="docs/screenshots/web/Screenshot%202026-09-29%20185947.png" width="450" alt="Search" /> | <img src="docs/screenshots/web/Screenshot%202026-09-29%20185734.png" width="450" alt="Notification Modal" /> |
-| *Görevler ve projeler arası hızlı kısayol araması* | *Şirket geneli kritik bildirimler ve aksiyon pencereleri* |
+| *Görev ve projeler için hızlı arama menüsü* | *Kritik duyurular ve sistem bildirimleri* |
 
 ---
 
@@ -94,10 +94,10 @@
   <img src="docs/screenshots/mobile/Screenshot_1790781096.png" width="230" alt="Mobil Modal Proje Seçici" style="margin: 6px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.1);" />
 </p>
 
-* **Anasayfa & Dashboard:** Tamamlanma oranını gösteren dinamik progress banner, 4'lü metrik kartları ve son görevler akışı.
-* **3x2 Pano Durum Izgarası:** Renkli buton matrisi üzerinden anında durum bazlı filtreleme (*Tümü, Yapılacak, Devam Eden, İncelemede, Tamamlandı*).
-* **Modal Proje Seçici (Bottom Sheet):** Projeleri ve "Tüm Projeler" seçeneğini anında listeleyen, dokunmatik optimizasyonlu seçim paneli.
-* **Çift Dil Desteği:** Türkçe (`tr`) ve İngilizce (`en`) anlık yerelleştirme motoru.
+* **Anasayfa & Özet:** Görev tamamlama oranı, durum kartları ve son görevler listesi.
+* **Görevler Panosu:** Yapılacak, Devam Eden, İncelemede ve Tamamlandı filtreleme ızgarası.
+* **Proje Seçici:** Projeler ve tüm şirket görevleri arasında tek dokunuşla hızlı geçiş.
+* **Çift Dil Desteği:** Türkçe ve İngilizce dil seçeneği.
 
 ---
 
