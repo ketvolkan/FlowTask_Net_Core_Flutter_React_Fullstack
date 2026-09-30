@@ -165,6 +165,7 @@ export interface Notification {
   type: NotificationType;
   isRead: boolean;
   linkUrl?: string;
+  referenceId?: string;
   createdAt: string;
 }
 

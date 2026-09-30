@@ -41,6 +41,13 @@ ios/Flutter/flutter_export_environment.sh
 ios/ServiceDefinitions.json
 android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
 
+## Database
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
 ## OS Files
 .DS_Store
 Thumbs.db

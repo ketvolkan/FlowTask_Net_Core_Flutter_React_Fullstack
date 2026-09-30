@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_dimensions.dart';
 
 class CustomTextField extends StatelessWidget {
   final String label;
@@ -40,7 +41,7 @@ class CustomTextField extends StatelessWidget {
             color: AppColors.textPrimary,
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: AppDimensions.spacing6),
         TextFormField(
           controller: controller,
           obscureText: obscureText,
@@ -53,6 +54,10 @@ class CustomTextField extends StatelessWidget {
             hintText: hintText,
             prefixIcon: prefixIcon,
             suffixIcon: suffixIcon,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.spacing16,
+              vertical: AppDimensions.spacing14,
+            ),
           ),
         ),
       ],

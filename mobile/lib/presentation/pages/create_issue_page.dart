@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/enums/issue_priority.dart';
+import '../../core/enums/issue_type.dart';
 import '../../core/localization/app_translations.dart';
-import '../blocs/language/language_cubit.dart';
 import '../blocs/issue/issue_bloc.dart';
 import '../blocs/issue/issue_event.dart';
+import '../blocs/language/language_cubit.dart';
+import '../blocs/project/project_bloc.dart';
+import '../blocs/project/project_state.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
 
 class CreateIssuePage extends StatefulWidget {
-  final String projectId;
+  final String? projectId;
 
-  const CreateIssuePage({super.key, required this.projectId});
+  const CreateIssuePage({super.key, this.projectId});
 
   @override
   State<CreateIssuePage> createState() => _CreateIssuePageState();
@@ -23,10 +27,25 @@ class _CreateIssuePageState extends State<CreateIssuePage> {
   final _descController = TextEditingController();
   final _storyPointsController = TextEditingController();
 
-  String _selectedType = 'Task';
-  String _selectedPriority = 'Medium';
-  final List<String> _types = ['Task', 'Bug', 'Story', 'Epic'];
-  final List<String> _priorities = ['Low', 'Medium', 'High', 'Urgent'];
+  String? _selectedProjectId;
+  IssueType _selectedType = IssueType.task;
+  IssuePriority _selectedPriority = IssuePriority.medium;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.projectId != null &&
+        widget.projectId!.isNotEmpty &&
+        widget.projectId != 'all') {
+      _selectedProjectId = widget.projectId;
+    } else {
+      final projectState = context.read<ProjectBloc>().state;
+      if (projectState is ProjectsLoaded) {
+        _selectedProjectId = projectState.selectedProject?.id ??
+            (projectState.projects.isNotEmpty ? projectState.projects.first.id : null);
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -36,47 +55,26 @@ class _CreateIssuePageState extends State<CreateIssuePage> {
     super.dispose();
   }
 
-  String _getTypeLabel(String type, String locale) {
-    switch (type) {
-      case 'Task':
-        return AppTranslations.get('type_task', locale: locale);
-      case 'Bug':
-        return AppTranslations.get('type_bug', locale: locale);
-      case 'Story':
-        return AppTranslations.get('type_story', locale: locale);
-      case 'Epic':
-        return AppTranslations.get('type_epic', locale: locale);
-      default:
-        return type;
-    }
-  }
-
-  String _getPriorityLabel(String priority, String locale) {
-    switch (priority) {
-      case 'Low':
-        return AppTranslations.get('priority_low', locale: locale);
-      case 'Medium':
-        return AppTranslations.get('priority_medium', locale: locale);
-      case 'High':
-        return AppTranslations.get('priority_high', locale: locale);
-      case 'Urgent':
-      case 'Critical':
-        return AppTranslations.get('priority_urgent', locale: locale);
-      default:
-        return priority;
-    }
-  }
-
   void _onCreatePressed(String locale) {
+    if (_selectedProjectId == null || _selectedProjectId!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(locale == 'tr' ? 'Lütfen bir proje seçin.' : 'Please select a project.'),
+          backgroundColor: AppColors.danger,
+        ),
+      );
+      return;
+    }
+
     if (_formKey.currentState?.validate() ?? false) {
       final points = int.tryParse(_storyPointsController.text.trim());
       context.read<IssueBloc>().add(
             CreateIssueSubmittedEvent(
               title: _titleController.text.trim(),
               description: _descController.text.trim(),
-              type: _selectedType,
-              priority: _selectedPriority,
-              projectId: widget.projectId,
+              type: _selectedType.toApiValue(),
+              priority: _selectedPriority.toApiValue(),
+              projectId: _selectedProjectId!,
               storyPoints: points,
             ),
           );
@@ -92,8 +90,15 @@ class _CreateIssuePageState extends State<CreateIssuePage> {
 
   @override
   Widget build(BuildContext context) {
-    final langState = context.watch<LanguageCubit>().state;
-    final locale = langState.locale;
+    final locale = context.watch<LanguageCubit>().state.locale;
+
+    // Filter out 'all' for actionable priority choice
+    final selectablePriorities = [
+      IssuePriority.low,
+      IssuePriority.medium,
+      IssuePriority.high,
+      IssuePriority.urgent,
+    ];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -102,7 +107,7 @@ class _CreateIssuePageState extends State<CreateIssuePage> {
         elevation: 0,
         title: Text(
           AppTranslations.get('create_task_title', locale: locale),
-          style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+          style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.textPrimary),
         ),
       ),
       body: SingleChildScrollView(
@@ -112,11 +117,91 @@ class _CreateIssuePageState extends State<CreateIssuePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // Project Selector Dropdown
+              BlocBuilder<ProjectBloc, ProjectState>(
+                builder: (context, projectState) {
+                  if (projectState is ProjectsLoaded && projectState.projects.isNotEmpty) {
+                    final validSelected = projectState.projects.any((p) => p.id == _selectedProjectId)
+                        ? _selectedProjectId
+                        : projectState.projects.first.id;
+
+                    if (_selectedProjectId != validSelected) {
+                      _selectedProjectId = validSelected;
+                    }
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppTranslations.get('active_project', locale: locale),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: AppColors.divider),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              key: ValueKey(_selectedProjectId),
+                              value: validSelected,
+                              isExpanded: true,
+                              isDense: true,
+                              dropdownColor: Colors.white,
+                              icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textSecondary),
+                              items: projectState.projects.map((p) {
+                                return DropdownMenuItem<String>(
+                                  value: p.id,
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.folder_rounded, size: 16, color: AppColors.primary),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          '${p.key} – ${p.name}',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setState(() => _selectedProjectId = val);
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+
               CustomTextField(
                 controller: _titleController,
                 label: AppTranslations.get('task_title', locale: locale),
-                hintText: locale == 'tr' ? 'örn: Mobil uygulama giriş akışı optimizasyonu' : 'e.g. Implement login flow',
-                validator: (val) => (val == null || val.isEmpty) ? (locale == 'tr' ? 'Başlık zorunludur' : 'Title is required') : null,
+                hintText: locale == 'tr'
+                    ? 'örn: Mobil uygulama giriş akışı optimizasyonu'
+                    : 'e.g. Implement login flow',
+                validator: (val) =>
+                    (val == null || val.isEmpty) ? (locale == 'tr' ? 'Başlık zorunludur' : 'Title is required') : null,
               ),
               const SizedBox(height: 16),
               Row(
@@ -130,18 +215,13 @@ class _CreateIssuePageState extends State<CreateIssuePage> {
                           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(height: 6),
-                        DropdownButtonFormField<String>(
-                          initialValue: _selectedType,
-                          decoration: InputDecoration(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          items: _types
-                              .map((t) => DropdownMenuItem(value: t, child: Text(_getTypeLabel(t, locale), style: const TextStyle(fontSize: 12))))
-                              .toList(),
-                          onChanged: (val) {
-                            if (val != null) setState(() => _selectedType = val);
-                          },
+                        _buildEnumDropdown<IssueType>(
+                          value: _selectedType,
+                          items: IssueType.values,
+                          getLabel: (t) => t.getLocalizedLabel(locale),
+                          getIcon: (t) => t.icon,
+                          getColor: (t) => t.color,
+                          onChanged: (val) => setState(() => _selectedType = val),
                         ),
                       ],
                     ),
@@ -156,18 +236,13 @@ class _CreateIssuePageState extends State<CreateIssuePage> {
                           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
                         ),
                         const SizedBox(height: 6),
-                        DropdownButtonFormField<String>(
-                          initialValue: _selectedPriority,
-                          decoration: InputDecoration(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                          ),
-                          items: _priorities
-                              .map((p) => DropdownMenuItem(value: p, child: Text(_getPriorityLabel(p, locale), style: const TextStyle(fontSize: 12))))
-                              .toList(),
-                          onChanged: (val) {
-                            if (val != null) setState(() => _selectedPriority = val);
-                          },
+                        _buildEnumDropdown<IssuePriority>(
+                          value: _selectedPriority,
+                          items: selectablePriorities,
+                          getLabel: (p) => p.getLocalizedLabel(locale),
+                          getIcon: (p) => p.icon,
+                          getColor: (p) => p.color,
+                          onChanged: (val) => setState(() => _selectedPriority = val),
                         ),
                       ],
                     ),
@@ -185,7 +260,9 @@ class _CreateIssuePageState extends State<CreateIssuePage> {
               CustomTextField(
                 controller: _descController,
                 label: AppTranslations.get('task_description', locale: locale),
-                hintText: locale == 'tr' ? 'Görev detayları, kabul kriterleri...' : 'Detailed requirements, acceptance criteria...',
+                hintText: locale == 'tr'
+                    ? 'Görev detayları, kabul kriterleri...'
+                    : 'Detailed requirements, acceptance criteria...',
                 maxLines: 4,
               ),
               const SizedBox(height: 28),
@@ -195,6 +272,56 @@ class _CreateIssuePageState extends State<CreateIssuePage> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEnumDropdown<T>({
+    required T value,
+    required List<T> items,
+    required String Function(T) getLabel,
+    required IconData Function(T) getIcon,
+    required Color Function(T) getColor,
+    required ValueChanged<T> onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<T>(
+          key: ValueKey(value),
+          value: items.contains(value) ? value : items.first,
+          isExpanded: true,
+          isDense: true,
+          dropdownColor: Colors.white,
+          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.textSecondary),
+          items: items
+              .map((item) => DropdownMenuItem<T>(
+                    value: item,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(getIcon(item), size: 14, color: getColor(item)),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            getLabel(item),
+                            style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ))
+              .toList(),
+          onChanged: (val) {
+            if (val != null) onChanged(val);
+          },
         ),
       ),
     );

@@ -19,8 +19,8 @@ class ProjectRemoteDataSource {
       );
       final list = ResponseParser.extractList(response.data);
       return list
-          .whereType<Map<String, dynamic>>()
-          .map((json) => ProjectModel.fromJson(json))
+          .whereType<Map>()
+          .map((json) => ProjectModel.fromJson(Map<String, dynamic>.from(json)))
           .toList();
     } on DioException catch (e) {
       throw ServerException(
@@ -72,8 +72,8 @@ class ProjectRemoteDataSource {
       final response = await client.dio.get(ApiEndpoints.projectMembers(projectId));
       final list = ResponseParser.extractList(response.data);
       return list
-          .whereType<Map<String, dynamic>>()
-          .map((json) => ProjectMemberModel.fromJson(json))
+          .whereType<Map>()
+          .map((json) => ProjectMemberModel.fromJson(Map<String, dynamic>.from(json)))
           .toList();
     } on DioException catch (e) {
       throw ServerException(

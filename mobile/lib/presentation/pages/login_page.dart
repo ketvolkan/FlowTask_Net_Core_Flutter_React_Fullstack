@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_dimensions.dart';
 import '../../core/localization/app_translations.dart';
 import '../blocs/auth/auth_bloc.dart';
 import '../blocs/auth/auth_event.dart';
@@ -8,6 +9,9 @@ import '../blocs/auth/auth_state.dart';
 import '../blocs/language/language_cubit.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
+import 'auth/widgets/auth_language_pill.dart';
+import 'auth/widgets/login_brand_header.dart';
+import 'auth/widgets/login_role_toggle.dart';
 import 'main_navigation_page.dart';
 import 'register_page.dart';
 
@@ -23,7 +27,7 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController(text: 'manager@techflow.com');
   final _passwordController = TextEditingController(text: 'Manager123*');
   bool _obscurePassword = true;
-  String _selectedRoleType = 'manager'; // 'manager' | 'employee'
+  String _selectedRoleType = 'manager';
 
   @override
   void dispose() {
@@ -58,8 +62,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final langState = context.watch<LanguageCubit>().state;
-    final locale = langState.locale;
+    final locale = context.watch<LanguageCubit>().state.locale;
 
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
@@ -73,6 +76,7 @@ class _LoginPageState extends State<LoginPage> {
               content: Text(state.message),
               backgroundColor: AppColors.danger,
               behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: AppDimensions.borderRadius10),
             ),
           );
         }
@@ -85,247 +89,100 @@ class _LoginPageState extends State<LoginPage> {
           body: SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.responsiveHorizontalPadding + AppDimensions.spacing8,
+                  vertical: AppDimensions.spacing24,
+                ),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Language Switcher Top Pill
-                      Align(
-                        alignment: Alignment.topRight,
-                        child: InkWell(
-                          onTap: () => context.read<LanguageCubit>().toggleLanguage(),
-                          borderRadius: BorderRadius.circular(20),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: AppColors.divider),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.language, size: 14, color: AppColors.primary),
-                                const SizedBox(width: 4),
-                                Text(
-                                  locale == 'tr' ? '🇹🇷 TR' : '🇬🇧 EN',
-                                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                      AuthLanguagePill(locale: locale),
+                      const SizedBox(height: AppDimensions.spacing10),
+                      LoginBrandHeader(locale: locale),
+                      const SizedBox(height: AppDimensions.spacing24),
+                      LoginRoleToggle(
+                        selectedRoleType: _selectedRoleType,
+                        locale: locale,
+                        onRoleSelected: _selectQuickAccount,
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: AppDimensions.spacing20),
 
-                      // Brand Logo
-                      Center(
-                        child: Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryLight,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.primary.withValues(alpha: 0.15),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.check_circle_outline,
-                            size: 42,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        AppTranslations.get('login_title', locale: locale),
-                        style: const TextStyle(
-                          fontSize: 23,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -0.5,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        AppTranslations.get('login_subtitle', locale: locale),
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Quick Account Selection Segment
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.grey.shade200),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () => _selectQuickAccount('manager'),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 10),
-                                  decoration: BoxDecoration(
-                                    color: _selectedRoleType == 'manager'
-                                        ? Colors.white
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(10),
-                                    boxShadow: _selectedRoleType == 'manager'
-                                        ? [
-                                            BoxShadow(
-                                              color: Colors.black.withValues(alpha: 0.05),
-                                              blurRadius: 4,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ]
-                                        : null,
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.admin_panel_settings_outlined,
-                                        size: 16,
-                                        color: _selectedRoleType == 'manager'
-                                            ? AppColors.primary
-                                            : AppColors.textSecondary,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        AppTranslations.get('role_manager', locale: locale),
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: _selectedRoleType == 'manager'
-                                              ? FontWeight.w700
-                                              : FontWeight.w500,
-                                          color: _selectedRoleType == 'manager'
-                                              ? AppColors.primary
-                                              : AppColors.textSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () => _selectQuickAccount('employee'),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 10),
-                                  decoration: BoxDecoration(
-                                    color: _selectedRoleType == 'employee'
-                                        ? Colors.white
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(10),
-                                    boxShadow: _selectedRoleType == 'employee'
-                                        ? [
-                                            BoxShadow(
-                                              color: Colors.black.withValues(alpha: 0.05),
-                                              blurRadius: 4,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ]
-                                        : null,
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.person_outline,
-                                        size: 16,
-                                        color: _selectedRoleType == 'employee'
-                                            ? AppColors.primary
-                                            : AppColors.textSecondary,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        AppTranslations.get('role_member', locale: locale),
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: _selectedRoleType == 'employee'
-                                              ? FontWeight.w700
-                                              : FontWeight.w500,
-                                          color: _selectedRoleType == 'employee'
-                                              ? AppColors.primary
-                                              : AppColors.textSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
+                      // Email field
                       CustomTextField(
                         controller: _emailController,
                         label: AppTranslations.get('email', locale: locale),
                         hintText: 'name@company.com',
+                        prefixIcon: const Icon(
+                          Icons.email_outlined,
+                          size: AppDimensions.iconDefault,
+                          color: AppColors.textMuted,
+                        ),
                         keyboardType: TextInputType.emailAddress,
-                        prefixIcon: const Icon(Icons.email_outlined, size: 20, color: AppColors.textMuted),
                         validator: (val) {
-                          if (val == null || val.isEmpty) return locale == 'tr' ? 'E-posta zorunludur' : 'Email is required';
-                          if (!val.contains('@')) return locale == 'tr' ? 'Geçerli bir e-posta adresi girin' : 'Enter a valid email';
+                          if (val == null || val.isEmpty) {
+                            return locale == 'tr' ? 'E-posta zorunludur' : 'Email is required';
+                          }
+                          if (!val.contains('@')) {
+                            return locale == 'tr' ? 'Geçerli bir e-posta girin' : 'Enter a valid email';
+                          }
                           return null;
                         },
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppDimensions.spacing16),
+
+                      // Password field
                       CustomTextField(
                         controller: _passwordController,
                         label: AppTranslations.get('password', locale: locale),
                         hintText: '••••••••',
+                        prefixIcon: const Icon(
+                          Icons.lock_outline_rounded,
+                          size: AppDimensions.iconDefault,
+                          color: AppColors.textMuted,
+                        ),
                         obscureText: _obscurePassword,
-                        prefixIcon: const Icon(Icons.lock_outline, size: 20, color: AppColors.textMuted),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                            size: 20,
+                            size: AppDimensions.iconDefault,
                             color: AppColors.textMuted,
                           ),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
+                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                         ),
                         validator: (val) {
-                          if (val == null || val.isEmpty) return locale == 'tr' ? 'Şifre zorunludur' : 'Password is required';
+                          if (val == null || val.isEmpty) {
+                            return locale == 'tr' ? 'Şifre zorunludur' : 'Password is required';
+                          }
+                          if (val.length < 6) {
+                            return locale == 'tr'
+                                ? 'Şifre en az 6 karakter olmalıdır'
+                                : 'Password must be at least 6 characters';
+                          }
                           return null;
                         },
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppDimensions.spacing24),
+
+                      // Submit button
                       CustomButton(
                         text: AppTranslations.get('login_button', locale: locale),
                         isLoading: isLoading,
                         onPressed: _onLoginPressed,
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: AppDimensions.spacing20),
+
+                      // Register link
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            '${AppTranslations.get('no_account', locale: locale).split('?')[0]}? ',
-                            style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                            AppTranslations.get('no_account_yet', locale: locale),
+                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                           ),
+                          const SizedBox(width: AppDimensions.spacing6),
                           GestureDetector(
                             onTap: () {
                               Navigator.of(context).push(
@@ -335,9 +192,9 @@ class _LoginPageState extends State<LoginPage> {
                             child: Text(
                               AppTranslations.get('register_button', locale: locale),
                               style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
                                 color: AppColors.primary,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13,
                               ),
                             ),
                           ),

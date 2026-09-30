@@ -23,10 +23,10 @@ class ProjectModel extends ProjectEntity {
       ownerName: json['ownerName']?.toString(),
       memberCount: json['memberCount'] is num
           ? (json['memberCount'] as num).toInt()
-          : (json['members'] as List?)?.length ?? 0,
+          : (json['members'] is List ? (json['members'] as List).length : 0),
       issueCount: json['issueCount'] is num
           ? (json['issueCount'] as num).toInt()
-          : (json['issues'] as List?)?.length ?? 0,
+          : (json['issues'] is List ? (json['issues'] as List).length : 0),
       createdAt: json['createdAt'] != null
           ? (DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now())
           : DateTime.now(),

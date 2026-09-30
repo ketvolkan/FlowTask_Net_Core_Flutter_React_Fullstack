@@ -10,19 +10,24 @@ class AuthTokensModel extends AuthTokensEntity {
   });
 
   factory AuthTokensModel.fromJson(Map<String, dynamic> json) {
+    UserModel user;
+    if (json['user'] is Map) {
+      user = UserModel.fromJson(Map<String, dynamic>.from(json['user'] as Map));
+    } else {
+      user = UserModel(
+        id: json['userId']?.toString() ?? '',
+        email: json['email']?.toString() ?? '',
+        fullName: json['fullName']?.toString() ?? '',
+        role: json['role']?.toString() ?? 'Member',
+        isActive: true,
+      );
+    }
+
     return AuthTokensModel(
-      token: json['token'] as String? ?? '',
-      refreshToken: json['refreshToken'] as String? ?? '',
-      expiresAt: json['expiresAt'] != null ? DateTime.tryParse(json['expiresAt'] as String) : null,
-      user: json['user'] != null
-          ? UserModel.fromJson(json['user'] as Map<String, dynamic>)
-          : UserModel(
-              id: json['userId'] as String? ?? '',
-              email: json['email'] as String? ?? '',
-              fullName: json['fullName'] as String? ?? '',
-              role: json['role'] as String? ?? 'Member',
-              isActive: true,
-            ),
+      token: (json['token'] ?? json['accessToken'])?.toString() ?? '',
+      refreshToken: json['refreshToken']?.toString() ?? '',
+      expiresAt: json['expiresAt'] != null ? DateTime.tryParse(json['expiresAt'].toString()) : null,
+      user: user,
     );
   }
 

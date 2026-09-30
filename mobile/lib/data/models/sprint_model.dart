@@ -15,15 +15,15 @@ class SprintModel extends SprintEntity {
 
   factory SprintModel.fromJson(Map<String, dynamic> json) {
     return SprintModel(
-      id: json['id'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      goal: json['goal'] as String?,
-      status: json['status'] as String? ?? 'Planning',
-      startDate: json['startDate'] != null ? DateTime.tryParse(json['startDate'] as String) : null,
-      endDate: json['endDate'] != null ? DateTime.tryParse(json['endDate'] as String) : null,
-      projectId: json['projectId'] as String? ?? '',
-      totalIssues: json['totalIssues'] as int? ?? 0,
-      completedIssues: json['completedIssues'] as int? ?? 0,
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      goal: json['goal']?.toString(),
+      status: json['status']?.toString() ?? 'Planning',
+      startDate: json['startDate'] != null ? DateTime.tryParse(json['startDate'].toString()) : null,
+      endDate: json['endDate'] != null ? DateTime.tryParse(json['endDate'].toString()) : null,
+      projectId: json['projectId']?.toString() ?? '',
+      totalIssues: json['totalIssues'] is num ? (json['totalIssues'] as num).toInt() : 0,
+      completedIssues: json['completedIssues'] is num ? (json['completedIssues'] as num).toInt() : 0,
     );
   }
 

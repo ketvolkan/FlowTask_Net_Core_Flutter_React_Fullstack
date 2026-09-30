@@ -27,10 +27,11 @@ class ProjectsLoaded extends ProjectState {
   ProjectsLoaded copyWith({
     List<ProjectEntity>? projects,
     ProjectEntity? selectedProject,
+    bool clearSelectedProject = false,
   }) {
     return ProjectsLoaded(
       projects: projects ?? this.projects,
-      selectedProject: selectedProject ?? this.selectedProject,
+      selectedProject: clearSelectedProject ? null : (selectedProject ?? this.selectedProject),
     );
   }
 }

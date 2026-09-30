@@ -13,16 +13,26 @@ class ProjectMemberModel extends ProjectMemberEntity {
   });
 
   factory ProjectMemberModel.fromJson(Map<String, dynamic> json) {
+    String fullName = json['fullName']?.toString() ?? '';
+    String email = json['email']?.toString() ?? '';
+    String? avatarUrl = json['avatarUrl']?.toString();
+    if (json['user'] is Map) {
+      final userMap = json['user'] as Map;
+      if (fullName.isEmpty) fullName = userMap['fullName']?.toString() ?? '';
+      if (email.isEmpty) email = userMap['email']?.toString() ?? '';
+      avatarUrl ??= userMap['avatarUrl']?.toString();
+    }
+
     return ProjectMemberModel(
-      id: json['id'] as String? ?? '',
-      projectId: json['projectId'] as String? ?? '',
-      userId: json['userId'] as String? ?? '',
-      email: json['email'] as String? ?? '',
-      fullName: json['fullName'] as String? ?? '',
-      avatarUrl: json['avatarUrl'] as String?,
-      role: json['role'] as String? ?? 'Member',
+      id: json['id']?.toString() ?? '',
+      projectId: json['projectId']?.toString() ?? '',
+      userId: json['userId']?.toString() ?? '',
+      email: email,
+      fullName: fullName,
+      avatarUrl: avatarUrl,
+      role: json['role']?.toString() ?? 'Member',
       joinedAt: json['joinedAt'] != null
-          ? DateTime.parse(json['joinedAt'] as String)
+          ? (DateTime.tryParse(json['joinedAt'].toString()) ?? DateTime.now())
           : DateTime.now(),
     );
   }

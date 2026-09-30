@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNotification } from '../../context/NotificationContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { Bell, CheckSquare, MessageSquare, RefreshCw, X, ExternalLink, Sparkles } from 'lucide-react';
+import { Bell, CheckSquare, MessageSquare, RefreshCw, X, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { tr as trLocale, enUS } from 'date-fns/locale';
@@ -46,23 +46,25 @@ export const NotificationToast: React.FC = () => {
 
         {/* Content */}
         <div className="flex-1 min-w-0 cursor-pointer" onClick={handleClick}>
-          <div className="flex items-center gap-1.5">
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded uppercase">
-              <Sparkles className="h-2.5 w-2.5" />
-              Anlık Bildirim
-            </span>
-          </div>
-          <h4 className="text-xs font-bold text-slate-900 mt-1 leading-tight">
+          <h4 className="text-xs font-bold text-slate-900 leading-tight">
             {recentToast.title}
           </h4>
           <p className="text-xs text-slate-600 mt-0.5 line-clamp-2 leading-relaxed">
             {recentToast.message}
           </p>
-          <span className="text-[10px] text-slate-400 mt-1 block">
-            {recentToast.createdAt
-              ? formatDistanceToNow(new Date(recentToast.createdAt), { addSuffix: true, locale: dateLocale })
-              : 'Az önce'}
-          </span>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-[10px] text-slate-400">
+              {recentToast.createdAt
+                ? formatDistanceToNow(new Date(recentToast.createdAt), { addSuffix: true, locale: dateLocale })
+                : isTurkish ? 'Az önce' : 'Just now'}
+            </span>
+            {recentToast.linkUrl && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-indigo-600">
+                <ExternalLink className="h-2.5 w-2.5" />
+                {isTurkish ? 'Aç' : 'Open'}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Dismiss Button */}

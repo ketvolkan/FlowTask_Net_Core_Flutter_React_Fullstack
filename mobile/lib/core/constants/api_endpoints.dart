@@ -17,7 +17,9 @@ class ApiEndpoints {
   static const String issues = '/issues';
   static String issueById(String id) => '/issues/$id';
   static String issueStatus(String id) => '/issues/$id/status';
-  static String issueComments(String id) => '/issues/$id/comments';
+  // Comments (Note: backend uses /comments/issue/{id}, not /issues/{id}/comments)
+  static String issueComments(String issueId) => '/comments/issue/$issueId';
+  static String commentById(String id) => '/comments/$id';
   static String issueAttachments(String id) => '/issues/$id/attachments';
   
   // Sprints

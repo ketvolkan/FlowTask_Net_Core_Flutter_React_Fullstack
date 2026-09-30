@@ -27,8 +27,8 @@ class IssueRemoteDataSource {
 
       final list = ResponseParser.extractList(response.data);
       return list
-          .whereType<Map<String, dynamic>>()
-          .map((json) => IssueModel.fromJson(json))
+          .whereType<Map>()
+          .map((json) => IssueModel.fromJson(Map<String, dynamic>.from(json)))
           .toList();
     } on DioException catch (e) {
       throw ServerException(

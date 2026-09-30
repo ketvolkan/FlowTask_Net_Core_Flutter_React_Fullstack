@@ -1,58 +1,47 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_dimensions.dart';
+import '../../core/enums/issue_priority.dart';
 
 class PriorityBadge extends StatelessWidget {
   final String priority;
+  final String? locale;
 
-  const PriorityBadge({super.key, required this.priority});
+  const PriorityBadge({
+    super.key,
+    required this.priority,
+    this.locale,
+  });
 
   @override
   Widget build(BuildContext context) {
-    Color bg;
-    Color text;
-    IconData icon;
-
-    switch (priority.toLowerCase()) {
-      case 'critical':
-        bg = const Color(0xFFFEF2F2);
-        text = const Color(0xFFB91C1C);
-        icon = Icons.error_outline;
-        break;
-      case 'high':
-        bg = const Color(0xFFFFF1F2);
-        text = const Color(0xFFE11D48);
-        icon = Icons.keyboard_double_arrow_up;
-        break;
-      case 'medium':
-        bg = const Color(0xFFFFFBEB);
-        text = const Color(0xFFD97706);
-        icon = Icons.drag_handle;
-        break;
-      case 'low':
-      default:
-        bg = const Color(0xFFF1F5F9);
-        text = const Color(0xFF64748B);
-        icon = Icons.keyboard_arrow_down;
-        break;
-    }
+    final issuePriority = IssuePriority.fromString(priority);
+    final activeLocale = locale ?? 'tr';
+    final label = issuePriority.getLocalizedLabel(activeLocale);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.spacing8,
+        vertical: AppDimensions.spacing4,
+      ),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: text.withAlpha(50)),
+        color: issuePriority.backgroundColor,
+        borderRadius: AppDimensions.borderRadius6,
+        border: Border.all(
+          color: issuePriority.color.withValues(alpha: 0.25),
+          width: AppDimensions.borderWidthRegular,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: text),
-          const SizedBox(width: 4),
+          Icon(issuePriority.icon, size: AppDimensions.iconExtraSmall, color: issuePriority.color),
+          const SizedBox(width: AppDimensions.spacing4),
           Text(
-            priority,
+            label,
             style: TextStyle(
-              color: text,
+              color: issuePriority.color,
               fontSize: 11,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],

@@ -39,6 +39,10 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
   ) {
     if (state is ProjectsLoaded) {
       final currentState = state as ProjectsLoaded;
+      if (event.projectId == 'all' || event.projectId.isEmpty) {
+        emit(currentState.copyWith(clearSelectedProject: true));
+        return;
+      }
       final selected = currentState.projects.firstWhere(
         (p) => p.id == event.projectId,
         orElse: () => currentState.projects.first,

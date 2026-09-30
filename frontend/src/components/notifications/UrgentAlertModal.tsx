@@ -56,7 +56,7 @@ export const UrgentAlertModal: React.FC = () => {
           <div className="flex items-center justify-between text-xs text-slate-400 pt-1">
             <div className="flex items-center gap-1.5">
               <BellRing className="h-3.5 w-3.5 text-rose-500" />
-              <span>Anlık WebSocket Yayını</span>
+              <span>{isTurkish ? 'Anlık Bildirim' : 'Live Notification'}</span>
             </div>
             <span>
               {urgentAlert.createdAt

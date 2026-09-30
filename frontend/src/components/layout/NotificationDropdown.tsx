@@ -32,13 +32,33 @@ export const NotificationDropdown: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const getNotifLink = (n: typeof notifications[0]): string | null => {
+    if (n.linkUrl) return n.linkUrl;
+    if (!n.referenceId) return null;
+    switch (n.type) {
+      case 'IssueAssigned':
+      case 'IssueStatusChanged':
+      case 'CommentAdded':
+      case 'Mentioned':
+        return `/issues/${n.referenceId}`;
+      case 'ProjectInvited':
+        return `/projects/${n.referenceId}`;
+      case 'SprintStarted':
+      case 'SprintCompleted':
+        return `/board`;
+      default:
+        return null;
+    }
+  };
+
   const handleNotificationClick = (n: typeof notifications[0]) => {
     if (!n.isRead) {
       markAsRead(n.id);
     }
-    if (n.linkUrl) {
+    const link = getNotifLink(n);
+    if (link) {
       setIsOpen(false);
-      navigate(n.linkUrl);
+      navigate(link);
     }
   };
 
@@ -109,6 +129,8 @@ export const NotificationDropdown: React.FC = () => {
                     n.type === 'SystemAlert' ||
                     n.type?.toLowerCase().includes('alert');
 
+                  const notifLink = getNotifLink(n);
+
                   return (
                     <div
                       key={n.id}
@@ -126,12 +148,12 @@ export const NotificationDropdown: React.FC = () => {
                           {isUrgent ? (
                             <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-rose-700 bg-rose-100 px-1.5 py-0.2 rounded uppercase">
                               <ShieldAlert className="h-2.5 w-2.5" />
-                              Acil Uyarı
+                              {isTurkish ? 'Acil Uyarı' : 'Urgent Alert'}
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 text-[9px] font-bold text-slate-500 bg-slate-100 px-1.5 py-0.2 rounded uppercase">
                               <Sparkles className="h-2.5 w-2.5 text-indigo-500" />
-                              {n.type || 'Sistem'}
+                              {n.type || (isTurkish ? 'Sistem' : 'System')}
                             </span>
                           )}
                         </div>
@@ -145,12 +167,12 @@ export const NotificationDropdown: React.FC = () => {
                           <span className="text-[10px] text-slate-400">
                             {n.createdAt
                               ? formatDistanceToNow(new Date(n.createdAt), { addSuffix: true, locale: dateLocale })
-                              : 'Az önce'}
+                              : isTurkish ? 'Az önce' : 'Just now'}
                           </span>
-                          {n.linkUrl && (
+                          {notifLink && (
                             <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-indigo-600">
                               <ExternalLink className="h-2.5 w-2.5" />
-                              Aç
+                              {isTurkish ? 'Aç' : 'Open'}
                             </span>
                           )}
                         </div>

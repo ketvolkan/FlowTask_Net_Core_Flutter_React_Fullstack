@@ -15,8 +15,8 @@ class CommentRemoteDataSource {
       final response = await client.dio.get(ApiEndpoints.issueComments(issueId));
       final list = ResponseParser.extractList(response.data);
       return list
-          .whereType<Map<String, dynamic>>()
-          .map((json) => CommentModel.fromJson(json))
+          .whereType<Map>()
+          .map((json) => CommentModel.fromJson(Map<String, dynamic>.from(json)))
           .toList();
     } on DioException catch (e) {
       throw ServerException(
@@ -44,7 +44,7 @@ class CommentRemoteDataSource {
 
   Future<void> deleteComment(String commentId) async {
     try {
-      await client.dio.delete('/comments/$commentId');
+      await client.dio.delete(ApiEndpoints.commentById(commentId));
     } on DioException catch (e) {
       throw ServerException(
         message: e.response?.data?['message'] ?? 'Failed to delete comment',

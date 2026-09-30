@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_dimensions.dart';
 
 class CustomButton extends StatelessWidget {
   final String text;
@@ -28,9 +29,12 @@ class CustomButton extends StatelessWidget {
         onPressed: isLoading ? null : onPressed,
         style: OutlinedButton.styleFrom(
           foregroundColor: effectiveColor,
-          side: BorderSide(color: effectiveColor),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          side: BorderSide(color: effectiveColor, width: AppDimensions.borderWidthRegular),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.spacing20,
+            vertical: AppDimensions.spacing14,
+          ),
+          shape: RoundedRectangleBorder(borderRadius: AppDimensions.borderRadius12),
         ),
         child: _buildChild(effectiveColor),
       );
@@ -41,8 +45,12 @@ class CustomButton extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: effectiveColor,
         foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.spacing20,
+          vertical: AppDimensions.spacing14,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: AppDimensions.borderRadius12),
+        elevation: 0,
       ),
       child: _buildChild(Colors.white),
     );
@@ -51,10 +59,10 @@ class CustomButton extends StatelessWidget {
   Widget _buildChild(Color textColor) {
     if (isLoading) {
       return SizedBox(
-        height: 20,
-        width: 20,
+        height: AppDimensions.spacing20,
+        width: AppDimensions.spacing20,
         child: CircularProgressIndicator(
-          strokeWidth: 2,
+          strokeWidth: AppDimensions.borderWidthAccent,
           valueColor: AlwaysStoppedAnimation<Color>(textColor),
         ),
       );
@@ -65,13 +73,27 @@ class CustomButton extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 18),
-          const SizedBox(width: 8),
-          Text(text, style: const TextStyle(fontWeight: FontWeight.w600)),
+          Icon(icon, size: AppDimensions.iconRegular, color: textColor),
+          const SizedBox(width: AppDimensions.spacing8),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: textColor,
+            ),
+          ),
         ],
       );
     }
 
-    return Text(text, style: const TextStyle(fontWeight: FontWeight.w600));
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w700,
+        color: textColor,
+      ),
+    );
   }
 }

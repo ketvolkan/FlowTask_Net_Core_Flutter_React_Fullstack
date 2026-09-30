@@ -12,15 +12,29 @@ class CommentModel extends CommentEntity {
   });
 
   factory CommentModel.fromJson(Map<String, dynamic> json) {
+    String userFullName = 'User';
+    String? userAvatarUrl;
+    if (json['userFullName'] != null) {
+      userFullName = json['userFullName'].toString();
+    } else if (json['user'] is Map) {
+      final userMap = json['user'] as Map;
+      userFullName = userMap['fullName']?.toString() ?? 'User';
+      userAvatarUrl = userMap['avatarUrl']?.toString();
+    }
+
+    if (json['userAvatarUrl'] != null) {
+      userAvatarUrl = json['userAvatarUrl']?.toString();
+    }
+
     return CommentModel(
-      id: json['id'] as String? ?? '',
-      content: json['content'] as String? ?? '',
-      issueId: json['issueId'] as String? ?? '',
-      userId: json['userId'] as String? ?? '',
-      userFullName: json['userFullName'] as String? ?? (json['user'] != null ? json['user']['fullName'] : 'User'),
-      userAvatarUrl: json['userAvatarUrl'] as String? ?? (json['user'] != null ? json['user']['avatarUrl'] : null),
+      id: json['id']?.toString() ?? '',
+      content: json['content']?.toString() ?? '',
+      issueId: json['issueId']?.toString() ?? '',
+      userId: json['userId']?.toString() ?? '',
+      userFullName: userFullName,
+      userAvatarUrl: userAvatarUrl,
       createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'] as String)
+          ? (DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now())
           : DateTime.now(),
     );
   }

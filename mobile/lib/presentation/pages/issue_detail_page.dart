@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/enums/issue_status.dart';
 import '../../core/localization/app_translations.dart';
-import '../../core/utils/date_formatter.dart';
-import '../../domain/entities/issue_entity.dart';
-import '../../domain/entities/comment_entity.dart';
-import '../../domain/usecases/get_comments_usecase.dart';
-import '../../domain/usecases/add_comment_usecase.dart';
 import '../../data/datasources/issue_remote_data_source.dart';
+import '../../domain/entities/comment_entity.dart';
+import '../../domain/entities/issue_entity.dart';
+import '../../domain/usecases/add_comment_usecase.dart';
+import '../../domain/usecases/get_comments_usecase.dart';
 import '../../injection_container.dart';
-import '../blocs/language/language_cubit.dart';
 import '../blocs/issue/issue_bloc.dart';
 import '../blocs/issue/issue_event.dart';
+import '../blocs/language/language_cubit.dart';
 import '../widgets/status_badge.dart';
-import '../widgets/priority_badge.dart';
 import '../widgets/type_badge.dart';
+import 'issue_detail/widgets/issue_comments_section.dart';
+import 'issue_detail/widgets/issue_meta_card.dart';
 
 class IssueDetailPage extends StatefulWidget {
   final IssueEntity issue;
@@ -26,9 +27,7 @@ class IssueDetailPage extends StatefulWidget {
 }
 
 class _IssueDetailPageState extends State<IssueDetailPage> {
-  late String _currentStatus;
-  final List<String> _statuses = ['Todo', 'InProgress', 'InReview', 'Done'];
-
+  late IssueStatus _currentStatus;
   final List<CommentEntity> _comments = [];
   bool _isLoadingComments = false;
   final TextEditingController _commentController = TextEditingController();
@@ -37,7 +36,7 @@ class _IssueDetailPageState extends State<IssueDetailPage> {
   @override
   void initState() {
     super.initState();
-    _currentStatus = widget.issue.status;
+    _currentStatus = IssueStatus.fromString(widget.issue.status);
     _loadComments();
   }
 
@@ -52,11 +51,12 @@ class _IssueDetailPageState extends State<IssueDetailPage> {
     try {
       final getComments = sl<GetCommentsUseCase>();
       final list = await getComments(widget.issue.id);
-      setState(() => _comments..clear()..addAll(list));
-    } catch (_) {
-      // Ignored if comments endpoint fails
+      if (mounted) setState(() => _comments..clear()..addAll(list));
+    } catch (e) {
+      debugPrint('[CommentsError] $e');
+      if (mounted) setState(() => _comments.clear());
     } finally {
-      setState(() => _isLoadingComments = false);
+      if (mounted) setState(() => _isLoadingComments = false);
     }
   }
 
@@ -94,12 +94,12 @@ class _IssueDetailPageState extends State<IssueDetailPage> {
     }
   }
 
-  void _onStatusChange(String newStatus, String locale) {
+  void _onStatusChange(IssueStatus newStatus, String locale) {
     setState(() => _currentStatus = newStatus);
     context.read<IssueBloc>().add(
           UpdateIssueStatusEvent(
             issueId: widget.issue.id,
-            newStatus: newStatus,
+            newStatus: newStatus.toApiValue(),
             newOrder: widget.issue.orderIndex,
           ),
         );
@@ -150,23 +150,28 @@ class _IssueDetailPageState extends State<IssueDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final locale = context.watch<LanguageCubit>().state.locale;
     final issue = widget.issue;
-    final langState = context.watch<LanguageCubit>().state;
-    final locale = langState.locale;
+
+    // Available actionable statuses (excluding 'all')
+    final selectableStatuses = [
+      IssueStatus.todo,
+      IssueStatus.inProgress,
+      IssueStatus.inReview,
+      IssueStatus.done,
+    ];
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.pageBackground,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
         title: Text(
-          issue.issueKey.isNotEmpty ? issue.issueKey : AppTranslations.get('task_detail_title', locale: locale),
-          style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+          issue.issueKey,
+          style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.textPrimary),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete_outline, color: AppColors.danger),
-            tooltip: AppTranslations.get('delete_task', locale: locale),
+            icon: const Icon(Icons.delete_outline_rounded, color: AppColors.danger),
+            tooltip: AppTranslations.get('delete', locale: locale),
             onPressed: () => _deleteIssue(locale),
           ),
         ],
@@ -180,22 +185,27 @@ class _IssueDetailPageState extends State<IssueDetailPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                TypeBadge(type: issue.type),
+                TypeBadge(type: issue.type, locale: locale),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: AppColors.divider),
                   ),
                   child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _statuses.contains(_currentStatus) ? _currentStatus : _statuses.first,
+                    child: DropdownButton<IssueStatus>(
+                      key: ValueKey(_currentStatus),
+                      value: selectableStatuses.contains(_currentStatus)
+                          ? _currentStatus
+                          : IssueStatus.todo,
                       isDense: true,
-                      items: _statuses.map((s) {
-                        return DropdownMenuItem(
+                      dropdownColor: Colors.white,
+                      icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18),
+                      items: selectableStatuses.map((s) {
+                        return DropdownMenuItem<IssueStatus>(
                           value: s,
-                          child: StatusBadge(status: s),
+                          child: StatusBadge(status: s.toApiValue(), locale: locale),
                         );
                       }).toList(),
                       onChanged: (val) {
@@ -220,195 +230,55 @@ class _IssueDetailPageState extends State<IssueDetailPage> {
             const SizedBox(height: 16),
 
             // Details Card
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              elevation: 0.5,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppTranslations.get('task_detail_title', locale: locale),
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-                    ),
-                    const Divider(height: 20),
-                    _buildDetailRow(
-                      AppTranslations.get('task_priority', locale: locale),
-                      PriorityBadge(priority: issue.priority),
-                    ),
-                    const SizedBox(height: 10),
-                    _buildDetailRow(
-                      AppTranslations.get('assignee', locale: locale),
-                      Text(
-                        issue.assigneeName ?? AppTranslations.get('unassigned', locale: locale),
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    _buildDetailRow(
-                      AppTranslations.get('reporter', locale: locale),
-                      Text(
-                        issue.reporterName ?? 'Flowtask User',
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    _buildDetailRow(
-                      AppTranslations.get('task_story_points', locale: locale),
-                      Text(
-                        issue.storyPoints != null ? '${issue.storyPoints} pts' : '-',
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    _buildDetailRow(
-                      locale == 'tr' ? 'Oluşturulma' : 'Created',
-                      Text(
-                        DateFormatter.formatShort(issue.createdAt),
-                        style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            IssueMetaCard(issue: issue, locale: locale),
             const SizedBox(height: 16),
 
             // Description Card
             if (issue.description != null && issue.description!.isNotEmpty) ...[
-              Text(
-                AppTranslations.get('task_description', locale: locale),
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.divider),
-                ),
-                child: Text(
-                  issue.description!,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textPrimary,
-                    height: 1.5,
+              Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                elevation: 0.5,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        AppTranslations.get('task_description', locale: locale),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        issue.description!,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textPrimary,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
             ],
 
             // Comments Section
-            Text(
-              AppTranslations.get('comments', locale: locale),
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+            IssueCommentsSection(
+              comments: _comments,
+              isLoadingComments: _isLoadingComments,
+              isSendingComment: _isSendingComment,
+              commentController: _commentController,
+              locale: locale,
+              onAddComment: () => _addComment(locale),
             ),
-            const SizedBox(height: 10),
-
-            // Add Comment Input Box
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.divider),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _commentController,
-                      decoration: InputDecoration(
-                        hintText: AppTranslations.get('add_comment', locale: locale),
-                        hintStyle: const TextStyle(fontSize: 13, color: AppColors.textMuted),
-                        border: InputBorder.none,
-                        isDense: true,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: _isSendingComment
-                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.send, color: AppColors.primary, size: 20),
-                    onPressed: _isSendingComment ? null : () => _addComment(locale),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Comments List
-            if (_isLoadingComments)
-              const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()))
-            else if (_comments.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Text(
-                  AppTranslations.get('no_comments', locale: locale),
-                  style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
-                ),
-              )
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _comments.length,
-                itemBuilder: (context, index) {
-                  final c = _comments[index];
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.divider),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              c.userFullName.isNotEmpty ? c.userFullName : 'Ekip Üyesi',
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                            ),
-                            Text(
-                              DateFormatter.formatShort(c.createdAt),
-                              style: const TextStyle(fontSize: 10, color: AppColors.textMuted),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          c.content,
-                          style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, Widget value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-        ),
-        value,
-      ],
     );
   }
 }

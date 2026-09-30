@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_dimensions.dart';
 import '../../core/constants/companies.dart';
 import '../../core/localization/app_translations.dart';
 import '../blocs/auth/auth_bloc.dart';
@@ -9,6 +10,8 @@ import '../blocs/auth/auth_state.dart';
 import '../blocs/language/language_cubit.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_text_field.dart';
+import 'auth/widgets/register_company_dropdown.dart';
+import 'auth/widgets/register_role_toggle.dart';
 import 'main_navigation_page.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -52,8 +55,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
-    final langState = context.watch<LanguageCubit>().state;
-    final locale = langState.locale;
+    final locale = context.watch<LanguageCubit>().state.locale;
 
     return BlocConsumer<AuthBloc, AuthState>(
       listener: (context, state) {
@@ -68,6 +70,7 @@ class _RegisterPageState extends State<RegisterPage> {
               content: Text(state.message),
               backgroundColor: AppColors.danger,
               behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: AppDimensions.borderRadius10),
             ),
           );
         }
@@ -81,7 +84,7 @@ class _RegisterPageState extends State<RegisterPage> {
             backgroundColor: AppColors.background,
             elevation: 0,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+              icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
               onPressed: () => Navigator.of(context).pop(),
             ),
             title: Text(
@@ -96,141 +99,52 @@ class _RegisterPageState extends State<RegisterPage> {
           body: SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.responsiveHorizontalPadding + AppDimensions.spacing8,
+                  vertical: AppDimensions.spacing16,
+                ),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Role Selection Type
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.grey.shade200),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () => setState(() => _registerType = 'employee'),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 10),
-                                  decoration: BoxDecoration(
-                                    color: _registerType == 'employee'
-                                        ? Colors.white
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(10),
-                                    boxShadow: _registerType == 'employee'
-                                        ? [
-                                            BoxShadow(
-                                              color: Colors.black.withValues(alpha: 0.05),
-                                              blurRadius: 4,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ]
-                                        : null,
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.person_outline,
-                                        size: 16,
-                                        color: _registerType == 'employee'
-                                            ? AppColors.primary
-                                            : AppColors.textSecondary,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        AppTranslations.get('role_member', locale: locale),
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: _registerType == 'employee'
-                                              ? FontWeight.w700
-                                              : FontWeight.w500,
-                                          color: _registerType == 'employee'
-                                              ? AppColors.primary
-                                              : AppColors.textSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: () => setState(() => _registerType = 'company'),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 10),
-                                  decoration: BoxDecoration(
-                                    color: _registerType == 'company'
-                                        ? Colors.white
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(10),
-                                    boxShadow: _registerType == 'company'
-                                        ? [
-                                            BoxShadow(
-                                              color: Colors.black.withValues(alpha: 0.05),
-                                              blurRadius: 4,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ]
-                                        : null,
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.business_outlined,
-                                        size: 16,
-                                        color: _registerType == 'company'
-                                            ? AppColors.primary
-                                            : AppColors.textSecondary,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        AppTranslations.get('role_manager', locale: locale),
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: _registerType == 'company'
-                                              ? FontWeight.w700
-                                              : FontWeight.w500,
-                                          color: _registerType == 'company'
-                                              ? AppColors.primary
-                                              : AppColors.textSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                      RegisterRoleToggle(
+                        registerType: _registerType,
+                        locale: locale,
+                        onRoleChanged: (type) => setState(() => _registerType = type),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppDimensions.spacing24),
 
+                      // Full name field
                       CustomTextField(
                         controller: _nameController,
                         label: AppTranslations.get('fullname', locale: locale),
                         hintText: locale == 'tr' ? 'Örn: Ahmet Yılmaz' : 'e.g. John Doe',
-                        prefixIcon: const Icon(Icons.person_outline, size: 20, color: AppColors.textMuted),
+                        prefixIcon: const Icon(
+                          Icons.person_outline_rounded,
+                          size: AppDimensions.iconDefault,
+                          color: AppColors.textMuted,
+                        ),
                         validator: (val) {
-                          if (val == null || val.isEmpty) return locale == 'tr' ? 'Ad Soyad zorunludur' : 'Name is required';
+                          if (val == null || val.isEmpty) {
+                            return locale == 'tr' ? 'Ad Soyad zorunludur' : 'Name is required';
+                          }
                           return null;
                         },
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppDimensions.spacing16),
 
+                      // Company name field or dropdown
                       if (_registerType == 'company')
                         CustomTextField(
                           controller: _companyNameController,
                           label: AppTranslations.get('company_name', locale: locale),
                           hintText: 'Örn: Acme Tech A.Ş.',
-                          prefixIcon: const Icon(Icons.business_outlined, size: 20, color: AppColors.textMuted),
+                          prefixIcon: const Icon(
+                            Icons.business_outlined,
+                            size: AppDimensions.iconDefault,
+                            color: AppColors.textMuted,
+                          ),
                           validator: (val) {
                             if (_registerType == 'company' && (val == null || val.isEmpty)) {
                               return locale == 'tr' ? 'Şirket adı zorunludur' : 'Company name is required';
@@ -239,113 +153,74 @@ class _RegisterPageState extends State<RegisterPage> {
                           },
                         )
                       else
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              AppTranslations.get('company_name', locale: locale),
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.grey.shade300),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _selectedCompanyId,
-                                  isExpanded: true,
-                                  icon: const Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
-                                  items: AppCompanies.list.map((c) {
-                                    return DropdownMenuItem(
-                                      value: c.id,
-                                      child: Text(
-                                        c.name,
-                                        style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
-                                      ),
-                                    );
-                                  }).toList(),
-                                  onChanged: (val) {
-                                    if (val != null) {
-                                      setState(() => _selectedCompanyId = val);
-                                    }
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
+                        RegisterCompanyDropdown(
+                          selectedCompanyId: _selectedCompanyId,
+                          locale: locale,
+                          onCompanyChanged: (id) => setState(() => _selectedCompanyId = id),
                         ),
+                      const SizedBox(height: AppDimensions.spacing16),
 
-                      const SizedBox(height: 16),
+                      // Email field
                       CustomTextField(
                         controller: _emailController,
                         label: AppTranslations.get('email', locale: locale),
                         hintText: 'name@company.com',
+                        prefixIcon: const Icon(
+                          Icons.email_outlined,
+                          size: AppDimensions.iconDefault,
+                          color: AppColors.textMuted,
+                        ),
                         keyboardType: TextInputType.emailAddress,
-                        prefixIcon: const Icon(Icons.email_outlined, size: 20, color: AppColors.textMuted),
                         validator: (val) {
-                          if (val == null || val.isEmpty) return locale == 'tr' ? 'E-posta zorunludur' : 'Email is required';
-                          if (!val.contains('@')) return locale == 'tr' ? 'Geçerli bir e-posta adresi girin' : 'Enter a valid email';
+                          if (val == null || val.isEmpty) {
+                            return locale == 'tr' ? 'E-posta zorunludur' : 'Email is required';
+                          }
+                          if (!val.contains('@')) {
+                            return locale == 'tr' ? 'Geçerli bir e-posta girin' : 'Enter a valid email';
+                          }
                           return null;
                         },
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppDimensions.spacing16),
+
+                      // Password field
                       CustomTextField(
                         controller: _passwordController,
                         label: AppTranslations.get('password', locale: locale),
                         hintText: '••••••••',
+                        prefixIcon: const Icon(
+                          Icons.lock_outline_rounded,
+                          size: AppDimensions.iconDefault,
+                          color: AppColors.textMuted,
+                        ),
                         obscureText: _obscurePassword,
-                        prefixIcon: const Icon(Icons.lock_outline, size: 20, color: AppColors.textMuted),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                            size: 20,
+                            size: AppDimensions.iconDefault,
                             color: AppColors.textMuted,
                           ),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
+                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                         ),
                         validator: (val) {
-                          if (val == null || val.length < 6) return locale == 'tr' ? 'En az 6 karakter girilmelidir' : 'Minimum 6 characters';
+                          if (val == null || val.isEmpty) {
+                            return locale == 'tr' ? 'Şifre zorunludur' : 'Password is required';
+                          }
+                          if (val.length < 6) {
+                            return locale == 'tr'
+                                ? 'Şifre en az 6 karakter olmalıdır'
+                                : 'Password must be at least 6 characters';
+                          }
                           return null;
                         },
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppDimensions.spacing28),
+
+                      // Submit button
                       CustomButton(
                         text: AppTranslations.get('register_button', locale: locale),
                         isLoading: isLoading,
                         onPressed: _onRegisterPressed,
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            '${AppTranslations.get('have_account', locale: locale).split('?')[0]}? ',
-                            style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                          ),
-                          GestureDetector(
-                            onTap: () => Navigator.of(context).pop(),
-                            child: Text(
-                              AppTranslations.get('login_button', locale: locale),
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
                     ],
                   ),
